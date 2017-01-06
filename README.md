@@ -1,5 +1,4 @@
 # csredis
-.NETCore redis 驱动
 
 ServiceStack.redis 是商业版，免费版有限制；
 
