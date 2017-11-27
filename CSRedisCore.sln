@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "CSRedisCore", "CSRedisCore.xproj", "{325F9E7E-A349-4C3B-85A0-C0512B455405}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "csredis", "csredis.csproj", "{325F9E7E-A349-4C3B-85A0-C0512B455405}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {17910722-5C3E-4DDA-9664-D0F456DAC8D4}
 	EndGlobalSection
 EndGlobal

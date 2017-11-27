@@ -6,19 +6,34 @@ namespace CSRedis {
 	public partial class QuickHelperBase {
 		protected static string Name { get; set; }
 		public static ConnectionPool Instance { get; protected set; }
-		public static string Set(string key, string value, int expireSeconds = -1) {
+		public static bool Set(string key, string value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
 			using(var conn = Instance.GetConnection()) {
 				if (expireSeconds > 0)
-					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds));
+					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
-					return conn.Client.Set(key, value);
+					return conn.Client.Set(key, value) == "OK";
+			}
+		}
+		public static bool SetBytes(string key, byte[] value, int expireSeconds = -1) {
+			key = string.Concat(Name, key);
+			using (var conn = Instance.GetConnection()) {
+				if (expireSeconds > 0)
+					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
+				else
+					return conn.Client.Set(key, value) == "OK";
 			}
 		}
 		public static string Get(string key) {
 			key = string.Concat(Name, key);
 			using (var conn = Instance.GetConnection()) {
 				return conn.Client.Get(key);
+			}
+		}
+		public static byte[] GetBytes(string key) {
+			key = string.Concat(Name, key);
+			using (var conn = Instance.GetConnection()) {
+				return conn.Client.GetBytes(key);
 			}
 		}
 		public static long Remove(params string[] key) {
@@ -48,14 +63,24 @@ namespace CSRedis {
 				return conn.Client.Expire(key, expire);
 			}
 		}
-		#region Hash 操作
-		public static string HashSetExpire(string key, params object[] keyValues) {
-			return HashSet(key, TimeSpan.Zero, keyValues);
+		public static string[] Keys(string pattern) {
+			using (var conn = Instance.GetConnection()) {
+				return conn.Client.Keys(pattern);
+			}
 		}
-		public static string HashSet(string key, TimeSpan expire, params object[] keyValues) {
+		public static long Publish(string channel, string data) {
+			using (var conn = Instance.GetConnection()) {
+				return conn.Client.Publish(channel, data);
+			}
+		}
+		#region Hash 操作
+		public static string HashSet(string key, params object[] keyValues) {
+			return HashSetExpire(key, TimeSpan.Zero, keyValues);
+		}
+		public static string HashSetExpire(string key, TimeSpan expire, params object[] keyValues) {
 			key = string.Concat(Name, key);
 			using (var conn = Instance.GetConnection()) {
-				var ret = conn.Client.HMSet(key, keyValues.Select<object, string>(a => string.Concat(a)).ToArray());
+				var ret = conn.Client.HMSet(key, keyValues.Select(a => string.Concat(a)).ToArray());
 				if (expire > TimeSpan.Zero) conn.Client.Expire(key, expire);
 				return ret;
 			}

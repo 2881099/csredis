@@ -1,10 +1,10 @@
-﻿
-using CSRedis.Internal.IO;
+﻿using CSRedis.Internal.IO;
 using System;
 using System.ComponentModel;
+
 namespace CSRedis.Internal.Commands
 {
-    class RedisString : RedisCommand<string>
+	class RedisString : RedisCommand<string>
     {
         public RedisString(string command, params object[] args)
             : base(command, args)

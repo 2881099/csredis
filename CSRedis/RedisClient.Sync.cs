@@ -1688,14 +1688,17 @@ namespace CSRedis
         {
             return Write(RedisCommands.Get(key));
         }
+		public byte[] GetBytes(string key) {
+			return Write(RedisCommands.GetBytes(key));
+		}
 
-        /// <summary>
-        /// Returns the bit value at offset in the string value stored at key
-        /// </summary>
-        /// <param name="key">Key to lookup</param>
-        /// <param name="offset">Offset of key to check</param>
-        /// <returns>Bit value stored at offset</returns>
-        public bool GetBit(string key, uint offset)
+		/// <summary>
+		/// Returns the bit value at offset in the string value stored at key
+		/// </summary>
+		/// <param name="key">Key to lookup</param>
+		/// <param name="offset">Offset of key to check</param>
+		/// <returns>Bit value stored at offset</returns>
+		public bool GetBit(string key, uint offset)
         {
             return Write(RedisCommands.GetBit(key, offset));
         }

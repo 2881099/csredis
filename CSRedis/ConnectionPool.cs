@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Text.RegularExpressions;
 using System.Net;
-using Microsoft.Extensions.Logging;
 
 namespace CSRedis {
 	/// <summary>
@@ -26,7 +25,7 @@ namespace CSRedis {
 			_poolsize = poolsize;
 		}
 
-		public RedisConnection2 GetConnection() {
+		public RedisConnection2 GetConnection () {
 			RedisConnection2 conn = null;
 			if (FreeConnections.Count > 0)
 				lock (_lock)
@@ -40,7 +39,9 @@ namespace CSRedis {
 					}
 				if (conn != null) {
 					conn.Pool = this;
-					conn.Client = new RedisClient(new IPEndPoint(IPAddress.Parse(_ip), _port));
+					var ips = Dns.GetHostAddresses(_ip);
+					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}
 			}
@@ -55,6 +56,15 @@ namespace CSRedis {
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
 			Interlocked.Increment(ref conn.UseSum);
+			if (conn.Client.IsConnected == false)
+				try {
+					conn.Client.Ping();
+				} catch {
+					var ips = Dns.GetHostAddresses(_ip);
+					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
+					conn.Client.Connected += Connected;
+				}
 			return conn;
 		}
 

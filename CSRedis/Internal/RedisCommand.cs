@@ -806,7 +806,10 @@ namespace CSRedis
         {
             return new RedisString("GET", key);
         }
-        public static RedisBool GetBit(string key, uint offset)
+		public static RedisBytes GetBytes (string key) {
+			return new RedisBytes("GET", key);
+		}
+		public static RedisBool GetBit(string key, uint offset)
         {
             return new RedisBool("GETBIT", key, offset);
         }
