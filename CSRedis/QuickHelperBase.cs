@@ -565,7 +565,7 @@ namespace CSRedis {
 		public static string[] ZRange(string key, long start, long stop) {
 			key = string.Concat(Name, key);
 			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRange(key, start, stop, true);
+				return conn.Client.ZRange(key, start, stop, false);
 			}
 		}
 		/// <summary>
@@ -643,7 +643,7 @@ namespace CSRedis {
 		public static string[] ZRevRange(string key, long start, long stop) {
 			key = string.Concat(Name, key);
 			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRevRange(key, start, stop, true);
+				return conn.Client.ZRevRange(key, start, stop, false);
 			}
 		}
 		/// <summary>
@@ -658,7 +658,7 @@ namespace CSRedis {
 		public static string[] ZRevRangeByScore(string key, double maxScore, double minScore, long? limit = null, long? offset = null) {
 			key = string.Concat(Name, key);
 			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRevRangeByScore(key, maxScore, minScore, true, false, false, offset, limit);
+				return conn.Client.ZRevRangeByScore(key, maxScore, minScore, false, false, false, offset, limit);
 			}
 		}
 		/// <summary>
