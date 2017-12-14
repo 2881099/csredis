@@ -577,10 +577,10 @@ namespace CSRedis {
 		/// <param name="limit">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public static string[] ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long? offset = null) {
+		public static string[] ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
 			key = string.Concat(Name, key);
 			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRangeByScore(key, minScore, maxScore, true, false, false, offset, limit);
+				return conn.Client.ZRangeByScore(key, minScore, maxScore, false, false, false, offset, limit);
 			}
 		}
 		/// <summary>
