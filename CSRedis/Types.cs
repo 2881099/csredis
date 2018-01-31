@@ -618,16 +618,36 @@ namespace CSRedis
         public RedisSentinelInfo(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            SDownTime = info.GetInt64("s-down-time");
-            LastHelloMessage = info.GetInt64("last-hello-message");
-            VotedLeader = info.GetString("voted-leader");
-            VotedLeaderEpoch = info.GetInt64("voted-leader-epoch");
-        }
+			SDownTime = this.GetSerializationItemValue<long>(info, "s-down-time");
+            LastHelloMessage = this.GetSerializationItemValue<long>(info, "last-hello-message");
+            VotedLeader = this.GetSerializationItemValue<string>(info, "voted-leader");
+			VotedLeaderEpoch = this.GetSerializationItemValue<long>(info, "voted-leader-epoch");
 
-        /// <summary>
-        /// Get or set the subjective down time
-        /// </summary>
-        public long SDownTime { get; set; }
+			if (SDownTime == 0) SDownTime = -1;
+			if (LastHelloMessage == 0) LastHelloMessage = -1;
+			if (VotedLeaderEpoch == 0) VotedLeaderEpoch = -1;
+		}
+
+		/// <summary>
+		/// Get a value from an instance of the SerializationInfo
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="info"></param>
+		/// <param name="key"></param>
+		/// <returns></returns>
+		private T GetSerializationItemValue<T>(SerializationInfo info, string key) {
+			foreach (SerializationEntry entry in info) {
+				if (entry.Name == key) {
+					return (T)Convert.ChangeType(entry.Value, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+				}
+			}
+			return default(T);
+		}
+
+		/// <summary>
+		/// Get or set the subjective down time
+		/// </summary>
+		public long SDownTime { get; set; }
 
         /// <summary>
         /// Get or set milliseconds(?) since last hello message from current Sentinel node
