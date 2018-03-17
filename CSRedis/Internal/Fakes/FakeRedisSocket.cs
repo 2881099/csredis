@@ -37,6 +37,11 @@ namespace CSRedis.Internal.Fakes
 
         public void Connect(EndPoint endpoint)
         {
+            Connect(endpoint, -1);
+        }
+
+        public void Connect(EndPoint endpoint, int timeout)
+        {
             _connected = true;
         }
 

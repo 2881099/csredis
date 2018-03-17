@@ -9,6 +9,14 @@ using System.Text;
 
 namespace CSRedis.Internal.IO
 {
+    class RedisSocketException : Exception
+    {
+        public RedisSocketException(string message)
+            : base(message)
+        {
+        }
+    }
+
     class RedisSocket : IRedisSocket
     {
         readonly bool _ssl;
@@ -36,8 +44,17 @@ namespace CSRedis.Internal.IO
 
         public void Connect(EndPoint endpoint)
         {
+            Connect(endpoint, -1);
+        }
+
+        public void Connect(EndPoint endpoint, int timeout)
+        {
             InitSocket(endpoint);
-            _socket.Connect(endpoint);
+
+            IAsyncResult result = _socket.BeginConnect(endpoint, null, null);
+            if (!result.AsyncWaitHandle.WaitOne(timeout, true)) {
+                throw new RedisSocketException("Connect to server timeout");
+            }
         }
 
         public bool ConnectAsync(SocketAsyncEventArgs args)
