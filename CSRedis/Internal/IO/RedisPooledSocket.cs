@@ -34,6 +34,11 @@ namespace CSRedis.Internal.IO
 
         public void Connect(EndPoint endpoint)
         {
+            Connect(endpoint, -1);
+        }
+
+        public void Connect(EndPoint endpoint, int timeout)
+        {
             _socket = _pool.Connect();
             System.Diagnostics.Debug.WriteLine("Got socket #{0}", _socket.LocalEndPoint);
         }

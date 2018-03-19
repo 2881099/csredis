@@ -56,9 +56,9 @@ namespace CSRedis.Internal
             _asyncConnector = new Lazy<AsyncConnector>(AsyncConnectorFactory);
         }
 
-        public bool Connect()
+        public bool Connect(int timeout)
         {
-            _redisSocket.Connect(_endPoint);
+            _redisSocket.Connect(_endPoint, timeout);
 
             if (_redisSocket.Connected)
                 OnConnected();
@@ -189,7 +189,7 @@ namespace CSRedis.Internal
             int attempts = 0;
             while (attempts++ < ReconnectAttempts || ReconnectAttempts == -1)
             {
-                if (Connect())
+                if (Connect(-1))
                     return;
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(ReconnectWait));
@@ -220,7 +220,7 @@ namespace CSRedis.Internal
         void ConnectIfNotConnected()
         {
             if (!IsConnected)
-                Connect();
+                Connect(-1);
         }
 
         void ExpectConnected()

@@ -15,7 +15,7 @@ namespace CSRedis
         /// <returns>True if connected</returns>
         public bool Connect(int timeout)
         {
-            return _connector.Connect(); // TODO: timeout
+            return _connector.Connect(timeout);
         }
 
         /// <summary>
