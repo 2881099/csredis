@@ -3,41 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CSRedis {
-	public partial class QuickHelperBase {
-		public static string Name { get; set; }
-		public static ConnectionPool Instance { get; protected set; }
-
-		private static DateTime dt1970 = new DateTime(1970, 1, 1);
-		private static Random rnd = new Random();
-		private static readonly int __staticMachine = ((0x00ffffff & Environment.MachineName.GetHashCode()) +
-#if NETSTANDARD1_5 || NETSTANDARD1_6
-			1
-#else
-            AppDomain.CurrentDomain.Id
-#endif
-			) & 0x00ffffff;
-		private static readonly int __staticPid = Process.GetCurrentProcess().Id;
-		private static int __staticIncrement = rnd.Next();
-		/// <summary>
-		/// 生成类似Mongodb的ObjectId有序、不重复Guid
-		/// </summary>
-		/// <returns></returns>
-		public static Guid NewMongodbId() {
-			var now = DateTime.Now;
-			var uninxtime = (int)now.Subtract(dt1970).TotalSeconds;
-			int increment = Interlocked.Increment(ref __staticIncrement) & 0x00ffffff;
-			var rand = rnd.Next(0, int.MaxValue);
-			var guid = $"{uninxtime.ToString("x8").PadLeft(8, '0')}{__staticMachine.ToString("x8").PadLeft(8, '0').Substring(2, 6)}{__staticPid.ToString("x8").PadLeft(8, '0').Substring(6, 2)}{increment.ToString("x8").PadLeft(8, '0')}{rand.ToString("x8").PadLeft(8, '0')}";
-			return Guid.Parse(guid);
-			//var value = HashIncrement("NewMongodbIdyyyyMMdd", now.ToString("HH:mm"), 1);
-			//if (value == 1) Expire("NewMongodbIdyyyyMMdd", TimeSpan.FromHours(24));
-			//var rand = rnd.Next(0, int.MaxValue);
-			////e8f35037-887d-4f64-8355-f96e02e71807
-			//var guid = $"{uninxtime.ToString("x8").PadLeft(8, '0')}{rand.ToString("x8").PadLeft(8, '0')}{value.ToString("x8").PadLeft(16, '0')}";
-			//return Guid.Parse(guid);
-		}
+	partial class QuickHelperBase {
 		/// <summary>
 		/// 设置指定 key 的值
 		/// </summary>
@@ -45,13 +14,13 @@ namespace CSRedis {
 		/// <param name="value">字符串值</param>
 		/// <param name="expireSeconds">过期(秒单位)</param>
 		/// <returns></returns>
-		public static bool Set(string key, string value, int expireSeconds = -1) {
+		async public static Task<bool> SetAsync(string key, string value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
-			using(var conn = Instance.GetConnection()) {
+			using(var conn = await Instance.GetConnectionAsync()) {
 				if (expireSeconds > 0)
-					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
+					return await conn.Client.SetAsync(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
-					return conn.Client.Set(key, value) == "OK";
+					return await conn.Client.SetAsync(key, value) == "OK";
 			}
 		}
 		/// <summary>
@@ -61,13 +30,13 @@ namespace CSRedis {
 		/// <param name="value">字节流</param>
 		/// <param name="expireSeconds">过期(秒单位)</param>
 		/// <returns></returns>
-		public static bool SetBytes(string key, byte[] value, int expireSeconds = -1) {
+		async public static Task<bool> SetBytesAsync(string key, byte[] value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = await Instance.GetConnectionAsync()) {
 				if (expireSeconds > 0)
-					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
+					return await conn.Client.SetAsync(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
-					return conn.Client.Set(key, value) == "OK";
+					return await conn.Client.SetAsync(key, value) == "OK";
 			}
 		}
 		/// <summary>
@@ -75,10 +44,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static string Get(string key) {
+		async public static Task<string> GetAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Get(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.GetAsync(key);
 			}
 		}
 		/// <summary>
@@ -86,12 +55,12 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static string[] GetStrings(params string[] key) {
+		async public static Task<string[]> GetStringsAsync(params string[] key) {
 			if (key == null || key.Length == 0) return new string[0];
 			string[] rkeys = new string[key.Length];
 			for (int a = 0; a < key.Length; a++) rkeys[a] = string.Concat(Name, key[a]);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.MGet(rkeys);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.MGetAsync(rkeys);
 			}
 		}
 		/// <summary>
@@ -99,10 +68,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static byte[] GetBytes(string key) {
+		async public static Task<byte[]> GetBytesAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.GetBytes(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.GetBytesAsync(key);
 			}
 		}
 		/// <summary>
@@ -110,12 +79,12 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long Remove(params string[] key) {
+		async public static Task<long> RemoveAsync(params string[] key) {
 			if (key == null || key.Length == 0) return 0;
 			string[] rkeys = new string[key.Length];
 			for (int a = 0; a < key.Length; a++) rkeys[a] = string.Concat(Name, key[a]);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Del(rkeys);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.DelAsync(rkeys);
 			}
 		}
 		/// <summary>
@@ -123,10 +92,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static bool Exists(string key) {
+		async public static Task<bool> ExistsAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Exists(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ExistsAsync(key);
 			}
 		}
 		/// <summary>
@@ -135,10 +104,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public static long Increment(string key, long value = 1) {
+		async public static Task<long> IncrementAsync(string key, long value = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.IncrBy(key, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.IncrByAsync(key, value);
 			}
 		}
 		/// <summary>
@@ -147,11 +116,11 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="expire">过期时间</param>
 		/// <returns></returns>
-		public static bool Expire(string key, TimeSpan expire) {
+		async public static Task<bool> ExpireAsync(string key, TimeSpan expire) {
 			if (expire <= TimeSpan.Zero) return false;
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Expire(key, expire);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ExpireAsync(key, expire);
 			}
 		}
 		/// <summary>
@@ -159,10 +128,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long Ttl(string key) {
+		async public static Task<long> TtlAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Ttl(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.TtlAsync(key);
 			}
 		}
 		/// <summary>
@@ -170,9 +139,9 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="pattern">如：runoob*</param>
 		/// <returns></returns>
-		public static string[] Keys(string pattern) {
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Keys(pattern);
+		async public static Task<string[]> KeysAsync(string pattern) {
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.KeysAsync(pattern);
 			}
 		}
 		/// <summary>
@@ -181,9 +150,9 @@ namespace CSRedis {
 		/// <param name="channel">频道名</param>
 		/// <param name="data">消息文本</param>
 		/// <returns></returns>
-		public static long Publish(string channel, string data) {
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.Publish(channel, data);
+		async public static Task<long> PublishAsync(string channel, string data) {
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.PublishAsync(channel, data);
 			}
 		}
 		#region Hash 操作
@@ -193,8 +162,8 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keyValues">field1 value1 [field2 value2]</param>
 		/// <returns></returns>
-		public static string HashSet(string key, params object[] keyValues) {
-			return HashSetExpire(key, TimeSpan.Zero, keyValues);
+		async public static Task<string> HashSetAsync(string key, params object[] keyValues) {
+			return await HashSetExpireAsync(key, TimeSpan.Zero, keyValues);
 		}
 		/// <summary>
 		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
@@ -203,11 +172,11 @@ namespace CSRedis {
 		/// <param name="expire">过期时间</param>
 		/// <param name="keyValues">field1 value1 [field2 value2]</param>
 		/// <returns></returns>
-		public static string HashSetExpire(string key, TimeSpan expire, params object[] keyValues) {
+		async public static Task<string> HashSetExpireAsync(string key, TimeSpan expire, params object[] keyValues) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				var ret = conn.Client.HMSet(key, keyValues.Select(a => string.Concat(a)).ToArray());
-				if (expire > TimeSpan.Zero) conn.Client.Expire(key, expire);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				var ret = await conn.Client.HMSetAsync(key, keyValues.Select(a => string.Concat(a)).ToArray());
+				if (expire > TimeSpan.Zero) await conn.Client.ExpireAsync(key, expire);
 				return ret;
 			}
 		}
@@ -217,10 +186,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="field">字段</param>
 		/// <returns></returns>
-		public static string HashGet(string key, string field) {
+		async public static Task<string> HashGetAsync(string key, string field) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HGet(key, field);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HGetAsync(key, field);
 			}
 		}
 		/// <summary>
@@ -230,10 +199,10 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public static long HashIncrement(string key, string field, long value = 1) {
+		async public static Task<long> HashIncrementAsync(string key, string field, long value = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HIncrBy(key, field, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HIncrByAsync(key, field, value);
 			}
 		}
 		/// <summary>
@@ -242,11 +211,11 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="fields">字段</param>
 		/// <returns></returns>
-		public static long HashDelete(string key, params string[] fields) {
+		async public static Task<long> HashDeleteAsync(string key, params string[] fields) {
 			if (fields == null || fields.Length == 0) return 0;
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HDel(key, fields);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HDelAsync(key, fields);
 			}
 		}
 		/// <summary>
@@ -255,10 +224,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="field">字段</param>
 		/// <returns></returns>
-		public static bool HashExists(string key, string field) {
+		async public static Task<bool> HashExistsAsync(string key, string field) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HExists(key, field);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HExistsAsync(key, field);
 			}
 		}
 		/// <summary>
@@ -266,10 +235,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long HashLength(string key) {
+		async public static Task<long> HashLengthAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HLen(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HLenAsync(key);
 			}
 		}
 		/// <summary>
@@ -277,10 +246,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static Dictionary<string, string> HashGetAll(string key) {
+		async public static Task<Dictionary<string, string>> HashGetAllAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HGetAll(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HGetAllAsync(key);
 			}
 		}
 		/// <summary>
@@ -288,10 +257,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static string[] HashKeys(string key) {
+		async public static Task<string[]> HashKeysAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HKeys(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HKeysAsync(key);
 			}
 		}
 		/// <summary>
@@ -299,10 +268,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static string[] HashVals(string key) {
+		async public static Task<string[]> HashValsAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.HVals(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.HValsAsync(key);
 			}
 		}
 		#endregion
@@ -314,10 +283,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="index">索引</param>
 		/// <returns></returns>
-		public static string LIndex(string key, long index) {
+		async public static Task<string> LIndexAsync(string key, long index) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LIndex(key, index);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LIndexAsync(key, index);
 			}
 		}
 		/// <summary>
@@ -327,10 +296,10 @@ namespace CSRedis {
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public static long LInsertBefore(string key, string pivot, string value) {
+		async public static Task<long> LInsertBeforeAsync(string key, string pivot, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LInsert(key, RedisInsert.Before, pivot, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LInsertAsync(key, RedisInsert.Before, pivot, value);
 			}
 		}
 		/// <summary>
@@ -340,10 +309,10 @@ namespace CSRedis {
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public static long LInsertAfter(string key, string pivot, string value) {
+		async public static Task<long> LInsertAfterAsync(string key, string pivot, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LInsert(key, RedisInsert.After, pivot, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LInsertAsync(key, RedisInsert.After, pivot, value);
 			}
 		}
 		/// <summary>
@@ -351,10 +320,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long LLen(string key) {
+		async public static Task<long> LLenAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LLen(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LLenAsync(key);
 			}
 		}
 		/// <summary>
@@ -362,10 +331,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static string LPop(string key) {
+		async public static Task<string> LPopAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LPop(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LPopAsync(key);
 			}
 		}
 		/// <summary>
@@ -373,10 +342,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static string RPop(string key) {
+		async public static Task<string> RPopAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.RPop(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.RPopAsync(key);
 			}
 		}
 		/// <summary>
@@ -385,10 +354,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns></returns>
-		public static long LPush(string key, string[] value) {
+		async public static Task<long> LPushAsync(string key, string[] value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LPush(key, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LPushAsync(key, value);
 			}
 		}
 		/// <summary>
@@ -397,10 +366,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns></returns>
-		public static long RPush(string key, string[] value) {
+		async public static Task<long> RPushAsync(string key, string[] value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.RPush(key, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.RPushAsync(key, value);
 			}
 		}
 		/// <summary>
@@ -410,10 +379,10 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public static string[] LRang(string key, long start, long stop) {
+		async public static Task<string[]> LRangAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LRange(key, start, stop);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LRangeAsync(key, start, stop);
 			}
 		}
 		/// <summary>
@@ -423,10 +392,10 @@ namespace CSRedis {
 		/// <param name="count">移除的数量，大于0时从表头删除数量count，小于0时从表尾删除数量-count，等于0移除所有</param>
 		/// <param name="value">元素</param>
 		/// <returns></returns>
-		public static long LRem(string key, long count, string value) {
+		async public static Task<long> LRemAsync(string key, long count, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LRem(key, count, value);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LRemAsync(key, count, value);
 			}
 		}
 		/// <summary>
@@ -436,10 +405,10 @@ namespace CSRedis {
 		/// <param name="index">索引</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		public static bool LSet(string key, long index, string value) {
+		async public static Task<bool> LSetAsync(string key, long index, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LSet(key, index, value) == "OK";
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LSetAsync(key, index, value) == "OK";
 			}
 		}
 		/// <summary>
@@ -449,10 +418,10 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public static bool LTrim(string key, long start, long stop) {
+		async public static Task<bool> LTrimAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.LTrim(key, start, stop) == "OK";
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.LTrimAsync(key, start, stop) == "OK";
 			}
 		}
 		#endregion
@@ -465,10 +434,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="memberScores">一个或多个成员分数</param>
 		/// <returns></returns>
-		public static long ZAdd(string key, params (double, string)[] memberScores) {
+		async public static Task<long> ZAddAsync(string key, params (double, string)[] memberScores) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZAdd<double, string>(key, memberScores.Select(a => new Tuple<double, string>(a.Item1, a.Item2)).ToArray());
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZAddAsync<double, string>(key, memberScores.Select(a => new Tuple<double, string>(a.Item1, a.Item2)).ToArray());
 			}
 		}
 		/// <summary>
@@ -476,10 +445,10 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZCard(string key) {
+		async public static Task<long> ZCardAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZCard(key);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZCardAsync(key);
 			}
 		}
 		/// <summary>
@@ -489,10 +458,10 @@ namespace CSRedis {
 		/// <param name="min">分数最小值</param>
 		/// <param name="max">分数最大值</param>
 		/// <returns></returns>
-		public static long ZCount(string key, double min, double max) {
+		async public static Task<long> ZCountAsync(string key, double min, double max) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZCount(key, min, max);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZCountAsync(key, min, max);
 			}
 		}
 		/// <summary>
@@ -502,10 +471,10 @@ namespace CSRedis {
 		/// <param name="memeber">成员</param>
 		/// <param name="increment">增量值(默认=1)</param>
 		/// <returns></returns>
-		public static double ZIncrBy(string key, string memeber, double increment = 1) {
+		async public static Task<double> ZIncrByAsync(string key, string memeber, double increment = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZIncrBy(key, increment, memeber);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZIncrByAsync(key, increment, memeber);
 			}
 		}
 
@@ -516,8 +485,8 @@ namespace CSRedis {
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZInterStoreMax(string destinationKey, params string[] keys) {
-			return ZInterStore(destinationKey, RedisAggregate.Max, keys);
+		async public static Task<long> ZInterStoreMaxAsync(string destinationKey, params string[] keys) {
+			return await ZInterStoreAsync(destinationKey, RedisAggregate.Max, keys);
 		}
 		/// <summary>
 		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中
@@ -525,8 +494,8 @@ namespace CSRedis {
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZInterStoreMin(string destinationKey, params string[] keys) {
-			return ZInterStore(destinationKey, RedisAggregate.Min, keys);
+		async public static Task<long> ZInterStoreMinAsync(string destinationKey, params string[] keys) {
+			return await ZInterStoreAsync(destinationKey, RedisAggregate.Min, keys);
 		}
 		/// <summary>
 		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中
@@ -534,16 +503,16 @@ namespace CSRedis {
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZInterStoreSum(string destinationKey, params string[] keys) {
-			return ZInterStore(destinationKey, RedisAggregate.Sum, keys);
+		async public static Task<long> ZInterStoreSumAsync(string destinationKey, params string[] keys) {
+			return await ZInterStoreAsync(destinationKey, RedisAggregate.Sum, keys);
 		}
-		private static long ZInterStore(string destinationKey, RedisAggregate aggregate, params string[] keys) {
+		async private static Task<long> ZInterStoreAsync(string destinationKey, RedisAggregate aggregate, params string[] keys) {
 			destinationKey = string.Concat(Name, destinationKey);
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
 			if (rkeys.Length == 0) return 0;
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZInterStore(destinationKey, null, aggregate, rkeys);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZInterStoreAsync(destinationKey, null, aggregate, rkeys);
 			}
 		}
 		#endregion
@@ -555,8 +524,8 @@ namespace CSRedis {
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZUnionStoreMax(string destinationKey, params string[] keys) {
-			return ZUnionStore(destinationKey, RedisAggregate.Max, keys);
+		async public static Task<long> ZUnionStoreMaxAsync(string destinationKey, params string[] keys) {
+			return await ZUnionStoreAsync(destinationKey, RedisAggregate.Max, keys);
 		}
 		/// <summary>
 		/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination
@@ -564,8 +533,8 @@ namespace CSRedis {
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZUnionStoreMin(string destinationKey, params string[] keys) {
-			return ZUnionStore(destinationKey, RedisAggregate.Min, keys);
+		async public static Task<long> ZUnionStoreMinAsync(string destinationKey, params string[] keys) {
+			return await ZUnionStoreAsync(destinationKey, RedisAggregate.Min, keys);
 		}
 		/// <summary>
 		/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination
@@ -573,16 +542,16 @@ namespace CSRedis {
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍RedisHelper.Name</param>
 		/// <returns></returns>
-		public static long ZUnionStoreSum(string destinationKey, params string[] keys) {
-			return ZUnionStore(destinationKey, RedisAggregate.Sum, keys);
+		async public static Task<long> ZUnionStoreSumAsync(string destinationKey, params string[] keys) {
+			return await ZUnionStoreAsync(destinationKey, RedisAggregate.Sum, keys);
 		}
-		private static long ZUnionStore(string destinationKey, RedisAggregate aggregate, params string[] keys) {
+		async private static Task<long> ZUnionStoreAsync(string destinationKey, RedisAggregate aggregate, params string[] keys) {
 			destinationKey = string.Concat(Name, destinationKey);
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
 			if (rkeys.Length == 0) return 0;
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZUnionStore(destinationKey, null, aggregate, rkeys);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZUnionStoreAsync(destinationKey, null, aggregate, rkeys);
 			}
 		}
 		#endregion
@@ -594,10 +563,10 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public static string[] ZRange(string key, long start, long stop) {
+		async public static Task<string[]> ZRangeAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRange(key, start, stop, false);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRangeAsync(key, start, stop, false);
 			}
 		}
 		/// <summary>
@@ -609,10 +578,10 @@ namespace CSRedis {
 		/// <param name="limit">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public static string[] ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
+		async public static Task<string[]> ZRangeByScoreAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRangeByScore(key, minScore, maxScore, false, false, false, offset, limit);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRangeByScoreAsync(key, minScore, maxScore, false, false, false, offset, limit);
 			}
 		}
 		/// <summary>
@@ -621,10 +590,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public static long? ZRank(string key, string member) {
+		async public static Task<long?> ZRankAsync(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRank(key, member);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRankAsync(key, member);
 			}
 		}
 		/// <summary>
@@ -633,10 +602,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="member">一个或多个成员</param>
 		/// <returns></returns>
-		public static long ZRem(string key, params string[] member) {
+		async public static Task<long> ZRemAsync(string key, params string[] member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRem(key, member);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRemAsync(key, member);
 			}
 		}
 		/// <summary>
@@ -646,10 +615,10 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public static long ZRemRangeByRank(string key, long start, long stop) {
+		async public static Task<long> ZRemRangeByRankAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRemRangeByRank(key, start, stop);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRemRangeByRankAsync(key, start, stop);
 			}
 		}
 		/// <summary>
@@ -659,10 +628,10 @@ namespace CSRedis {
 		/// <param name="minScore">最小分数</param>
 		/// <param name="maxScore">最大分数</param>
 		/// <returns></returns>
-		public static long ZRemRangeByScore(string key, double minScore, double maxScore) {
+		async public static Task<long> ZRemRangeByScoreAsync(string key, double minScore, double maxScore) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRemRangeByScore(key, minScore, maxScore);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRemRangeByScoreAsync(key, minScore, maxScore);
 			}
 		}
 		/// <summary>
@@ -672,10 +641,10 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public static string[] ZRevRange(string key, long start, long stop) {
+		async public static Task<string[]> ZRevRangeAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRevRange(key, start, stop, false);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRevRangeAsync(key, start, stop, false);
 			}
 		}
 		/// <summary>
@@ -687,10 +656,10 @@ namespace CSRedis {
 		/// <param name="limit">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public static string[] ZRevRangeByScore(string key, double maxScore, double minScore, long? limit = null, long? offset = null) {
+		async public static Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long? offset = null) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRevRangeByScore(key, maxScore, minScore, false, false, false, offset, limit);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRevRangeByScoreAsync(key, maxScore, minScore, false, false, false, offset, limit);
 			}
 		}
 		/// <summary>
@@ -699,10 +668,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public static long? ZRevRank(string key, string member) {
+		async public static Task<long?> ZRevRankAsync(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZRevRank(key, member);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZRevRankAsync(key, member);
 			}
 		}
 		/// <summary>
@@ -711,10 +680,10 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public static double? ZScore(string key, string member) {
+		async public static Task<double?> ZScoreAsync(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
-				return conn.Client.ZScore(key, member);
+			using (var conn = await Instance.GetConnectionAsync()) {
+				return await conn.Client.ZScoreAsync(key, member);
 			}
 		}
 		#endregion

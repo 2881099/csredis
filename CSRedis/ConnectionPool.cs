@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Text.RegularExpressions;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CSRedis {
 	/// <summary>
@@ -12,7 +12,8 @@ namespace CSRedis {
 
 		public List<RedisConnection2> AllConnections = new List<RedisConnection2>();
 		public Queue<RedisConnection2> FreeConnections = new Queue<RedisConnection2>();
-		public Queue<ManualResetEvent> GetConnectionQueue = new Queue<ManualResetEvent>();
+		public Queue<ManualResetEventSlim> GetConnectionQueue = new Queue<ManualResetEventSlim>();
+		public Queue<TaskCompletionSource<RedisConnection2>> GetConnectionAsyncQueue = new Queue<TaskCompletionSource<RedisConnection2>>();
 		private static object _lock = new object();
 		private static object _lock_GetConnectionQueue = new object();
 		private string _ip;
@@ -25,7 +26,7 @@ namespace CSRedis {
 			_poolsize = poolsize;
 		}
 
-		public RedisConnection2 GetConnection () {
+		private RedisConnection2 GetFreeConnection() {
 			RedisConnection2 conn = null;
 			if (FreeConnections.Count > 0)
 				lock (_lock)
@@ -45,13 +46,39 @@ namespace CSRedis {
 					conn.Client.Connected += Connected;
 				}
 			}
+			return conn;
+		}
+		public RedisConnection2 GetConnection () {
+			var conn = GetFreeConnection();
 			if (conn == null) {
-				ManualResetEvent wait = new ManualResetEvent(false);
+				ManualResetEventSlim wait = new ManualResetEventSlim(false);
 				lock (_lock_GetConnectionQueue)
 					GetConnectionQueue.Enqueue(wait);
-				if (wait.WaitOne(TimeSpan.FromSeconds(10)))
+				if (wait.Wait(TimeSpan.FromSeconds(10)))
 					return GetConnection();
 				throw new Exception("CSRedis.ConnectionPool.GetConnection 连接池获取超时（10秒）");
+			}
+			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
+			conn.LastActive = DateTime.Now;
+			Interlocked.Increment(ref conn.UseSum);
+			if (conn.Client.IsConnected == false)
+				try {
+					conn.Client.Ping();
+				} catch {
+					var ips = Dns.GetHostAddresses(_ip);
+					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
+					conn.Client.Connected += Connected;
+				}
+			return conn;
+		}
+		async public Task<RedisConnection2> GetConnectionAsync() {
+			var conn = GetFreeConnection();
+			if (conn == null) {
+				TaskCompletionSource<RedisConnection2> tcs = new TaskCompletionSource<RedisConnection2>();
+				lock (_lock_GetConnectionQueue)
+					GetConnectionAsyncQueue.Enqueue(tcs);
+				conn = await tcs.Task;
 			}
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
@@ -72,8 +99,16 @@ namespace CSRedis {
 			lock (_lock)
 				FreeConnections.Enqueue(conn);
 
-			if (GetConnectionQueue.Count > 0) {
-				ManualResetEvent wait = null;
+			bool isAsync = false;
+			if (GetConnectionAsyncQueue.Count > 0) {
+				TaskCompletionSource<RedisConnection2> tcs = null;
+				lock (_lock_GetConnectionQueue)
+					if (GetConnectionAsyncQueue.Count > 0)
+						tcs = GetConnectionAsyncQueue.Dequeue();
+				if (isAsync = (tcs != null)) tcs.SetResult(GetConnectionAsync().Result);
+			}
+			if (isAsync == false && GetConnectionQueue.Count > 0) {
+				ManualResetEventSlim wait = null;
 				lock (_lock_GetConnectionQueue)
 					if (GetConnectionQueue.Count > 0)
 						wait = GetConnectionQueue.Dequeue();

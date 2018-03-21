@@ -1485,14 +1485,17 @@ namespace CSRedis
         {
             return WriteAsync(RedisCommands.Get(key));
         }
+		public Task<byte[]> GetBytesAsync(string key) {
+			return WriteAsync(RedisCommands.GetBytes(key));
+		}
 
-        /// <summary>
-        /// Returns the bit value at offset in the string value stored at key
-        /// </summary>
-        /// <param name="key">Key to lookup</param>
-        /// <param name="offset">Offset of key to check</param>
-        /// <returns>Bit value stored at offset</returns>
-        public Task<bool> GetBitAsync(string key, uint offset)
+		/// <summary>
+		/// Returns the bit value at offset in the string value stored at key
+		/// </summary>
+		/// <param name="key">Key to lookup</param>
+		/// <param name="offset">Offset of key to check</param>
+		/// <returns>Bit value stored at offset</returns>
+		public Task<bool> GetBitAsync(string key, uint offset)
         {
             return WriteAsync(RedisCommands.GetBit(key, offset));
         }

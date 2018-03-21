@@ -877,7 +877,7 @@ namespace CSRedis
         }
         private static RedisStatus.Nullable Set(string key, object value, int? expirationSeconds = null, long? expirationMilliseconds = null, RedisExistence? exists = null)
         {
-            var args = new List<string> { key, value.ToString() };
+            var args = new List<object> { key, value };
             if (expirationSeconds != null)
                 args.AddRange(new[] { "EX", expirationSeconds.ToString() });
             if (expirationMilliseconds != null)

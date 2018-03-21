@@ -47,7 +47,8 @@ namespace CSRedis.Internal.IO
 
         public Task<bool> ConnectAsync()
         {
-            if (_redisSocket.Connected)
+			this.InitConnection();
+			if (_redisSocket.Connected)
                 _connectionTaskSource.SetResult(true);
 
             if (!_asyncConnectionStarted && !_redisSocket.Connected)
@@ -68,7 +69,8 @@ namespace CSRedis.Internal.IO
 
         public Task<T> CallAsync<T>(RedisCommand<T> command)
         {
-            var token = new RedisAsyncCommandToken<T>(command);
+			this.InitConnection();
+			var token = new RedisAsyncCommandToken<T>(command);
             _asyncWriteQueue.Enqueue(token);
             ConnectAsync().ContinueWith(CallAsyncDeferred);
             return token.TaskSource.Task;
