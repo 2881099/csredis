@@ -11,7 +11,7 @@ StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题，�
 1、重新开发了一个连接池管理 ConnectionPool
 
 ```c#
-//第一步：引入该项目 nuget Install-Package CSRedisCore 2.0.0
+//第一步：引入该项目 nuget Install-Package CSRedisCore 2.1.1
 
 //第二步：将此类编写到您的项目中
 public partial class RedisHelper : CSRedis.QuickHelperBase {
