@@ -37,6 +37,59 @@ namespace CSRedis {
 			////e8f35037-887d-4f64-8355-f96e02e71807
 			//var guid = $"{uninxtime.ToString("x8").PadLeft(8, '0')}{rand.ToString("x8").PadLeft(8, '0')}{value.ToString("x8").PadLeft(16, '0')}";
 			//return Guid.Parse(guid);
+			
+		}
+		/// <summary>
+		/// 缓存壳
+		/// </summary>
+		/// <typeparam name="T">缓存类型</typeparam>
+		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
+		/// <param name="timeoutSeconds">缓存秒数</param>
+		/// <param name="getData">获取源数据的函数</param>
+		/// <param name="serialize">序列化函数</param>
+		/// <param name="deserialize">反序列化函数</param>
+		/// <returns></returns>
+		public static T Cache<T>(string key, int timeoutSeconds, Func<T> getData, Func<T, string> serialize, Func<string, T> deserialize) {
+			if (timeoutSeconds <= 0) return getData();
+			var cacheValue = Get(key);
+			if (!string.IsNullOrEmpty(cacheValue)) {
+				try {
+					return deserialize(cacheValue);
+				} catch {
+					Remove(key);
+					throw;
+				}
+			}
+			var ret = getData();
+			Set(key, serialize(ret), timeoutSeconds);
+			return ret;
+		}
+		/// <summary>
+		/// 缓存壳(哈希表)
+		/// </summary>
+		/// <typeparam name="T">缓存类型</typeparam>
+		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
+		/// <param name="field">字段</param>
+		/// <param name="timeoutSeconds">缓存秒数</param>
+		/// <param name="getData">获取源数据的函数</param>
+		/// <param name="serialize">序列化函数</param>
+		/// <param name="deserialize">反序列化函数</param>
+		/// <returns></returns>
+		public static T Cache<T>(string key, string field, long timeoutSeconds, Func<T> getData, Func<(T, DateTime), string> serialize, Func<string, (T, DateTime)> deserialize) {
+			if (timeoutSeconds <= 0) return getData();
+			var cacheValue = HashGet(key, field);
+			if (!string.IsNullOrEmpty(cacheValue)) {
+				try {
+					var value = deserialize(cacheValue);
+					if (DateTime.Now.Subtract(value.Item2).TotalSeconds <= timeoutSeconds) return value.Item1;
+				} catch {
+					HashDelete(key, field);
+					throw;
+				}
+			}
+			var ret = getData();
+			HashSet(key, field, serialize((ret, DateTime.Now)));
+			return ret;
 		}
 		/// <summary>
 		/// 设置指定 key 的值
