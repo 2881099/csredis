@@ -514,7 +514,6 @@ namespace CSRedis {
 		/// <summary>
 		/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
 		/// </summary>
-		/// <typeparam name="TScore">分数类型</typeparam>
 		/// <param name="key">不含prefix前辍RedisHelper.Name</param>
 		/// <param name="memberScores">一个或多个成员分数</param>
 		/// <returns></returns>
