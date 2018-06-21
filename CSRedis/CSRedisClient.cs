@@ -41,7 +41,7 @@ namespace CSRedis {
 				}
 			}
 			var ret = getData();
-			this.Set(key, serialize(ret));
+			this.Set(key, serialize(ret), timeoutSeconds);
 			return ret;
 		}
 		/// <summary>
@@ -58,7 +58,7 @@ namespace CSRedis {
 		public T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData, Func<(T, long), string> serialize, Func<string, (T, long)> deserialize) {
 			if (timeoutSeconds <= 0) return getData();
 			var cacheValue = this.HashGet(key, field);
-			if (!string.IsNullOrEmpty(cacheValue)) {
+			if (cacheValue != null) {
 				try {
 					var value = deserialize(cacheValue);
 					if (DateTime.Now.Subtract(dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) return value.Item1;
