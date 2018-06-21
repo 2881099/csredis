@@ -187,6 +187,20 @@ namespace CSRedis {
 			}
 		}
 		/// <summary>
+		/// 执行脚本
+		/// </summary>
+		/// <param name="script">脚本</param>
+		/// <param name="keys">不含prefix前辍</param>
+		/// <param name="args">参数</param>
+		/// <returns></returns>
+		async public Task<object> EvalAsync(string script, string[] keys, params string[] args) {
+			string[] rkeys = new string[keys.Length];
+			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
+			using (var conn = await Pool.GetConnectionAsync()) {
+				return await conn.Client.EvalAsync(script, rkeys, args);
+			}
+		}
+		/// <summary>
 		/// 查找所有符合给定模式( pattern)的 key
 		/// </summary>
 		/// <param name="pattern">如：runoob*</param>
@@ -242,6 +256,18 @@ namespace CSRedis {
 			key = string.Concat(Name, key);
 			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HGetAsync(key, field);
+			}
+		}
+		/// <summary>
+		/// 获取存储在哈希表中多个字段的值
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="fields">字段</param>
+		/// <returns></returns>
+		async public  Task<string[]> HashMGetAsync(string key, params string[] fields) {
+			key = string.Concat(Name, key);
+			using (var conn = await Pool.GetConnectionAsync()) {
+				return await conn.Client.HMGetAsync(key, fields);
 			}
 		}
 		/// <summary>
