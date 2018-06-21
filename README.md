@@ -52,8 +52,8 @@ var t1 = Test.Select.WhereId(1).ToOne();
 csredis.Set("test1", JsonConvert.SerializeObject(t1), 10); //缓存10秒
 
 //使用缓存壳效果同上，以下示例使用 string 和 hash 缓存数据
-var t1 = csredis.Cache("test1", 10, () => Test.Select.WhereId(1).ToOne());
-var t2 = csredis.Cache("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
+var t1 = csredis.CacheShell("test1", 10, () => Test.Select.WhereId(1).ToOne());
+var t2 = csredis.CacheShell("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
 ```
 
 > 为减少csredis的依赖，缓存壳默认序列化，请使用新类继承 CSRedisClient 重截以下方法：
@@ -68,7 +68,7 @@ var t2 = csredis.Cache("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getData">获取源数据的函数</param>
 /// <returns></returns>
-public T Cache<T>(string key, int timeoutSeconds, Func<T> getData) => Cache(key, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
+public T CacheShell<T>(string key, int timeoutSeconds, Func<T> getData) => CacheShell(key, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
 /// <summary>
 /// 缓存壳(哈希表)
 /// </summary>
@@ -78,7 +78,7 @@ public T Cache<T>(string key, int timeoutSeconds, Func<T> getData) => Cache(key,
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getData">获取源数据的函数</param>
 /// <returns></returns>
-public T Cache<T>(string key, string field, int timeoutSeconds, Func<T> getData) => Cache(key, field, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
+public T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData) => CacheShell(key, field, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
 /// <summary>
 /// 缓存壳
 /// </summary>
@@ -87,7 +87,7 @@ public T Cache<T>(string key, string field, int timeoutSeconds, Func<T> getData)
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getDataAsync">获取源数据的函数</param>
 /// <returns></returns>
-async public Task<T> CacheAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheAsync(key, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
+async public Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheShellAsync(key, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
 /// <summary>
 /// 缓存壳(哈希表)
 /// </summary>
@@ -97,6 +97,6 @@ async public Task<T> CacheAsync<T>(string key, int timeoutSeconds, Func<Task<T>>
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getDataAsync">获取源数据的函数</param>
 /// <returns></returns>
-async public Task<T> CacheAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheAsync(key, field, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
+async public Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheShellAsync(key, field, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
 #endregion
 ```
