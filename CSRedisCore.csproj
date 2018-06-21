@@ -4,7 +4,7 @@
     <AssemblyName>CSRedisCore</AssemblyName>
     <PackageId>CSRedisCore</PackageId>
     <RootNamespace>CSRedisCore</RootNamespace>
-    <Version>2.1.3</Version>
+    <Version>2.2.3</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/csredis</PackageProjectUrl>
     <Description>CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore</Description>
