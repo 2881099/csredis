@@ -68,7 +68,7 @@ var t2 = csredis.Cache("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getData">获取源数据的函数</param>
 /// <returns></returns>
-public static T Cache<T>(string key, int timeoutSeconds, Func<T> getData) => Cache(key, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
+public T Cache<T>(string key, int timeoutSeconds, Func<T> getData) => Cache(key, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
 /// <summary>
 /// 缓存壳(哈希表)
 /// </summary>
@@ -78,7 +78,7 @@ public static T Cache<T>(string key, int timeoutSeconds, Func<T> getData) => Cac
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getData">获取源数据的函数</param>
 /// <returns></returns>
-public static T Cache<T>(string key, string field, int timeoutSeconds, Func<T> getData) => Cache(key, field, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
+public T Cache<T>(string key, string field, int timeoutSeconds, Func<T> getData) => Cache(key, field, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
 /// <summary>
 /// 缓存壳
 /// </summary>
@@ -87,7 +87,7 @@ public static T Cache<T>(string key, string field, int timeoutSeconds, Func<T> g
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getDataAsync">获取源数据的函数</param>
 /// <returns></returns>
-async public static Task<T> CacheAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheAsync(key, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
+async public Task<T> CacheAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheAsync(key, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
 /// <summary>
 /// 缓存壳(哈希表)
 /// </summary>
@@ -97,6 +97,6 @@ async public static Task<T> CacheAsync<T>(string key, int timeoutSeconds, Func<T
 /// <param name="timeoutSeconds">缓存秒数</param>
 /// <param name="getDataAsync">获取源数据的函数</param>
 /// <returns></returns>
-async public static Task<T> CacheAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheAsync(key, field, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
+async public Task<T> CacheAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheAsync(key, field, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
 #endregion
 ```
