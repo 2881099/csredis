@@ -68,7 +68,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool> SetAsync(string key, string value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
-			using(var conn = await Instance.GetConnectionAsync()) {
+			using(var conn = await Pool.GetConnectionAsync()) {
 				if (expireSeconds > 0)
 					return await conn.Client.SetAsync(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
@@ -84,7 +84,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool> SetBytesAsync(string key, byte[] value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				if (expireSeconds > 0)
 					return await conn.Client.SetAsync(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
@@ -98,7 +98,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string> GetAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.GetAsync(key);
 			}
 		}
@@ -111,7 +111,7 @@ namespace CSRedis {
 			if (key == null || key.Length == 0) return new string[0];
 			string[] rkeys = new string[key.Length];
 			for (int a = 0; a < key.Length; a++) rkeys[a] = string.Concat(Name, key[a]);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.MGetAsync(rkeys);
 			}
 		}
@@ -122,7 +122,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<byte[]> GetBytesAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.GetBytesAsync(key);
 			}
 		}
@@ -135,7 +135,7 @@ namespace CSRedis {
 			if (key == null || key.Length == 0) return 0;
 			string[] rkeys = new string[key.Length];
 			for (int a = 0; a < key.Length; a++) rkeys[a] = string.Concat(Name, key[a]);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.DelAsync(rkeys);
 			}
 		}
@@ -146,7 +146,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool> ExistsAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ExistsAsync(key);
 			}
 		}
@@ -158,7 +158,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> IncrementAsync(string key, long value = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.IncrByAsync(key, value);
 			}
 		}
@@ -171,7 +171,7 @@ namespace CSRedis {
 		async public Task<bool> ExpireAsync(string key, TimeSpan expire) {
 			if (expire <= TimeSpan.Zero) return false;
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ExpireAsync(key, expire);
 			}
 		}
@@ -182,7 +182,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> TtlAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.TtlAsync(key);
 			}
 		}
@@ -192,7 +192,7 @@ namespace CSRedis {
 		/// <param name="pattern">如：runoob*</param>
 		/// <returns></returns>
 		async public Task<string[]> KeysAsync(string pattern) {
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.KeysAsync(pattern);
 			}
 		}
@@ -203,7 +203,7 @@ namespace CSRedis {
 		/// <param name="data">消息文本</param>
 		/// <returns></returns>
 		async public Task<long> PublishAsync(string channel, string data) {
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.PublishAsync(channel, data);
 			}
 		}
@@ -226,7 +226,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string> HashSetExpireAsync(string key, TimeSpan expire, params object[] keyValues) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				var ret = await conn.Client.HMSetAsync(key, keyValues.Select(a => string.Concat(a)).ToArray());
 				if (expire > TimeSpan.Zero) await conn.Client.ExpireAsync(key, expire);
 				return ret;
@@ -240,7 +240,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string> HashGetAsync(string key, string field) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HGetAsync(key, field);
 			}
 		}
@@ -253,7 +253,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> HashIncrementAsync(string key, string field, long value = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HIncrByAsync(key, field, value);
 			}
 		}
@@ -266,7 +266,7 @@ namespace CSRedis {
 		async public Task<long> HashDeleteAsync(string key, params string[] fields) {
 			if (fields == null || fields.Length == 0) return 0;
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HDelAsync(key, fields);
 			}
 		}
@@ -278,7 +278,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool> HashExistsAsync(string key, string field) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HExistsAsync(key, field);
 			}
 		}
@@ -289,7 +289,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> HashLengthAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HLenAsync(key);
 			}
 		}
@@ -300,7 +300,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<Dictionary<string, string>> HashGetAllAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HGetAllAsync(key);
 			}
 		}
@@ -311,7 +311,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> HashKeysAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HKeysAsync(key);
 			}
 		}
@@ -322,7 +322,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> HashValsAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.HValsAsync(key);
 			}
 		}
@@ -337,7 +337,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string> LIndexAsync(string key, long index) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LIndexAsync(key, index);
 			}
 		}
@@ -350,7 +350,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> LInsertBeforeAsync(string key, string pivot, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LInsertAsync(key, RedisInsert.Before, pivot, value);
 			}
 		}
@@ -363,7 +363,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> LInsertAfterAsync(string key, string pivot, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LInsertAsync(key, RedisInsert.After, pivot, value);
 			}
 		}
@@ -374,7 +374,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> LLenAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LLenAsync(key);
 			}
 		}
@@ -385,7 +385,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string> LPopAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LPopAsync(key);
 			}
 		}
@@ -396,7 +396,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string> RPopAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.RPopAsync(key);
 			}
 		}
@@ -408,7 +408,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> LPushAsync(string key, string[] value) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LPushAsync(key, value);
 			}
 		}
@@ -420,7 +420,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> RPushAsync(string key, string[] value) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.RPushAsync(key, value);
 			}
 		}
@@ -433,7 +433,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> LRangAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LRangeAsync(key, start, stop);
 			}
 		}
@@ -446,7 +446,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> LRemAsync(string key, long count, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LRemAsync(key, count, value);
 			}
 		}
@@ -459,7 +459,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool> LSetAsync(string key, long index, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LSetAsync(key, index, value) == "OK";
 			}
 		}
@@ -472,7 +472,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool> LTrimAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.LTrimAsync(key, start, stop) == "OK";
 			}
 		}
@@ -487,7 +487,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZAddAsync(string key, params (double, string)[] memberScores) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZAddAsync<double, string>(key, memberScores.Select(a => new Tuple<double, string>(a.Item1, a.Item2)).ToArray());
 			}
 		}
@@ -498,7 +498,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZCardAsync(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZCardAsync(key);
 			}
 		}
@@ -511,7 +511,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZCountAsync(string key, double min, double max) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZCountAsync(key, min, max);
 			}
 		}
@@ -524,7 +524,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<double> ZIncrByAsync(string key, string memeber, double increment = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZIncrByAsync(key, increment, memeber);
 			}
 		}
@@ -562,7 +562,7 @@ namespace CSRedis {
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
 			if (rkeys.Length == 0) return 0;
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZInterStoreAsync(destinationKey, null, aggregate, rkeys);
 			}
 		}
@@ -601,7 +601,7 @@ namespace CSRedis {
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
 			if (rkeys.Length == 0) return 0;
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZUnionStoreAsync(destinationKey, null, aggregate, rkeys);
 			}
 		}
@@ -616,7 +616,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> ZRangeAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRangeAsync(key, start, stop, false);
 			}
 		}
@@ -631,7 +631,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> ZRangeByScoreAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRangeByScoreAsync(key, minScore, maxScore, false, false, false, offset, limit);
 			}
 		}
@@ -643,7 +643,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long?> ZRankAsync(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRankAsync(key, member);
 			}
 		}
@@ -655,7 +655,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZRemAsync(string key, params string[] member) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRemAsync(key, member);
 			}
 		}
@@ -668,7 +668,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZRemRangeByRankAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRemRangeByRankAsync(key, start, stop);
 			}
 		}
@@ -681,7 +681,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZRemRangeByScoreAsync(string key, double minScore, double maxScore) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRemRangeByScoreAsync(key, minScore, maxScore);
 			}
 		}
@@ -694,7 +694,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> ZRevRangeAsync(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRevRangeAsync(key, start, stop, false);
 			}
 		}
@@ -709,7 +709,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long? offset = null) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRevRangeByScoreAsync(key, maxScore, minScore, false, false, false, offset, limit);
 			}
 		}
@@ -721,7 +721,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long?> ZRevRankAsync(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZRevRankAsync(key, member);
 			}
 		}
@@ -733,7 +733,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<double?> ZScoreAsync(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = await Instance.GetConnectionAsync()) {
+			using (var conn = await Pool.GetConnectionAsync()) {
 				return await conn.Client.ZScoreAsync(key, member);
 			}
 		}

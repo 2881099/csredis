@@ -7,12 +7,12 @@ using System.Threading;
 namespace CSRedis {
 	public partial class CSRedisClient {
 		public string Name { get; set; }
-		public ConnectionPool Instance { get; protected set; }
+		public ConnectionPool Pool { get; protected set; }
 
 		public CSRedisClient(string ip, int port = 6379, string pass = "", int poolsize = 50, int database = 0, string name = "") {
 			this.Name = name;
-			this.Instance = new ConnectionPool(ip, port, poolsize);
-			this.Instance.Connected += (s, o) => {
+			this.Pool = new ConnectionPool(ip, port, poolsize);
+			this.Pool.Connected += (s, o) => {
 				RedisClient rc = s as RedisClient;
 				if (!string.IsNullOrEmpty(pass)) rc.Auth(pass);
 				if (database > 0) rc.Select(database);
@@ -81,7 +81,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public bool Set(string key, string value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
-			using(var conn = Instance.GetConnection()) {
+			using(var conn = Pool.GetConnection()) {
 				if (expireSeconds > 0)
 					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
@@ -97,7 +97,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public bool SetBytes(string key, byte[] value, int expireSeconds = -1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				if (expireSeconds > 0)
 					return conn.Client.Set(key, value, TimeSpan.FromSeconds(expireSeconds)) == "OK";
 				else
@@ -111,7 +111,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string Get(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Get(key);
 			}
 		}
@@ -124,7 +124,7 @@ namespace CSRedis {
 			if (key == null || key.Length == 0) return new string[0];
 			string[] rkeys = new string[key.Length];
 			for (int a = 0; a < key.Length; a++) rkeys[a] = string.Concat(Name, key[a]);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.MGet(rkeys);
 			}
 		}
@@ -135,7 +135,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public byte[] GetBytes(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.GetBytes(key);
 			}
 		}
@@ -148,7 +148,7 @@ namespace CSRedis {
 			if (key == null || key.Length == 0) return 0;
 			string[] rkeys = new string[key.Length];
 			for (int a = 0; a < key.Length; a++) rkeys[a] = string.Concat(Name, key[a]);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Del(rkeys);
 			}
 		}
@@ -159,7 +159,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public bool Exists(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Exists(key);
 			}
 		}
@@ -171,7 +171,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long Increment(string key, long value = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.IncrBy(key, value);
 			}
 		}
@@ -184,7 +184,7 @@ namespace CSRedis {
 		public bool Expire(string key, TimeSpan expire) {
 			if (expire <= TimeSpan.Zero) return false;
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Expire(key, expire);
 			}
 		}
@@ -195,7 +195,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long Ttl(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Ttl(key);
 			}
 		}
@@ -205,7 +205,7 @@ namespace CSRedis {
 		/// <param name="pattern">如：runoob*</param>
 		/// <returns></returns>
 		public string[] Keys(string pattern) {
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Keys(pattern);
 			}
 		}
@@ -216,7 +216,7 @@ namespace CSRedis {
 		/// <param name="data">消息文本</param>
 		/// <returns></returns>
 		public long Publish(string channel, string data) {
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.Publish(channel, data);
 			}
 		}
@@ -239,7 +239,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string HashSetExpire(string key, TimeSpan expire, params object[] keyValues) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				var ret = conn.Client.HMSet(key, keyValues.Select(a => string.Concat(a)).ToArray());
 				if (expire > TimeSpan.Zero) conn.Client.Expire(key, expire);
 				return ret;
@@ -253,7 +253,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string HashGet(string key, string field) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HGet(key, field);
 			}
 		}
@@ -266,7 +266,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long HashIncrement(string key, string field, long value = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HIncrBy(key, field, value);
 			}
 		}
@@ -279,7 +279,7 @@ namespace CSRedis {
 		public long HashDelete(string key, params string[] fields) {
 			if (fields == null || fields.Length == 0) return 0;
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HDel(key, fields);
 			}
 		}
@@ -291,7 +291,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public bool HashExists(string key, string field) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HExists(key, field);
 			}
 		}
@@ -302,7 +302,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long HashLength(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HLen(key);
 			}
 		}
@@ -313,7 +313,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Dictionary<string, string> HashGetAll(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HGetAll(key);
 			}
 		}
@@ -324,7 +324,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] HashKeys(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HKeys(key);
 			}
 		}
@@ -335,7 +335,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] HashVals(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.HVals(key);
 			}
 		}
@@ -350,7 +350,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string LIndex(string key, long index) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LIndex(key, index);
 			}
 		}
@@ -363,7 +363,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long LInsertBefore(string key, string pivot, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LInsert(key, RedisInsert.Before, pivot, value);
 			}
 		}
@@ -376,7 +376,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long LInsertAfter(string key, string pivot, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LInsert(key, RedisInsert.After, pivot, value);
 			}
 		}
@@ -387,7 +387,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long LLen(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LLen(key);
 			}
 		}
@@ -398,7 +398,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string LPop(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LPop(key);
 			}
 		}
@@ -409,7 +409,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string RPop(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.RPop(key);
 			}
 		}
@@ -421,7 +421,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long LPush(string key, string[] value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LPush(key, value);
 			}
 		}
@@ -433,7 +433,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long RPush(string key, string[] value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.RPush(key, value);
 			}
 		}
@@ -446,7 +446,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] LRang(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LRange(key, start, stop);
 			}
 		}
@@ -459,7 +459,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long LRem(string key, long count, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LRem(key, count, value);
 			}
 		}
@@ -472,7 +472,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public bool LSet(string key, long index, string value) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LSet(key, index, value) == "OK";
 			}
 		}
@@ -485,7 +485,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public bool LTrim(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.LTrim(key, start, stop) == "OK";
 			}
 		}
@@ -500,7 +500,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long ZAdd(string key, params (double, string)[] memberScores) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZAdd<double, string>(key, memberScores.Select(a => new Tuple<double, string>(a.Item1, a.Item2)).ToArray());
 			}
 		}
@@ -511,7 +511,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long ZCard(string key) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZCard(key);
 			}
 		}
@@ -524,7 +524,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long ZCount(string key, double min, double max) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZCount(key, min, max);
 			}
 		}
@@ -537,7 +537,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public double ZIncrBy(string key, string memeber, double increment = 1) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZIncrBy(key, increment, memeber);
 			}
 		}
@@ -575,7 +575,7 @@ namespace CSRedis {
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
 			if (rkeys.Length == 0) return 0;
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZInterStore(destinationKey, null, aggregate, rkeys);
 			}
 		}
@@ -614,7 +614,7 @@ namespace CSRedis {
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(Name, keys[a]);
 			if (rkeys.Length == 0) return 0;
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZUnionStore(destinationKey, null, aggregate, rkeys);
 			}
 		}
@@ -629,7 +629,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] ZRange(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRange(key, start, stop, false);
 			}
 		}
@@ -644,7 +644,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRangeByScore(key, minScore, maxScore, false, false, false, offset, limit);
 			}
 		}
@@ -656,7 +656,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long? ZRank(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRank(key, member);
 			}
 		}
@@ -668,7 +668,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long ZRem(string key, params string[] member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRem(key, member);
 			}
 		}
@@ -681,7 +681,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long ZRemRangeByRank(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRemRangeByRank(key, start, stop);
 			}
 		}
@@ -694,7 +694,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long ZRemRangeByScore(string key, double minScore, double maxScore) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRemRangeByScore(key, minScore, maxScore);
 			}
 		}
@@ -707,7 +707,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] ZRevRange(string key, long start, long stop) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRevRange(key, start, stop, false);
 			}
 		}
@@ -722,7 +722,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string[] ZRevRangeByScore(string key, double maxScore, double minScore, long? limit = null, long? offset = null) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRevRangeByScore(key, maxScore, minScore, false, false, false, offset, limit);
 			}
 		}
@@ -734,7 +734,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public long? ZRevRank(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZRevRank(key, member);
 			}
 		}
@@ -746,7 +746,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public double? ZScore(string key, string member) {
 			key = string.Concat(Name, key);
-			using (var conn = Instance.GetConnection()) {
+			using (var conn = Pool.GetConnection()) {
 				return conn.Client.ZScore(key, member);
 			}
 		}
