@@ -1,102 +1,89 @@
 # csredis
 
-ServiceStack.redis 是商业版，免费版有限制；
+ServiceStack.Redis 是商业版，免费版有限制；
 
-StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题，一并发就死锁，暂时无法解决；
+StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经常 Timeout，暂无法解决；
 
- > CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；
+CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙人作了以下扩展：
 
-扩展：
+1、增加了 CSRedisClient 现实集群与连接池管理，和 RedisHelper 静态类快速上手
 
-1、重新开发了 CSRedisClient，集成连接池和扩展方法
+> nuget Install-Package CSRedisCore 2.3.1
+
+## 普通模式
 
 ```csharp
-//第一步：引入该项目 nuget Install-Package CSRedisCore 2.3.0
+RedisHelper.Instance = new CSRedis.CSRedisClient("127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,prefix=key前辍");
+```
 
-//第二步：使用单例模式定义
+# 集群模式
 
-var csredis = new CSRedis.CSRedisClient(ip: "127.0.0.1", port: 6379, pass: "", poolsize: 50, database: 0, name: "prefix前辍");
+```csharp
+RedisHelper.Instance = new CSRedis.CSRedisClient(null,
+  "127.0.0.1:6371,pass=123,defaultDatabase=11,poolsize=10,prefix=key前辍", 
+  "127.0.0.1:6372,pass=123,defaultDatabase=12,poolsize=11,prefix=key前辍",
+  "127.0.0.1:6373,pass=123,defaultDatabase=13,poolsize=12,prefix=key前辍",
+  "127.0.0.1:6374,pass=123,defaultDatabase=14,poolsize=13,prefix=key前辍");
+//实现思路：根据key.GetHashCode() % 节点总数量，确定连向的节点
+//也可以自定义规则(第一个参数设置)
+```
 
-//第三步：使用
-csredis.Set("test1", "123123", 60);
-csredis.Get("test1");
+> mvc分布式缓存注入 nuget Install-Package Caching.CSRedis 2.3.1
 
+```csharp
+services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(RedisHelper.Instance));
+```
+
+> 提示：CSRedis.CSRedisClient 单例模式够用了
+
+```csharp
+RedisHelper.Set("test1", "123123", 60);
+RedisHelper.Get("test1");
 //...函数名基本与 redis-cli 的命令相同
 ```
 
-2、原本作者没支持byte[]读与写，现已支持
+# 2、订阅与发布
 
 ```csharp
-csredis.SetBytes("test1", Encoding.UTF8.GetBytes("123123"), 60);
-csredis.GetBytes("test1");
+//普通订阅
+RedisHelper.Subscribe(
+  ("chan1", msg => Console.WriteLine(msg.Body)),
+  ("chan2", msg => Console.WriteLine(msg.Body)));
+
+//模式订阅（通配符）
+RedisHelper.PSubscribe(new[] { "test*", "*test001", "test*002" }, msg => {
+  Console.WriteLine($"PSUB   {msg.MessageId}:{msg.Body}    {msg.Pattern}: chan:{msg.Channel}");
+});
+//模式订阅已经解决的难题：
+//1、集群的节点匹配规则，导致通配符最大可能匹配全部节点，所以全部节点都要订阅
+//2、本组 "test*", "*test001", "test*002" 订阅全部节点时，需要解决同一条消息不可执行多次
+
+//发布，
+RedisHelper.Publish("chan1", "123123123");
+//无论是集群或普通模式，RedisHelper.Publish 都能正常通信
 ```
 
-# 3、缓存壳
+## 3、缓存壳
 
 ```csharp
 //不加缓存的时候，要从数据库查询
 var t1 = Test.Select.WhereId(1).ToOne();
 
 //一般的缓存代码，如不封装还挺繁琐的
-var cacheValue = csredis.Get("test1");
+var cacheValue = RedisHelper.Get("test1");
 if (!string.IsNullOrEmpty(cacheValue)) {
 	try {
 		return JsonConvert.DeserializeObject(cacheValue);
 	} catch {
 		//出错时删除key
-		csredis.Remove("test1");
+		RedisHelper.Remove("test1");
 		throw;
 	}
 }
 var t1 = Test.Select.WhereId(1).ToOne();
-csredis.Set("test1", JsonConvert.SerializeObject(t1), 10); //缓存10秒
+RedisHelper.Set("test1", JsonConvert.SerializeObject(t1), 10); //缓存10秒
 
 //使用缓存壳效果同上，以下示例使用 string 和 hash 缓存数据
-var t1 = csredis.CacheShell("test1", 10, () => Test.Select.WhereId(1).ToOne());
-var t2 = csredis.CacheShell("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
-```
-
-> 为减少csredis的依赖，缓存壳默认序列化，请使用新类继承 CSRedisClient 重截以下方法：
-
-```csharp
-#region 缓存壳
-/// <summary>
-/// 缓存壳
-/// </summary>
-/// <typeparam name="T">缓存类型</typeparam>
-/// <param name="key">不含prefix前辍</param>
-/// <param name="timeoutSeconds">缓存秒数</param>
-/// <param name="getData">获取源数据的函数</param>
-/// <returns></returns>
-public T CacheShell<T>(string key, int timeoutSeconds, Func<T> getData) => CacheShell(key, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
-/// <summary>
-/// 缓存壳(哈希表)
-/// </summary>
-/// <typeparam name="T">缓存类型</typeparam>
-/// <param name="key">不含prefix前辍</param>
-/// <param name="field">字段</param>
-/// <param name="timeoutSeconds">缓存秒数</param>
-/// <param name="getData">获取源数据的函数</param>
-/// <returns></returns>
-public T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData) => CacheShell(key, field, timeoutSeconds, getData, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
-/// <summary>
-/// 缓存壳
-/// </summary>
-/// <typeparam name="T">缓存类型</typeparam>
-/// <param name="key">不含prefix前辍</param>
-/// <param name="timeoutSeconds">缓存秒数</param>
-/// <param name="getDataAsync">获取源数据的函数</param>
-/// <returns></returns>
-async public Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheShellAsync(key, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(cacheValue));
-/// <summary>
-/// 缓存壳(哈希表)
-/// </summary>
-/// <typeparam name="T">缓存类型</typeparam>
-/// <param name="key">不含prefix前辍</param>
-/// <param name="field">字段</param>
-/// <param name="timeoutSeconds">缓存秒数</param>
-/// <param name="getDataAsync">获取源数据的函数</param>
-/// <returns></returns>
-async public Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync) => await CacheShellAsync(key, field, timeoutSeconds, getDataAsync, data => Newtonsoft.Json.JsonConvert.SerializeObject(data), cacheValue => Newtonsoft.Json.JsonConvert.DeserializeObject<(T, DateTime)>(cacheValue));
-#endregion
+var t1 = RedisHelper.CacheShell("test1", 10, () => Test.Select.WhereId(1).ToOne());
+var t2 = RedisHelper.CacheShell("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
 ```
