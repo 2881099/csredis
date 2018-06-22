@@ -48,6 +48,14 @@ namespace CSRedis {
 				foreach (var conn in initConns) ReleaseConnection(conn);
 			}
 		}
+		public ConnectionPool() {
+			Connected += (s, o) => {
+				RedisClient rc = s as RedisClient;
+				if (!string.IsNullOrEmpty(_pass)) rc.Auth(_pass);
+				if (_database > 0) rc.Select(_database);
+				Connected?.Invoke(s, o);
+			};
+		}
 
 		private RedisConnection2 GetFreeConnection() {
 			RedisConnection2 conn = null;
@@ -66,12 +74,7 @@ namespace CSRedis {
 					var ips = Dns.GetHostAddresses(_ip);
 					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
-					conn.Client.Connected += (s, o) => {
-						RedisClient rc = s as RedisClient;
-						if (!string.IsNullOrEmpty(_pass)) rc.Auth(_pass);
-						if (_database > 0) rc.Select(_database);
-						Connected?.Invoke(s, o);
-					};
+					conn.Client.Connected += Connected;
 				}
 			}
 			return conn;
@@ -113,7 +116,7 @@ namespace CSRedis {
 			Interlocked.Increment(ref conn.UseSum);
 			if (conn.Client.IsConnected == false)
 				try {
-					conn.Client.Ping();
+					await conn.Client.PingAsync();
 				} catch {
 					var ips = Dns.GetHostAddresses(_ip);
 					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
