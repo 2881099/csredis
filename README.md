@@ -13,13 +13,13 @@ CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙
 ## 普通模式
 
 ```csharp
-RedisHelper.Instance = new CSRedis.CSRedisClient("127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,prefix=key前辍");
+var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,prefix=key前辍");
 ```
 
 # 集群模式
 
 ```csharp
-RedisHelper.Instance = new CSRedis.CSRedisClient(null,
+var csredis = new CSRedis.CSRedisClient(null,
   "127.0.0.1:6371,pass=123,defaultDatabase=11,poolsize=10,prefix=key前辍", 
   "127.0.0.1:6372,pass=123,defaultDatabase=12,poolsize=11,prefix=key前辍",
   "127.0.0.1:6373,pass=123,defaultDatabase=13,poolsize=12,prefix=key前辍",
@@ -31,10 +31,15 @@ RedisHelper.Instance = new CSRedis.CSRedisClient(null,
 > mvc分布式缓存注入 nuget Install-Package Caching.CSRedis 2.3.1
 
 ```csharp
+//初始化 RedisHelper
+RedisHelper.Initialization(csredis,
+  value => Newtonsoft.Json.JsonConvert.SerializeObject(value),
+  deserialize: (data, type) => Newtonsoft.Json.JsonConvert.DeserializeObject(data, type));
+//注册mvc分布式缓存
 services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(RedisHelper.Instance));
 ```
 
-> 提示：CSRedis.CSRedisClient 单例模式够用了
+> 提示：CSRedis.CSRedisClient 单例模式够用了，强烈建议使用 RedisHelper 静态类
 
 ```csharp
 RedisHelper.Set("test1", "123123", 60);
