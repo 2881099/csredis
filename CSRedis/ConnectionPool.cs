@@ -53,7 +53,6 @@ namespace CSRedis {
 				RedisClient rc = s as RedisClient;
 				if (!string.IsNullOrEmpty(_pass)) rc.Auth(_pass);
 				if (_database > 0) rc.Select(_database);
-				Connected?.Invoke(s, o);
 			};
 		}
 
