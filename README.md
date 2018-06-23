@@ -8,7 +8,7 @@ CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙
 
 1、增加了 CSRedisClient 现实集群与连接池管理，和 RedisHelper 静态类快速上手
 
-> nuget Install-Package CSRedisCore 2.3.1
+> nuget Install-Package CSRedisCore 2.3.3
 
 ## 普通模式
 
@@ -28,7 +28,7 @@ var csredis = new CSRedis.CSRedisClient(null,
 //也可以自定义规则(第一个参数设置)
 ```
 
-> mvc分布式缓存注入 nuget Install-Package Caching.CSRedis 2.3.1
+> mvc分布式缓存注入 nuget Install-Package Caching.CSRedis 2.3.3
 
 ```csharp
 //初始化 RedisHelper
