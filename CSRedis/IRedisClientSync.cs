@@ -403,13 +403,13 @@ namespace CSRedis
         long HLen(string key);
 
 
-        /// <summary>
-        /// Get the values of all the given hash fields
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="fields">Fields to return</param>
-        /// <returns>Values of given fields</returns>
-        string[] HMGet(string key, params string[] fields);
+		/// <summary>
+		/// Get the values of all the given hash fields
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="fields">Fields to return</param>
+		/// <returns>Values of given fields</returns>
+		string[] HMGet(string key, params string[] fields);
 
 
         /// <summary>
@@ -418,7 +418,7 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <param name="dict">Dictionary mapping of hash</param>
         /// <returns>Status code</returns>
-        string HMSet(string key, Dictionary<string, string> dict);
+        string HMSet(string key, Dictionary<string, object> dict);
 
 
         /// <summary>
@@ -438,7 +438,7 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <param name="keyValues">Array of [key,value,key,value,..]</param>
         /// <returns>Status code</returns>
-        string HMSet(string key, params string[] keyValues);
+        string HMSet(string key, params object[] keyValues);
 
 
         /// <summary>
@@ -1359,7 +1359,7 @@ namespace CSRedis
         /// <param name="keys">Keys used by script</param>
         /// <param name="arguments">Arguments to pass to script</param>
         /// <returns>Redis object</returns>
-        object Eval(string script, string[] keys, params string[] arguments);
+        object Eval(string script, string[] keys, params object[] arguments);
 
 
 

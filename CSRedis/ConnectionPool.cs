@@ -11,8 +11,9 @@ namespace CSRedis {
 	/// </summary>
 	public partial class ConnectionPool {
 
-		private int _poolsize, _port, _database;
-		private string _ip, _pass;
+		private int _poolsize = 50, _port = 6379, _database = 0, _writebuffer = 10240;
+		private string _ip = "127.0.0.1", _password = "";
+		private bool _ssl = false;
 		internal string ClusterKey => $"{_ip}:{_port}/{_database}";
 		internal string Prefix { get; set; }
 		public List<RedisConnection2> AllConnections = new List<RedisConnection2>();
@@ -37,10 +38,12 @@ namespace CSRedis {
 						continue;
 					}
 					var kv = v.Split(new[] { '=' }, 2);
-					if (kv[0].ToLower().Trim() == "password") _pass = kv.Length > 1 ? kv[1] : "";
+					if (kv[0].ToLower().Trim() == "password") _password = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0].ToLower().Trim() == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0].ToLower().Trim() == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _database) ? _database : 0;
 					else if (kv[0].ToLower().Trim() == "poolsize") _poolsize = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _poolsize) ? _poolsize : 50;
+					else if (kv[0].ToLower().Trim() == "ssl") _ssl = kv.Length > 1 ? kv[1] == "true" : false;
+					else if (kv[0].ToLower().Trim() == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1] : "10240", out _writebuffer) ? _writebuffer : 10240;
 				}
 				if (_poolsize <= 0) _poolsize = 50;
 				var initConns = new RedisConnection2[_poolsize];
@@ -51,7 +54,7 @@ namespace CSRedis {
 		public ConnectionPool() {
 			Connected += (s, o) => {
 				RedisClient rc = s as RedisClient;
-				if (!string.IsNullOrEmpty(_pass)) rc.Auth(_pass);
+				if (!string.IsNullOrEmpty(_password)) rc.Auth(_password);
 				if (_database > 0) rc.Select(_database);
 			};
 		}
@@ -72,7 +75,7 @@ namespace CSRedis {
 					conn.Pool = this;
 					var ips = Dns.GetHostAddresses(_ip);
 					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
+					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
 					conn.Client.Connected += Connected;
 				}
 			}

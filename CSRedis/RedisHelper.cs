@@ -10,13 +10,13 @@ public abstract partial class RedisHelper {
 	/// <summary>
 	/// CSRedisClient 静态实例，使用前请初始化
 	/// RedisHelper.Initialization(
-	///		csredis: new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,prefix=key前辍\"), 
+	///		csredis: new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"), 
 	///		serialize: value => Newtonsoft.Json.JsonConvert.SerializeObject(value), 
 	///		deserialize: (data, type) => Newtonsoft.Json.JsonConvert.DeserializeObject(data, type))
 	/// </summary>
 	public static CSRedisClient Instance {
 		get {
-			if (_instance == null) throw new Exception("使用前请初始化 RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,prefix=key前辍\");");
+			if (_instance == null) throw new Exception("使用前请初始化 RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\");");
 			return _instance;
 		}
 	}
@@ -40,7 +40,7 @@ public abstract partial class RedisHelper {
 	/// <summary>
 	/// 初始化csredis静态访问类
 	/// RedisHelper.Initialization(
-	///		csredis: new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,prefix=key前辍\"), 
+	///		csredis: new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"), 
 	///		serialize: value => Newtonsoft.Json.JsonConvert.SerializeObject(value), 
 	///		deserialize: (data, type) => Newtonsoft.Json.JsonConvert.DeserializeObject(data, type))
 	/// </summary>
@@ -152,7 +152,7 @@ public abstract partial class RedisHelper {
 	/// <param name="keys">不含prefix前辍</param>
 	/// <param name="args">参数</param>
 	/// <returns></returns>
-	public static object Eval(string script, string keys, params string[] args) => Instance.Eval(script, keys, args);
+	public static object Eval(string script, string keys, params object[] args) => Instance.Eval(script, keys, args);
 	/// <summary>
 	/// 查找所有符合给定模式( pattern)的 key
 	/// </summary>

@@ -14,7 +14,7 @@ namespace CSRedis {
 		/// <summary>
 		/// 创建redis访问类
 		/// </summary>
-		/// <param name="connectionString">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,prefix=key前辍</param>
+		/// <param name="connectionString">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
 		public CSRedisClient(string connectionString) {
 			var pool = new ConnectionPool();
 			pool.ConnectionString = connectionString;
@@ -27,7 +27,7 @@ namespace CSRedis {
 		/// 创建redis访问集群类，通过 KeyRule 对 key 进行分区，连接对应的 connectionString
 		/// </summary>
 		/// <param name="clusterRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
-		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,prefix=key前辍</param>
+		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
 		public CSRedisClient(Func<string, string> clusterRule, params string[] connectionStrings) {
 			_clusterRule = clusterRule;
 			if (_clusterRule == null) _clusterRule = key => {
@@ -238,7 +238,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="args">参数</param>
 		/// <returns></returns>
-		public object Eval(string script, string key, params string[] args) => ExecuteScalar(key, (c, k) => c.Eval(script, new[] { k }, args));
+		public object Eval(string script, string key, params object[] args) => ExecuteScalar(key, (c, k) => c.Eval(script, new[] { k }, args));
 		/// <summary>
 		/// 查找所有集群中符合给定模式(pattern)的 key
 		/// </summary>
@@ -446,13 +446,17 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		public string HashSetExpire(string key, TimeSpan expire, params object[] keyValues) {
 			if (keyValues == null || keyValues.Any() == false) return null;
 			if (expire > TimeSpan.Zero) {
-				var lua = "ARGV[1] = redis.call('HMSET', KEYS[0]";
-				for (var a = 0; a < keyValues.Length; a += 2) lua += ", \"" + (keyValues[a]?.ToString().Replace("\"", "\\\"")) + "\", \"" + (keyValues[a + 1]?.ToString().Replace("\"", "\\\"")) + "\"";
-				lua += @") redis.call('EXPIRE', KEYS[0], ARGV[2]) return ARGV[1]";
-				return Eval(lua, key, "", string.Concat((long) expire.TotalSeconds))?.ToString();
+				var lua = "ARGV[1] = redis.call('HMSET', KEYS[1]";
+				var argv = new List<object>();
+				for (int a = 0, argvIdx = 3; a < keyValues.Length; a += 2, argvIdx++) {
+					lua += ", '" + (keyValues[a]?.ToString().Replace("'", "\\'")) + "', ARGV[" + argvIdx + "]";
+					argv.Add(keyValues[a + 1]);
+				}
+				lua += @") redis.call('EXPIRE', KEYS[1], ARGV[2]) return ARGV[1]";
+				argv.InsertRange(0, new object[] { "", (long) expire.TotalSeconds });
+				return Eval(lua, key, argv.ToArray())?.ToString();
 			}
-			var kvs = keyValues.Select(a => string.Concat(a)).ToArray();
-			return ExecuteScalar(key, (c, k) => c.HMSet(k, kvs));
+			return ExecuteScalar(key, (c, k) => c.HMSet(k, keyValues));
 		}
 		/// <summary>
 		/// 获取存储在哈希表中指定字段的值

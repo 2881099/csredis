@@ -512,7 +512,7 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <param name="dict">Dictionary mapping of hash</param>
         /// <returns>Status code</returns>
-        public Task<string> HMSetAsync(string key, Dictionary<string, string> dict)
+        public Task<string> HMSetAsync(string key, Dictionary<string, object> dict)
         {
             return WriteAsync(RedisCommands.HMSet(key, dict));
         }
@@ -536,7 +536,7 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <param name="keyValues">Array of [key,value,key,value,..]</param>
         /// <returns>Status code</returns>
-        public Task<string> HMSetAsync(string key, params string[] keyValues)
+        public Task<string> HMSetAsync(string key, params object[] keyValues)
         {
             return WriteAsync(RedisCommands.HMSet(key, keyValues));
         }
@@ -1350,7 +1350,7 @@ namespace CSRedis
         /// <param name="keys">Keys used by script</param>
         /// <param name="arguments">Arguments to pass to script</param>
         /// <returns>Redis object</returns>
-        public Task<object> EvalAsync(string script, string[] keys, params string[] arguments)
+        public Task<object> EvalAsync(string script, string[] keys, params object[] arguments)
         {
             return WriteAsync(RedisCommands.Eval(script, keys, arguments));
         }

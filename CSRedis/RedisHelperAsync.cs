@@ -105,7 +105,7 @@ partial class RedisHelper {
 	/// <param name="keys">不含prefix前辍</param>
 	/// <param name="args">参数</param>
 	/// <returns></returns>
-	public static Task<object> EvalAsync(string script, string keys, params string[] args) => Instance.EvalAsync(script, keys, args);
+	public static Task<object> EvalAsync(string script, string keys, params object[] args) => Instance.EvalAsync(script, keys, args);
 	/// <summary>
 	/// 查找所有符合给定模式( pattern)的 key
 	/// </summary>

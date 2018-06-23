@@ -197,7 +197,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="args">参数</param>
 		/// <returns></returns>
-		async public Task<object> EvalAsync(string script, string key, params string[] args) => await ExecuteScalarAsync(key, (c, k) => c.EvalAsync(script, new[] { k }, args));
+		async public Task<object> EvalAsync(string script, string key, params object[] args) => await ExecuteScalarAsync(key, (c, k) => c.EvalAsync(script, new[] { k }, args));
 		/// <summary>
 		/// 查找所有集群中符合给定模式(pattern)的 key
 		/// </summary>
@@ -240,13 +240,17 @@ namespace CSRedis {
 		async public Task<string> HashSetExpireAsync(string key, TimeSpan expire, params object[] keyValues) {
 			if (keyValues == null || keyValues.Any() == false) return null;
 			if (expire > TimeSpan.Zero) {
-				var lua = "ARGV[1] = redis.call('HMSET', KEYS[0]";
-				for (var a = 0; a < keyValues.Length; a += 2) lua += ", \"" + (keyValues[a]?.ToString().Replace("\"", "\\\"")) + "\", \"" + (keyValues[a + 1]?.ToString().Replace("\"", "\\\"")) + "\"";
-				lua += @") redis.call('EXPIRE', KEYS[0], ARGV[2]) return ARGV[1]";
-				return (await EvalAsync(lua, key, "", string.Concat((long) expire.TotalSeconds)))?.ToString();
+				var lua = "ARGV[1] = redis.call('HMSET', KEYS[1]";
+				var argv = new List<object>();
+				for (int a = 0, argvIdx = 3; a < keyValues.Length; a += 2, argvIdx++) {
+					lua += ", '" + (keyValues[a]?.ToString().Replace("'", "\\'")) + "', ARGV[" + argvIdx + "]";
+					argv.Add(keyValues[a + 1]);
+				}
+				lua += @") redis.call('EXPIRE', KEYS[1], ARGV[2]) return ARGV[1]";
+				argv.InsertRange(0, new object[] { "", (long) expire.TotalSeconds });
+				return (await EvalAsync(lua, key, argv.ToArray()))?.ToString();
 			}
-			var kvs = keyValues.Select(a => string.Concat(a)).ToArray();
-			return await ExecuteScalarAsync(key, (c, k) => c.HMSetAsync(k, kvs));
+			return await ExecuteScalarAsync(key, (c, k) => c.HMSetAsync(k, keyValues));
 		}
 		/// <summary>
 		/// 获取存储在哈希表中指定字段的值

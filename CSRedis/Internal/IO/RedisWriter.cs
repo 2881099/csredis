@@ -31,7 +31,10 @@ namespace CSRedis.Internal.IO
         {
 			int b = 0;
 			byte[] data = Prepare(command);
-			for (int a = offset; a < buffer.Length && b < data.Length; a++, b++) buffer[a] = data[b];
+			var dataLen = data.Length;
+			var bufferLen = buffer.Length;
+			if (dataLen > bufferLen - offset) throw new Exception($"发送数据长度 {dataLen} 大于 异步写入缓冲块大小 {bufferLen - offset}，请设置连接串参数：writeBuffer");
+			for (int a = offset; a < bufferLen && b < data.Length; a++, b++) buffer[a] = data[b];
 			return b;
         }
 
