@@ -28,7 +28,7 @@ var csredis = new CSRedis.CSRedisClient(null,
 //也可以自定义规则(第一个参数设置)
 ```
 
-> mvc分布式缓存注入 nuget Install-Package Caching.CSRedis 2.3.6
+> mvc分布式缓存注入 nuget Install-Package Caching.CSRedis
 
 ```csharp
 //初始化 RedisHelper
