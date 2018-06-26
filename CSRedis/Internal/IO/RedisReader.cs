@@ -18,6 +18,7 @@ namespace CSRedis.Internal.IO
         public RedisMessage ReadType()
         {
             RedisMessage type = (RedisMessage)_stream.ReadByte();
+			//Console.WriteLine($"ReadType: {type}");
             if (type == RedisMessage.Error)
                 throw new RedisException(ReadStatus(false));
             return type;
@@ -63,7 +64,8 @@ namespace CSRedis.Internal.IO
             while (bytes_read < size)
                 bytes_read += _stream.Read(bulk, bytes_read, size - bytes_read);
 
-            ExpectBytesRead(size, bytes_read);
+			//Console.WriteLine($"ReadBulkBytes1: {Encoding.UTF8.GetString(bulk)}");
+			ExpectBytesRead(size, bytes_read);
             ReadCRLF();
             return bulk;
         }
@@ -90,7 +92,8 @@ namespace CSRedis.Internal.IO
                 position += bytes_read;
                 destination.Write(buffer, 0, bytes_read);
             }
-            ExpectBytesRead(size, position);
+			//Console.WriteLine($"ReadBulkBytes2: {Encoding.UTF8.GetString(buffer)}");
+			ExpectBytesRead(size, position);
             ReadCRLF();
         }
 
@@ -133,7 +136,8 @@ namespace CSRedis.Internal.IO
         {
             var r = _stream.ReadByte();
             var n = _stream.ReadByte();
-            if (r != (byte)13 && n != (byte)10)
+			//Console.WriteLine($"ReadCRLF: {r} {n}");
+			if (r != (byte)13 && n != (byte)10)
                 throw new RedisProtocolException(String.Format("Expecting CRLF; got bytes: {0}, {1}", r, n));
         }
 
@@ -194,7 +198,8 @@ namespace CSRedis.Internal.IO
                     should_break = false;
                 }
             }
-            return sb.ToString();
+			//Console.WriteLine($"ReadLine: {sb.ToString()}");
+			return sb.ToString();
         }
 
         void ExpectBytesRead(long expecting, long actual)

@@ -95,7 +95,7 @@ namespace CSRedis.Internal.IO
                 _asyncReadQueue.Enqueue(token);
 
                 var args = _asyncTransferPool.Acquire();
-                int bytes;
+				int bytes;
                 try
                 {
                     bytes = _io.Writer.Write(token.Command, args.Buffer, args.Offset);
@@ -128,11 +128,11 @@ namespace CSRedis.Internal.IO
 
         void OnSocketConnected(SocketAsyncEventArgs args)
         {
-            _connectionTaskSource.SetResult(_redisSocket.Connected);
-
             if (Connected != null)
                 Connected(this, new EventArgs());
-        }
+
+			_connectionTaskSource.SetResult(_redisSocket.Connected);
+		}
 
         void OnSocketSent(SocketAsyncEventArgs args)
         {
