@@ -29,7 +29,7 @@ partial class RedisHelper {
 	/// <param name="serialize">序列化函数</param>
 	/// <param name="deserialize">反序列化函数</param>
 	/// <returns></returns>
-	public static Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<(T, long), string> serialize, Func<string, (T, long)> deserialize) =>
+	public static Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) =>
 		Instance.CacheShellAsync(key, field, timeoutSeconds, getDataAsync, serialize ?? new Func<(T, long), string>(value => Serialize(value)), deserialize ?? new Func<string, (T, long)>(data => ((T, long)) Deserialize(data, typeof((T, long)))));
 
 	/// <summary>

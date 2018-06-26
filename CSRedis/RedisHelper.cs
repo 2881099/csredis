@@ -76,7 +76,7 @@ public abstract partial class RedisHelper {
 	/// <param name="serialize">序列化函数</param>
 	/// <param name="deserialize">反序列化函数</param>
 	/// <returns></returns>
-	public static T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData, Func<(T, long), string> serialize, Func<string, (T, long)> deserialize) =>
+	public static T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) =>
 		Instance.CacheShell(key, field, timeoutSeconds, getData, serialize ?? new Func<(T, long), string>(value => Serialize(value)), deserialize ?? new Func<string, (T, long)>(data => ((T, long)) Deserialize(data, typeof((T, long)))));
 
 	/// <summary>
