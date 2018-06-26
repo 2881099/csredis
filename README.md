@@ -8,22 +8,22 @@ CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙
 
 1、增加了 CSRedisClient 现实集群与连接池管理，和 RedisHelper 静态类快速上手
 
-> nuget Install-Package CSRedisCore 2.3.6
+> nuget Install-Package CSRedisCore
 
 ## 普通模式
 
 ```csharp
-var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍");
+var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍");
 ```
 
 # 集群模式
 
 ```csharp
 var csredis = new CSRedis.CSRedisClient(null,
-  "127.0.0.1:6371,pass=123,defaultDatabase=11,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍", 
-  "127.0.0.1:6372,pass=123,defaultDatabase=12,poolsize=11,ssl=false,writeBuffer=10240,prefix=key前辍",
-  "127.0.0.1:6373,pass=123,defaultDatabase=13,poolsize=12,ssl=false,writeBuffer=10240,prefix=key前辍",
-  "127.0.0.1:6374,pass=123,defaultDatabase=14,poolsize=13,ssl=false,writeBuffer=10240,prefix=key前辍");
+  "127.0.0.1:6371,password=123,defaultDatabase=11,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍", 
+  "127.0.0.1:6372,password=123,defaultDatabase=12,poolsize=11,ssl=false,writeBuffer=10240,prefix=key前辍",
+  "127.0.0.1:6373,password=123,defaultDatabase=13,poolsize=12,ssl=false,writeBuffer=10240,prefix=key前辍",
+  "127.0.0.1:6374,password=123,defaultDatabase=14,poolsize=13,ssl=false,writeBuffer=10240,prefix=key前辍");
 //实现思路：根据key.GetHashCode() % 节点总数量，确定连向的节点
 //也可以自定义规则(第一个参数设置)
 ```

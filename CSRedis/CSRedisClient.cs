@@ -15,14 +15,7 @@ namespace CSRedis {
 		/// 创建redis访问类
 		/// </summary>
 		/// <param name="connectionString">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
-		public CSRedisClient(string connectionString) {
-			var pool = new ConnectionPool();
-			pool.ConnectionString = connectionString;
-			pool.Connected += (s, o) => {
-				RedisClient rc = s as RedisClient;
-			};
-			ClusterNodes.Add(pool.ClusterKey, pool);
-		}
+		public CSRedisClient(string connectionString) : this(null, connectionString) { }
 		/// <summary>
 		/// 创建redis访问集群类，通过 KeyRule 对 key 进行分区，连接对应的 connectionString
 		/// </summary>

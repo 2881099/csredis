@@ -33,7 +33,7 @@ namespace CSRedis {
 				foreach(var v in vs) {
 					if (v.IndexOf('=') == -1) {
 						var host = v.Split(':');
-						_ip = string.IsNullOrEmpty(host[0].Trim()) ? host[0].Trim() : "127.0.0.1";
+						_ip = string.IsNullOrEmpty(host[0].Trim()) == false ? host[0].Trim() : "127.0.0.1";
 						if (host.Length < 2 || int.TryParse(host[1].Trim(), out _port) == false) _port = 6379;
 						continue;
 					}
