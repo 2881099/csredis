@@ -91,4 +91,8 @@ RedisHelper.Set("test1", JsonConvert.SerializeObject(t1), 10); //缓存10秒
 //使用缓存壳效果同上，以下示例使用 string 和 hash 缓存数据
 var t1 = RedisHelper.CacheShell("test1", 10, () => Test.Select.WhereId(1).ToOne());
 var t2 = RedisHelper.CacheShell("test", "1", 10, () => Test.Select.WhereId(1).ToOne());
+var t3 = RedisHelper.CacheShell("test", new [] { "1", "2" }, 10, notCacheFields => new [] {
+  ("1", Test.Select.WhereId(1).ToOne()),
+  ("2", Test.Select.WhereId(2).ToOne())
+});
 ```
