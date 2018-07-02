@@ -33,6 +33,20 @@ partial class RedisHelper {
 		Instance.CacheShellAsync(key, field, timeoutSeconds, getDataAsync, serialize ?? new Func<(T, long), string>(value => Serialize(value)), deserialize ?? new Func<string, (T, long)>(data => ((T, long)) Deserialize(data, typeof((T, long)))));
 
 	/// <summary>
+	/// 缓存壳(哈希表)，将 fields 每个元素存储到单独的缓存片，实现最大化复用
+	/// </summary>
+	/// <typeparam name="T">缓存类型</typeparam>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="fields">字段</param>
+	/// <param name="timeoutSeconds">缓存秒数</param>
+	/// <param name="getDataAsync">获取源数据的函数，输入参数是没有缓存的 fields，返回值应该是 (field, value)[]</param>
+	/// <param name="serialize">序列化函数</param>
+	/// <param name="deserialize">反序列化函数</param>
+	/// <returns></returns>
+	public static Task<T[]> CacheShellAsync<T>(string key, string[] fields, int timeoutSeconds, Func<string[], Task<(string, T)[]>> getDataAsync, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) =>
+		Instance.CacheShellAsync(key, fields, timeoutSeconds, getDataAsync, serialize ?? new Func<(T, long), string>(value => Serialize(value)), deserialize ?? new Func<string, (T, long)>(data => ((T, long))Deserialize(data, typeof((T, long)))));
+
+	/// <summary>
 	/// 设置指定 key 的值
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
