@@ -16,7 +16,7 @@ partial class RedisHelper {
 	/// <param name="serialize">序列化函数</param>
 	/// <param name="deserialize">反序列化函数</param>
 	/// <returns></returns>
-	public static Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<T, string> serialize, Func<string, T> deserialize) =>
+	public static Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<T, string> serialize = null, Func<string, T> deserialize = null) =>
 		Instance.CacheShellAsync(key, timeoutSeconds, getDataAsync, serialize ?? new Func<T, string>(value => Serialize(value)), deserialize ?? new Func<string, T>(data => (T) Deserialize(data, typeof(T))));
 	/// <summary>
 	/// 缓存壳(哈希表)
@@ -116,10 +116,10 @@ partial class RedisHelper {
 	/// 执行脚本
 	/// </summary>
 	/// <param name="script">脚本</param>
-	/// <param name="keys">不含prefix前辍</param>
+	/// <param name="key">不含prefix前辍</param>
 	/// <param name="args">参数</param>
 	/// <returns></returns>
-	public static Task<object> EvalAsync(string script, string keys, params object[] args) => Instance.EvalAsync(script, keys, args);
+	public static Task<object> EvalAsync(string script, string key, params object[] args) => Instance.EvalAsync(script, key, args);
 	/// <summary>
 	/// 查找所有符合给定模式( pattern)的 key
 	/// </summary>
@@ -171,6 +171,14 @@ partial class RedisHelper {
 	/// <param name="value">增量值(默认=1)</param>
 	/// <returns></returns>
 	public static Task<long> HashIncrementAsync(string key, string field, long value = 1) => Instance.HashIncrementAsync(key, field, value);
+	/// <summary>
+	/// 为哈希表 key 中的指定字段的整数值加上增量 increment
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="field">字段</param>
+	/// <param name="value">增量值(默认=1)</param>
+	/// <returns></returns>
+	public static Task<double> HashIncrementFloatAsync(string key, string field, double value = 1) => Instance.HashIncrementFloatAsync(key, field, value);
 	/// <summary>
 	/// 删除一个或多个哈希表字段
 	/// </summary>

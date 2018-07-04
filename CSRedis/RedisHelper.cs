@@ -163,10 +163,10 @@ public abstract partial class RedisHelper {
 	/// 执行脚本
 	/// </summary>
 	/// <param name="script">脚本</param>
-	/// <param name="keys">不含prefix前辍</param>
+	/// <param name="key">不含prefix前辍</param>
 	/// <param name="args">参数</param>
 	/// <returns></returns>
-	public static object Eval(string script, string keys, params object[] args) => Instance.Eval(script, keys, args);
+	public static object Eval(string script, string key, params object[] args) => Instance.Eval(script, key, args);
 	/// <summary>
 	/// 查找所有符合给定模式( pattern)的 key
 	/// </summary>
@@ -228,6 +228,14 @@ public abstract partial class RedisHelper {
 	/// <param name="value">增量值(默认=1)</param>
 	/// <returns></returns>
 	public static long HashIncrement(string key, string field, long value = 1) => Instance.HashIncrement(key, field, value);
+	/// <summary>
+	/// 为哈希表 key 中的指定字段的整数值加上增量 increment
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="field">字段</param>
+	/// <param name="value">增量值(默认=1)</param>
+	/// <returns></returns>
+	public static double HashIncrementFloat(string key, string field, double value = 1) => Instance.HashIncrementFloat(key, field, value);
 	/// <summary>
 	/// 删除一个或多个哈希表字段
 	/// </summary>

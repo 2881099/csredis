@@ -332,6 +332,14 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> HashIncrementAsync(string key, string field, long value = 1) => await ExecuteScalarAsync(key, (c, k) => c.HIncrByAsync(k, field, value));
 		/// <summary>
+		/// 为哈希表 key 中的指定字段的整数值加上增量 increment
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="field">字段</param>
+		/// <param name="value">增量值(默认=1)</param>
+		/// <returns></returns>
+		async public Task<double> HashIncrementFloatAsync(string key, string field, double value = 1) => await ExecuteScalarAsync(key, (c, k) => c.HIncrByFloatAsync(k, field, value));
+		/// <summary>
 		/// 删除一个或多个哈希表字段
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
