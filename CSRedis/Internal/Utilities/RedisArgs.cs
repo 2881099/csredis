@@ -11,32 +11,32 @@ namespace CSRedis.Internal.Utilities
         /// </summary>
         /// <param name="arrays">Arrays to join</param>
         /// <returns>Array of ToString() elements in each array</returns>
-        public static string[] Concat(params object[][] arrays)
+        public static object[] Concat(params object[][] arrays)
         {
             int count = 0;
             foreach (var ar in arrays)
                 count += ar.Length;
 
             int pos = 0;
-            string[] output = new string[count];
+            object[] output = new object[count];
             for (int i = 0; i < arrays.Length; i++)
             {
                 for (int j = 0; j < arrays[i].Length; j++)
                 {
                     object obj = arrays[i][j];
-                    output[pos++] = obj == null ? String.Empty : String.Format(CultureInfo.InvariantCulture, "{0}", obj);
+					output[pos++] = obj;// obj == null ? String.Empty : (obj is byte[] ? obj : String.Format(CultureInfo.InvariantCulture, "{0}", obj));
                 }
             }
             return output;
         }
 
-        /// <summary>
-        /// Joine string with arrays
-        /// </summary>
-        /// <param name="str">Leading string element</param>
-        /// <param name="arrays">Array to join</param>
-        /// <returns>Array of str and ToString() elements of arrays</returns>
-        public static string[] Concat(string str, params object[] arrays)
+		/// <summary>
+		/// Joine string with arrays
+		/// </summary>
+		/// <param name="str">Leading string element</param>
+		/// <param name="arrays">Array to join</param>
+		/// <returns>Array of str and ToString() elements of arrays</returns>
+		public static object[] Concat(string str, params object[] arrays)
         {
             return Concat(new[] { str }, arrays);
         }
@@ -75,7 +75,7 @@ namespace CSRedis.Internal.Utilities
                 return score.ToString();
         }
 
-        public static object[] FromDict(Dictionary<string, string> dict)
+        public static object[] FromDict(Dictionary<string, object> dict)
         {
             var array = new List<object>();
             foreach (var keyValue in dict)

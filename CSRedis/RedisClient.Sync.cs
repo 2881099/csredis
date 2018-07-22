@@ -443,8 +443,8 @@ namespace CSRedis
         /// <returns>Value of hash field</returns>
         public string HGet(string key, string field)
         {
-            return Write(RedisCommands.HGet(key, field));
-        }
+			return Write(RedisCommands.HGet(key, field));
+		}
 
         /// <summary>
         /// Get all the fields and values in a hash
@@ -529,7 +529,7 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <param name="dict">Dictionary mapping of hash</param>
         /// <returns>Status code</returns>
-        public string HMSet(string key, Dictionary<string, string> dict)
+        public string HMSet(string key, Dictionary<string, object> dict)
         {
             return Write(RedisCommands.HMSet(key, dict));
         }
@@ -553,7 +553,7 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <param name="keyValues">Array of [key,value,key,value,..]</param>
         /// <returns>Status code</returns>
-        public string HMSet(string key, params string[] keyValues)
+        public string HMSet(string key, params object[] keyValues)
         {
             return Write(RedisCommands.HMSet(key, keyValues));
         }
@@ -1553,7 +1553,7 @@ namespace CSRedis
         /// <param name="keys">Keys used by script</param>
         /// <param name="arguments">Arguments to pass to script</param>
         /// <returns>Redis object</returns>
-        public object Eval(string script, string[] keys, params string[] arguments)
+        public object Eval(string script, string[] keys, params object[] arguments)
         {
             return Write(RedisCommands.Eval(script, keys, arguments));
         }
