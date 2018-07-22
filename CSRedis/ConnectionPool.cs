@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSRedisCore.CSRedis.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -74,7 +75,7 @@ namespace CSRedis {
 				if (conn != null) {
 					conn.Pool = this;
 					var ips = Dns.GetHostAddresses(_ip);
-					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					if (ips.Length == 0) throw new CSRedisExcetion($"无法解析“{_ip}”");
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
 					conn.Client.Connected += Connected;
 				}
@@ -89,7 +90,7 @@ namespace CSRedis {
 					GetConnectionQueue.Enqueue(wait);
 				if (wait.Wait(TimeSpan.FromSeconds(10)))
 					return GetConnection();
-				throw new Exception("CSRedis.ConnectionPool.GetConnection 连接池获取超时（10秒）");
+				throw new CSRedisExcetion("CSRedis.ConnectionPool.GetConnection 连接池获取超时（10秒）");
 			}
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
@@ -99,7 +100,7 @@ namespace CSRedis {
 					conn.Client.Ping();
 				} catch {
 					var ips = Dns.GetHostAddresses(_ip);
-					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					if (ips.Length == 0) throw new CSRedisExcetion($"无法解析“{_ip}”");
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}
@@ -121,7 +122,7 @@ namespace CSRedis {
 					await conn.Client.PingAsync();
 				} catch {
 					var ips = Dns.GetHostAddresses(_ip);
-					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					if (ips.Length == 0) throw new CSRedisExcetion($"无法解析“{_ip}”");
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}

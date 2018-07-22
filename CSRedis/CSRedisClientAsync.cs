@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSRedisCore.CSRedis.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -101,7 +102,7 @@ namespace CSRedis {
 				var mset = new object[fieldsMGet.Count * 2];
 				var msetIndex = 0;
 				foreach (var d in data) {
-					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
+					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new CSRedisExcetion($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
 					ret[fieldsMGet[d.Item1]] = d.Item2;
 					mset[msetIndex++] = d.Item1;
 					mset[msetIndex++] = serialize((d.Item2, (long)DateTime.Now.Subtract(dt1970).TotalSeconds));
@@ -527,7 +528,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZInterStoreSumAsync(string destinationKey, params string[] keys) => await ZInterStoreAsync(destinationKey, RedisAggregate.Sum, keys);
 		async private Task<long> ZInterStoreAsync(string destinationKey, RedisAggregate aggregate, params string[] keys) {
-			if (ClusterNodes.Count > 1) throw new Exception("此功能在集群模式下不可用");
+			if (ClusterNodes.Count > 1) throw new CSRedisExcetion("此功能在集群模式下不可用");
 			var pool = ClusterNodes.First().Value;
 			destinationKey = string.Concat(pool.Prefix, destinationKey);
 			string[] rkeys = new string[keys.Length];
@@ -562,7 +563,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<long> ZUnionStoreSumAsync(string destinationKey, params string[] keys) => await ZUnionStoreAsync(destinationKey, RedisAggregate.Sum, keys);
 		async private Task<long> ZUnionStoreAsync(string destinationKey, RedisAggregate aggregate, params string[] keys) {
-			if (ClusterNodes.Count > 1) throw new Exception("此功能在集群模式下不可用");
+			if (ClusterNodes.Count > 1) throw new CSRedisExcetion("此功能在集群模式下不可用");
 			var pool = ClusterNodes.First().Value;
 			destinationKey = string.Concat(pool.Prefix, destinationKey);
 			string[] rkeys = new string[keys.Length];
