@@ -1,4 +1,5 @@
 ﻿using CSRedis;
+using CSRedisCore.CSRedis.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,7 +17,7 @@ public abstract partial class RedisHelper {
 	/// </summary>
 	public static CSRedisClient Instance {
 		get {
-			if (_instance == null) throw new Exception("使用前请初始化 RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\");");
+			if (_instance == null) throw new CSRedisExcetion("使用前请初始化 RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\");");
 			return _instance;
 		}
 	}
@@ -24,13 +25,13 @@ public abstract partial class RedisHelper {
 	private static Func<string, Type, object> _deserialize;
 	private static Func<object, string> Serialize {
 		get {
-			if (_serialize == null) throw new Exception("使用前请初始化 RedisHelper.Initialization");
+			if (_serialize == null) throw new CSRedisExcetion("使用前请初始化 RedisHelper.Initialization");
 			return _serialize;
 		}
 	}
 	private static Func<string, Type, object> Deserialize {
 		get {
-			if (_deserialize == null) throw new Exception("使用前请初始化 RedisHelper.Initialization");
+			if (_deserialize == null) throw new CSRedisExcetion("使用前请初始化 RedisHelper.Initialization");
 			return _deserialize;
 		}
 	}

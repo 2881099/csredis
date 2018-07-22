@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSRedisCore.CSRedis.Exceptions;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,7 +91,7 @@ namespace CSRedis.Internal.IO
             {
                 IRedisAsyncCommandToken token;
                 if (!_asyncWriteQueue.TryDequeue(out token))
-                    throw new Exception();
+                    throw new CSRedisExcetion();
 
                 _asyncReadQueue.Enqueue(token);
 

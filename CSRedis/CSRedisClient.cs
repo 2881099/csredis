@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSRedisCore.CSRedis.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -27,14 +28,14 @@ namespace CSRedis {
 				var idx = Math.Abs(string.Concat(key).GetHashCode()) % ClusterNodes.Count;
 				return idx < 0 || idx >= _clusterKeys.Count ? _clusterKeys.First() : _clusterKeys[idx];
 			};
-			if (connectionStrings == null || connectionStrings.Any() == false) throw new Exception("Redis ConnectionString 未设置");
+			if (connectionStrings == null || connectionStrings.Any() == false) throw new CSRedisExcetion("Redis ConnectionString 未设置");
 			foreach (var connectionString in connectionStrings) {
 				var pool = new ConnectionPool();
 				pool.ConnectionString = connectionString;
 				pool.Connected += (s, o) => {
 					RedisClient rc = s as RedisClient;
 				};
-				if (ClusterNodes.ContainsKey(pool.ClusterKey)) throw new Exception($"ClusterName: {pool.ClusterKey} 重复，请检查");
+				if (ClusterNodes.ContainsKey(pool.ClusterKey)) throw new CSRedisExcetion($"ClusterName: {pool.ClusterKey} 重复，请检查");
 				ClusterNodes.Add(pool.ClusterKey, pool);
 			}
 			_clusterKeys = ClusterNodes.Keys.ToList();
@@ -135,7 +136,7 @@ namespace CSRedis {
 				var mset = new object[fieldsMGet.Count * 2];
 				var msetIndex = 0;
 				foreach (var d in data) {
-					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
+					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new CSRedisExcetion($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
 					ret[fieldsMGet[d.Item1]] = d.Item2;
 					mset[msetIndex++] = d.Item1;
 					mset[msetIndex++] = serialize((d.Item2, (long)DateTime.Now.Subtract(dt1970).TotalSeconds));
@@ -726,7 +727,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public long ZInterStoreSum(string destinationKey, params string[] keys) => ZInterStore(destinationKey, RedisAggregate.Sum, keys);
 		private long ZInterStore(string destinationKey, RedisAggregate aggregate, params string[] keys) {
-			if (ClusterNodes.Count > 1) throw new Exception("此功能在集群模式下不可用");
+			if (ClusterNodes.Count > 1) throw new CSRedisExcetion("此功能在集群模式下不可用");
 			var pool = ClusterNodes.First().Value;
 			destinationKey = string.Concat(pool.Prefix, destinationKey);
 			string[] rkeys = new string[keys.Length];
@@ -761,7 +762,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public long ZUnionStoreSum(string destinationKey, params string[] keys) => ZUnionStore(destinationKey, RedisAggregate.Sum, keys);
 		private long ZUnionStore(string destinationKey, RedisAggregate aggregate, params string[] keys) {
-			if (ClusterNodes.Count > 1) throw new Exception("此功能在集群模式下不可用");
+			if (ClusterNodes.Count > 1) throw new CSRedisExcetion("此功能在集群模式下不可用");
 			var pool = ClusterNodes.First().Value;
 			destinationKey = string.Concat(pool.Prefix, destinationKey);
 			string[] rkeys = new string[keys.Length];

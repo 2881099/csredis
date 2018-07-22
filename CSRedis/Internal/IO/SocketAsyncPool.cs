@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSRedisCore.CSRedis.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -34,7 +35,7 @@ namespace CSRedis.Internal.IO
         public SocketAsyncEventArgs Acquire()
         {
             if (!_acquisitionGate.WaitOne())
-                throw new Exception();
+                throw new CSRedisExcetion();
 
             lock (_pool)
             {
