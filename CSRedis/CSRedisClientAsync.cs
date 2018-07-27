@@ -639,7 +639,7 @@ namespace CSRedis {
 		/// <param name="limit">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		async public Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long? offset = null) => await ExecuteScalarAsync(key, (c, k) => c.ZRevRangeByScoreAsync(k, maxScore, minScore, false, false, false, offset, limit));
+		async public Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long? offset = 0) => await ExecuteScalarAsync(key, (c, k) => c.ZRevRangeByScoreAsync(k, maxScore, minScore, false, false, false, offset, limit));
 		/// <summary>
 		/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
 		/// </summary>

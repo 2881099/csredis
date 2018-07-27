@@ -611,8 +611,8 @@ namespace CSRedis
 			object[] args = new[] { key, max, min };
             if (withScores)
                 args = RedisArgs.Concat(args, new[] { "WITHSCORES" });
-            if (offset.HasValue && count.HasValue)
-                args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
+            if (count.HasValue)
+                args = RedisArgs.Concat(args, new[] { "LIMIT", (offset ?? 0).ToString(), count.Value.ToString() });
 
             return new RedisArray.Strings("ZREVRANGEBYSCORE", args);
         }
@@ -625,8 +625,8 @@ namespace CSRedis
         public static RedisArray.WeakPairs<string, double> ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
         {
 			object[] args = new[] { key, max, min, "WITHSCORES" };
-            if (offset.HasValue && count.HasValue)
-                args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
+            if (count.HasValue)
+                args = RedisArgs.Concat(args, new[] { "LIMIT", (offset ?? 0).ToString(), count.Value.ToString() });
 
             return new RedisArray.WeakPairs<string, double>("ZREVRANGEBYSCORE", args);
         }
