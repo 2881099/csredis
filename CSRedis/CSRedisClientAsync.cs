@@ -187,16 +187,18 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字符串值</param>
 		/// <param name="expireSeconds">过期(秒单位)</param>
+		/// <param name="exists">Nx, Xx</param>
 		/// <returns></returns>
-		async public Task<bool> SetAsync(string key, string value, int expireSeconds = -1) => await ExecuteScalarAsync(key, (c, k) => expireSeconds > 0 ? c.SetAsync(k, value, TimeSpan.FromSeconds(expireSeconds)) : c.SetAsync(k, value)) == "OK";
+		async public Task<bool> SetAsync(string key, string value, int expireSeconds = -1, CSRedisExistence? exists = null) => await ExecuteScalarAsync(key, (c, k) => expireSeconds > 0 || exists != null ? c.SetAsync(k, value, expireSeconds > 0 ? new int?(expireSeconds) : null, exists == CSRedisExistence.Nx ? new RedisExistence?(RedisExistence.Nx) : (exists == CSRedisExistence.Xx ? new RedisExistence?(RedisExistence.Xx) : null)) : c.SetAsync(k, value)) == "OK";
 		/// <summary>
 		/// 设置指定 key 的值(字节流)
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字节流</param>
 		/// <param name="expireSeconds">过期(秒单位)</param>
+		/// <param name="exists">Nx, Xx</param>
 		/// <returns></returns>
-		async public Task<bool> SetBytesAsync(string key, byte[] value, int expireSeconds = -1) => await ExecuteScalarAsync(key, (c, k) => expireSeconds > 0 ? c.SetAsync(k, value, TimeSpan.FromSeconds(expireSeconds)) : c.SetAsync(k, value)) == "OK";
+		async public Task<bool> SetBytesAsync(string key, byte[] value, int expireSeconds = -1, CSRedisExistence? exists = null) => await ExecuteScalarAsync(key, (c, k) => expireSeconds > 0 || exists != null ? c.SetAsync(k, value, expireSeconds > 0 ? new int?(expireSeconds) : null, exists == CSRedisExistence.Nx ? new RedisExistence?(RedisExistence.Nx) : (exists == CSRedisExistence.Xx ? new RedisExistence?(RedisExistence.Xx) : null)) : c.SetAsync(k, value)) == "OK";
 		/// <summary>
 		/// 获取指定 key 的值
 		/// </summary>

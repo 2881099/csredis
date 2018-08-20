@@ -99,16 +99,18 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="value">字符串值</param>
 	/// <param name="expireSeconds">过期(秒单位)</param>
+	/// <param name="exists">Nx, Xx</param>
 	/// <returns></returns>
-	public static bool Set(string key, string value, int expireSeconds = -1) => Instance.Set(key, value, expireSeconds);
+	public static bool Set(string key, string value, int expireSeconds = -1, CSRedisExistence? exists = null) => Instance.Set(key, value, expireSeconds, exists);
 	/// <summary>
 	/// 设置指定 key 的值(字节流)
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="value">字节流</param>
 	/// <param name="expireSeconds">过期(秒单位)</param>
+	/// <param name="exists">Nx, Xx</param>
 	/// <returns></returns>
-	public static bool SetBytes(string key, byte[] value, int expireSeconds = -1) => Instance.SetBytes(key, value, expireSeconds);
+	public static bool SetBytes(string key, byte[] value, int expireSeconds = -1, CSRedisExistence? exists = null) => Instance.SetBytes(key, value, expireSeconds, exists);
 	/// <summary>
 	/// 获取指定 key 的值
 	/// </summary>

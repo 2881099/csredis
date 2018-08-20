@@ -221,16 +221,18 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字符串值</param>
 		/// <param name="expireSeconds">过期(秒单位)</param>
+		/// <param name="exists">Nx, Xx</param>
 		/// <returns></returns>
-		public bool Set(string key, string value, int expireSeconds = -1) => ExecuteScalar(key, (c, k) => expireSeconds > 0 ? c.Set(k, value, TimeSpan.FromSeconds(expireSeconds)) : c.Set(k, value)) == "OK";
+		public bool Set(string key, string value, int expireSeconds = -1, CSRedisExistence? exists = null) => ExecuteScalar(key, (c, k) => expireSeconds > 0 || exists != null ? c.Set(k, value, expireSeconds > 0 ? new int?(expireSeconds) : null, exists == CSRedisExistence.Nx ? new RedisExistence?(RedisExistence.Nx) : (exists == CSRedisExistence.Xx ? new RedisExistence?(RedisExistence.Xx) : null)) : c.Set(k, value)) == "OK";
 		/// <summary>
 		/// 设置指定 key 的值(字节流)
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字节流</param>
 		/// <param name="expireSeconds">过期(秒单位)</param>
+		/// <param name="exists">Nx, Xx</param>
 		/// <returns></returns>
-		public bool SetBytes(string key, byte[] value, int expireSeconds = -1) => ExecuteScalar(key, (c, k) => expireSeconds > 0 ? c.Set(k, value, TimeSpan.FromSeconds(expireSeconds)) : c.Set(k, value)) == "OK";
+		public bool SetBytes(string key, byte[] value, int expireSeconds = -1, CSRedisExistence? exists = null) => ExecuteScalar(key, (c, k) => expireSeconds > 0 || exists != null ? c.Set(k, value, expireSeconds > 0 ? new int?(expireSeconds) : null, exists == CSRedisExistence.Nx ? new RedisExistence?(RedisExistence.Nx) : (exists == CSRedisExistence.Xx ? new RedisExistence?(RedisExistence.Xx) : null)) : c.Set(k, value)) == "OK";
 		/// <summary>
 		/// 获取指定 key 的值
 		/// </summary>
@@ -855,4 +857,16 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		public double? ZScore(string key, string member) => ExecuteScalar(key, (c, k) => c.ZScore(k, member));
 		#endregion
 	}
+}
+
+public enum CSRedisExistence {
+	/// <summary>
+	/// Only set the key if it does not already exist
+	/// </summary>
+	Nx,
+
+	/// <summary>
+	/// Only set the key if it already exists
+	/// </summary>
+	Xx,
 }
