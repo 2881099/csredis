@@ -128,7 +128,16 @@ namespace CSRedis {
 			return conn;
 		}
 
-		public void ReleaseConnection(RedisConnection2 conn) {
+		public void ReleaseConnection(RedisConnection2 conn, bool isReset = false) {
+			if (isReset) {
+				try {
+					conn.Client.Quit();
+				} catch { }
+				var ips = Dns.GetHostAddresses(_ip);
+				if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+				conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
+				conn.Client.Connected += Connected;
+			}
 			lock (_lock)
 				FreeConnections.Enqueue(conn);
 

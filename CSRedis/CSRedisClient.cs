@@ -324,11 +324,43 @@ namespace CSRedis {
 			var chans = channels.Select(a => a.Item1).Distinct().ToArray();
 			var onmessages = channels.ToDictionary(a => a.Item1, b => b.Item2);
 			var subscrKey = string.Join("SpLiT", chans);
+
+			EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
+			};
+			EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
+				try {
+					if (b.Message.Type == "message" && onmessages.TryGetValue(b.Message.Channel, out var action)) {
+						var msgidIdx = b.Message.Body.IndexOf('|');
+						if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong))
+							action(new SubscribeMessageEventArgs {
+								MessageId = trylong,
+								Body = b.Message.Body.Substring(msgidIdx + 1),
+								Channel = b.Message.Channel
+							});
+						else action(new SubscribeMessageEventArgs {
+							MessageId = 0,
+							Body = b.Message.Body,
+							Channel = b.Message.Channel
+						});
+					}
+				} catch (Exception ex) {
+					Console.WriteLine($"订阅方法出错(channel:{b.Message.Channel})：{ex.Message}\r\n{ex.StackTrace}");
+				}
+			};
+			
 			lock (_subscrsDic_lock)
 				if (_subscrsDic.TryGetValue(subscrKey, out var subscrs2)) {
 					foreach (var subscr in subscrs2) {
-						subscr.Client.Unsubscribe();
-						subscr.Pool.ReleaseConnection(subscr);
+						try {
+							subscr.Client.MonitorReceived -= MonitorReceived;
+							subscr.Client.SubscriptionReceived -= SubscriptionReceived;
+							subscr.Client.Unsubscribe();
+							//subscr.Client.Quit();
+							//subscr.Client.ClientKill();
+							subscr.Client.Dispose();
+						} catch(Exception ex) {
+						}
+						subscr.Pool.ReleaseConnection(subscr, true);
 					}
 					_subscrsDic.Remove(subscrKey);
 				}
@@ -343,40 +375,33 @@ namespace CSRedis {
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var p) ? p : ClusterNodes.First().Value;
 				var subscr = pool.GetConnection();
-				subscr.Client.MonitorReceived += (a, b) => {
-				};
-				subscr.Client.SubscriptionReceived += (a, b) => {
-					try {
-						if (b.Message.Type == "message" && onmessages.TryGetValue(b.Message.Channel, out var action)) {
-							var msgidIdx = b.Message.Body.IndexOf('|');
-							if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong))
-								action(new SubscribeMessageEventArgs {
-									MessageId = trylong,
-									Body = b.Message.Body.Substring(msgidIdx + 1),
-									Channel = b.Message.Channel
-								});
-							else action(new SubscribeMessageEventArgs {
-								MessageId = 0,
-								Body = b.Message.Body,
-								Channel = b.Message.Channel
-							});
-						}
-					} catch (Exception ex) {
-						Console.WriteLine($"订阅方法出错(channel:{b.Message.Channel})：{ex.Message}\r\n{ex.StackTrace}");
-					}
-				};
+				subscr.Client.MonitorReceived += MonitorReceived;
+				subscr.Client.SubscriptionReceived += SubscriptionReceived;
 				subscrs.Add(subscr);
 
 				Task.Run(() => {
 					try {
+						Console.WriteLine("... " + string.Join(",", r.Value));
 						subscr.Client.Subscribe(r.Value.ToArray());
 					} catch (Exception ex) {
 						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
 						Console.BackgroundColor = ConsoleColor.Yellow;
-						Console.WriteLine($"订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，5秒后重连。。。");
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.Write($"订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，5秒后重连。。。");
 						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
 						Thread.CurrentThread.Join(1000 * 5);
-						Subscribe(channels);
+
+						try {
+
+						
+						var rcs = Subscribe(channels);
+						Console.WriteLine("成功数:" + rcs.Length);
+						}catch(Exception subscrEx) {
+							Console.WriteLine(subscrEx.Message);
+						}
 					}
 				});
 			}
@@ -406,11 +431,56 @@ namespace CSRedis {
 		public IRedisClient[] PSubscribe(string[] channelPatterns, Action<PSubscribePMessageEventArgs> pmessage) {
 			var chans = channelPatterns.Distinct().ToArray();
 			var subscrKey = string.Join("pSpLiT", chans);
+
+			EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
+			};
+			EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
+				try {
+					if (b.Message.Type == "pmessage" && pmessage != null) {
+						var msgidIdx = b.Message.Body.IndexOf('|');
+						if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong)) {
+							var readed = Eval($@"
+ARGV[1] = redis.call('HGET', KEYS[1], '{b.Message.Channel}')
+if ARGV[1] ~= ARGV[2] then
+  redis.call('HSET', KEYS[1], '{b.Message.Channel}', ARGV[2])
+  return 1
+end
+return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
+							if (readed?.ToString() == "1")
+								pmessage(new PSubscribePMessageEventArgs {
+									Body = b.Message.Body.Substring(msgidIdx + 1),
+									Channel = b.Message.Channel,
+									MessageId = trylong,
+									Pattern = b.Message.Pattern
+								});
+							//else
+							//	Console.WriteLine($"消息被处理过：id:{trylong} channel:{b.Message.Channel} pattern:{b.Message.Pattern} body:{b.Message.Body.Substring(msgidIdx + 1)}");
+						} else
+							pmessage(new PSubscribePMessageEventArgs {
+								Body = b.Message.Body,
+								Channel = b.Message.Channel,
+								MessageId = 0,
+								Pattern = b.Message.Pattern
+							});
+					}
+				} catch (Exception ex) {
+					Console.WriteLine($"模糊订阅方法出错(channel:{b.Message.Channel})：{ex.Message}\r\n{ex.StackTrace}");
+				}
+			};
+			
 			lock (_subscrsDic_lock)
 				if (_subscrsDic.TryGetValue(subscrKey, out var subscrs2)) {
 					foreach (var subscr in subscrs2) {
-						subscr.Client.PUnsubscribe();
-						subscr.Pool.ReleaseConnection(subscr);
+						try {
+							subscr.Client.MonitorReceived -= MonitorReceived;
+							subscr.Client.SubscriptionReceived -= SubscriptionReceived;
+							subscr.Client.PUnsubscribe();
+							//subscr.Client.Quit();
+							//subscr.Client.ClientKill();
+							subscr.Client.Dispose();
+						} catch (Exception ex) {
+						}
+						subscr.Pool.ReleaseConnection(subscr, true);
 					}
 					_subscrsDic.Remove(subscrKey);
 				}
@@ -418,41 +488,8 @@ namespace CSRedis {
 			var subscrs = new List<RedisConnection2>();
 			foreach (var pool in ClusterNodes) {
 				var subscr = pool.Value.GetConnection();
-				subscr.Client.MonitorReceived += (a, b) => {
-				};
-				subscr.Client.SubscriptionReceived += (a, b) => {
-					try {
-						if (b.Message.Type == "pmessage" && pmessage != null) {
-							var msgidIdx = b.Message.Body.IndexOf('|');
-							if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong)) {
-								var readed = Eval($@"
-ARGV[1] = redis.call('HGET', KEYS[1], '{b.Message.Channel}')
-if ARGV[1] ~= ARGV[2] then
-  redis.call('HSET', KEYS[1], '{b.Message.Channel}', ARGV[2])
-  return 1
-end
-return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
-								if (readed?.ToString() == "1")
-									pmessage(new PSubscribePMessageEventArgs {
-										Body = b.Message.Body.Substring(msgidIdx + 1),
-										Channel = b.Message.Channel,
-										MessageId = trylong,
-										Pattern = b.Message.Pattern
-									});
-								//else
-								//	Console.WriteLine($"消息被处理过：id:{trylong} channel:{b.Message.Channel} pattern:{b.Message.Pattern} body:{b.Message.Body.Substring(msgidIdx + 1)}");
-							} else
-								pmessage(new PSubscribePMessageEventArgs {
-									Body = b.Message.Body,
-									Channel = b.Message.Channel,
-									MessageId = 0,
-									Pattern = b.Message.Pattern
-								});
-						}
-					} catch (Exception ex) {
-						Console.WriteLine($"模糊订阅方法出错(channel:{b.Message.Channel})：{ex.Message}\r\n{ex.StackTrace}");
-					}
-				};
+				subscr.Client.MonitorReceived += MonitorReceived;
+				subscr.Client.SubscriptionReceived += SubscriptionReceived;
 				subscrs.Add(subscr);
 
 				Task.Run(() => {
@@ -460,9 +497,13 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 						subscr.Client.PSubscribe(chans);
 					} catch (Exception ex) {
 						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
 						Console.BackgroundColor = ConsoleColor.Yellow;
-						Console.WriteLine($"模糊订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，5秒后重连。。。");
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.Write($"模糊订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，5秒后重连。。。");
 						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
 						Thread.CurrentThread.Join(1000 * 5);
 						PSubscribe(channelPatterns, pmessage);
 					}
