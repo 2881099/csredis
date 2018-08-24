@@ -358,7 +358,7 @@ namespace CSRedis {
 							//subscr.Client.Quit();
 							//subscr.Client.ClientKill();
 							subscr.Client.Dispose();
-						} catch(Exception ex) {
+						} catch {
 						}
 						subscr.Pool.ReleaseConnection(subscr, true);
 					}
@@ -381,7 +381,6 @@ namespace CSRedis {
 
 				Task.Run(() => {
 					try {
-						Console.WriteLine("... " + string.Join(",", r.Value));
 						subscr.Client.Subscribe(r.Value.ToArray());
 					} catch (Exception ex) {
 						var bgcolor = Console.BackgroundColor;
@@ -393,15 +392,7 @@ namespace CSRedis {
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
 						Thread.CurrentThread.Join(1000 * 5);
-
-						try {
-
-						
-						var rcs = Subscribe(channels);
-						Console.WriteLine("成功数:" + rcs.Length);
-						}catch(Exception subscrEx) {
-							Console.WriteLine(subscrEx.Message);
-						}
+						Subscribe(channels);
 					}
 				});
 			}
@@ -478,7 +469,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 							//subscr.Client.Quit();
 							//subscr.Client.ClientKill();
 							subscr.Client.Dispose();
-						} catch (Exception ex) {
+						} catch {
 						}
 						subscr.Pool.ReleaseConnection(subscr, true);
 					}
