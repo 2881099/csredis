@@ -18,6 +18,10 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 
 # 集群模式
 
+本功能现实多节点分担存储，与官方的集群、高可用方案不同。
+
+> 例如：缓存数据达到500G，如果使用一台redis-server服务器光靠内存存储将非常吃力，本功能实现自动管理50台redis-server服务器分担存储，每台服务器只需10G左右内存即可，且每台服务器匀可以配置官方高可用架构。
+
 ```csharp
 var csredis = new CSRedis.CSRedisClient(null,
   "127.0.0.1:6371,password=123,defaultDatabase=11,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍", 
