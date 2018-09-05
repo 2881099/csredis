@@ -91,10 +91,7 @@ namespace CSRedis {
 					return GetConnection();
 				throw new Exception("CSRedis.ConnectionPool.GetConnection 连接池获取超时（10秒）");
 			}
-			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
-			conn.LastActive = DateTime.Now;
-			Interlocked.Increment(ref conn.UseSum);
-			if (conn.Client.IsConnected == false)
+			if (conn.Client.IsConnected == false || DateTime.Now.Subtract(conn.LastActive).TotalSeconds > 60)
 				try {
 					conn.Client.Ping();
 				} catch {
@@ -103,6 +100,9 @@ namespace CSRedis {
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}
+			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
+			conn.LastActive = DateTime.Now;
+			Interlocked.Increment(ref conn.UseSum);
 			return conn;
 		}
 		async public Task<RedisConnection2> GetConnectionAsync() {
@@ -113,10 +113,7 @@ namespace CSRedis {
 					GetConnectionAsyncQueue.Enqueue(tcs);
 				conn = await tcs.Task;
 			}
-			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
-			conn.LastActive = DateTime.Now;
-			Interlocked.Increment(ref conn.UseSum);
-			if (conn.Client.IsConnected == false)
+			if (conn.Client.IsConnected == false || DateTime.Now.Subtract(conn.LastActive).TotalSeconds > 60)
 				try {
 					await conn.Client.PingAsync();
 				} catch {
@@ -125,6 +122,9 @@ namespace CSRedis {
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}
+			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
+			conn.LastActive = DateTime.Now;
+			Interlocked.Increment(ref conn.UseSum);
 			return conn;
 		}
 
