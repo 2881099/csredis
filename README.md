@@ -52,6 +52,16 @@ RedisHelper.Get("test1");
 //...函数名基本与 redis-cli 的命令相同
 ```
 
+> 如果确定一定以及肯定非要有切换数据库的需求，请看以下代码：
+
+```csharp
+var redis = new CSRedisClient[14]; //定义成单例
+for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionString + “; defualtDatabase=“ + a);
+
+//访问数据库1的数据
+redis[1].Get("test1");
+```
+
 # 2、订阅与发布
 
 ```csharp
