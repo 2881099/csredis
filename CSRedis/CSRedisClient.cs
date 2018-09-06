@@ -244,6 +244,12 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
+		public string[] GetStrings(params string[] keys) => ExeucteArray(keys, (c, k) => c.MGet(k));
+		/// <summary>
+		/// 获取多个指定 key 的值(数组)
+		/// </summary>
+		/// <param name="keys">不含prefix前辍</param>
+		/// <returns></returns>
 		public string[] MGet(params string[] keys) => ExeucteArray(keys, (c, k) => c.MGet(k));
 		/// <summary>
 		/// 获取指定 key 的值(字节流)
@@ -702,6 +708,140 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		public bool LTrim(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.LTrim(k, start, stop)) == "OK";
 		#endregion
 
+		#region Set 操作
+		/// <summary>
+		/// 向集合添加一个或多个成员
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="members">一个或多个成员</param>
+		/// <returns></returns>
+		public long SAdd(string key, params string[] members) {
+			if (members == null || members.Any() == false) return 0;
+			return ExecuteScalar(key, (c, k) => c.SAdd(k, members));
+		}
+		/// <summary>
+		/// 获取集合的成员数
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <returns></returns>
+		public long SCard(string key) => ExecuteScalar(key, (c, k) => c.SCard(k));
+		/// <summary>
+		/// 返回给定所有集合的差集，警告：群集模式下，若keys分散在多个节点时，将报错
+		/// </summary>
+		/// <param name="keys">不含prefix前辍</param>
+		/// <returns></returns>
+		public string[] SDiff(params string[] keys) => ClusterNodesNotSupport(keys, new string[0], (c, k) => c.SDiff(k));
+		/// <summary>
+		/// 返回给定所有集合的差集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
+		/// </summary>
+		/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+		/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
+		/// <returns></returns>
+		public long SDiffStore(string destinationKey, params string[] keys) => ClusterNodesNotSupport(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.SDiffStore(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
+		/// <summary>
+		/// 返回给定所有集合的交集，警告：群集模式下，若keys分散在多个节点时，将报错
+		/// </summary>
+		/// <param name="keys">不含prefix前辍</param>
+		/// <returns></returns>
+		public string[] SInter(params string[] keys) => ClusterNodesNotSupport(keys, new string[0], (c, k) => c.SInter(k));
+		/// <summary>
+		/// 返回给定所有集合的交集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
+		/// </summary>
+		/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+		/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
+		/// <returns></returns>
+		public long SInterStore(string destinationKey, params string[] keys) => ClusterNodesNotSupport(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.SInterStore(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
+		/// <summary>
+		/// 返回集合中的所有成员
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <returns></returns>
+		public string[] SMembers(string key) => ExecuteScalar(key, (c, k) => c.SMembers(k));
+		/// <summary>
+		/// 将 member 元素从 source 集合移动到 destination 集合
+		/// </summary>
+		/// <param name="sourceKey">无序集合key，不含prefix前辍</param>
+		/// <param name="destinationKey">目标无序集合key，不含prefix前辍</param>
+		/// <param name="member">成员</param>
+		/// <returns></returns>
+		public bool SMove(string sourceKey, string destinationKey, string member) {
+			string rule = string.Empty;
+			if (ClusterNodes.Count > 1) {
+				var rule1 = _clusterRule(sourceKey);
+				var rule2 = _clusterRule(destinationKey);
+				if (rule1 != rule2) {
+					if (SRem(sourceKey, member) <= 0) return false;
+					return SAdd(destinationKey, member) > 0;
+				}
+				rule = rule1;
+			}
+			var pool = ClusterNodes.TryGetValue(rule, out var b) ? b : ClusterNodes.First().Value;
+			var key1 = string.Concat(pool.Prefix, sourceKey);
+			var key2 = string.Concat(pool.Prefix, destinationKey);
+			using (var conn = pool.GetConnection()) {
+				return conn.Client.SMove(key1, key2, member);
+			}
+		}
+		/// <summary>
+		/// 移除并返回集合中的一个随机元素
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <returns></returns>
+		public string SPop(string key) => ExecuteScalar(key, (c, k) => c.SPop(k));
+		/// <summary>
+		/// 返回集合中一个或多个随机数的元素
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="count">返回个数</param>
+		/// <returns></returns>
+		public string[] SRandMember(string key, int count = 1) => ExecuteScalar(key, (c, k) => c.SRandMember(k, count));
+		/// <summary>
+		/// 移除集合中一个或多个成员
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="members">一个或多个成员</param>
+		/// <returns></returns>
+		public long SRem(string key, params string[] members) {
+			if (members == null || members.Any() == false) return 0;
+			return ExecuteScalar(key, (c, k) => c.SRem(k, members));
+		}
+		/// <summary>
+		/// 返回所有给定集合的并集，警告：群集模式下，若keys分散在多个节点时，将报错
+		/// </summary>
+		/// <param name="keys">不含prefix前辍</param>
+		/// <returns></returns>
+		public string[] SUnion(params string[] keys) => ClusterNodesNotSupport(keys, new string[0], (c, k) => c.SUnion(k));
+		/// <summary>
+		/// 所有给定集合的并集存储在 destination 集合中，警告：群集模式下，若keys分散在多个节点时，将报错
+		/// </summary>
+		/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+		/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
+		/// <returns></returns>
+		public long SUnionStore(string destinationKey, params string[] keys) => ClusterNodesNotSupport(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.SUnionStore(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
+		/// <summary>
+		/// 迭代集合中的元素
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="cursor">位置</param>
+		/// <param name="pattern">模式</param>
+		/// <param name="count">数量</param>
+		/// <returns></returns>
+		public RedisScan<string> SScan(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => c.SScan(k, cursor, pattern, count));
+		#endregion
+
+		private T ClusterNodesNotSupport<T>(string[] keys, T defaultValue, Func<RedisClient, string[], T> callback) {
+			if (keys == null || keys.Any() == false) return defaultValue;
+			var rules = ClusterNodes.Count > 1 ? keys.Select(a => _clusterRule(a)).Distinct() : new[] { ClusterNodes.FirstOrDefault().Key };
+			if (rules.Count() > 1) throw new Exception("由于开启了群集模式，keys 分散在多个节点，无法使用此功能");
+			var pool = ClusterNodes.TryGetValue(rules.First(), out var b) ? b : ClusterNodes.First().Value;
+			string[] rkeys = new string[keys.Length];
+			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(pool.Prefix, keys[a]);
+			if (rkeys.Length == 0) return defaultValue;
+			using (var conn = pool.GetConnection()) {
+				return callback(conn.Client, rkeys);
+			}
+		}
+
 		#region Sorted Set 操作
 		/// <summary>
 		/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
@@ -739,72 +879,53 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 
 		#region 多个有序集合 交集
 		/// <summary>
-		/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中
+		/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
 		/// </summary>
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
 		public long ZInterStoreMax(string destinationKey, params string[] keys) => ZInterStore(destinationKey, RedisAggregate.Max, keys);
 		/// <summary>
-		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中
+		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
 		/// </summary>
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
 		public long ZInterStoreMin(string destinationKey, params string[] keys) => ZInterStore(destinationKey, RedisAggregate.Min, keys);
 		/// <summary>
-		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中
+		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
 		/// </summary>
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
 		public long ZInterStoreSum(string destinationKey, params string[] keys) => ZInterStore(destinationKey, RedisAggregate.Sum, keys);
-		private long ZInterStore(string destinationKey, RedisAggregate aggregate, params string[] keys) {
-			if (ClusterNodes.Count > 1) throw new Exception("此功能在集群模式下不可用");
-			var pool = ClusterNodes.First().Value;
-			destinationKey = string.Concat(pool.Prefix, destinationKey);
-			string[] rkeys = new string[keys.Length];
-			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(pool.Prefix, keys[a]);
-			if (rkeys.Length == 0) return 0;
-			using (var conn = pool.GetConnection()) {
-				return conn.Client.ZInterStore(destinationKey, null, aggregate, rkeys);
-			}
-		}
+		private long ZInterStore(string destinationKey, RedisAggregate aggregate, params string[] keys) => ClusterNodesNotSupport(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.ZInterStore(k.First(), null, aggregate, k.Where((ki, kj) => kj > 0).ToArray()));
+
 		#endregion
 
 		#region 多个有序集合 并集
 		/// <summary>
-		/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination
+		/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 		/// </summary>
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
 		public long ZUnionStoreMax(string destinationKey, params string[] keys) => ZUnionStore(destinationKey, RedisAggregate.Max, keys);
 		/// <summary>
-		/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination
+		/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 		/// </summary>
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
 		public long ZUnionStoreMin(string destinationKey, params string[] keys) => ZUnionStore(destinationKey, RedisAggregate.Min, keys);
 		/// <summary>
-		/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination
+		/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 		/// </summary>
 		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
 		public long ZUnionStoreSum(string destinationKey, params string[] keys) => ZUnionStore(destinationKey, RedisAggregate.Sum, keys);
-		private long ZUnionStore(string destinationKey, RedisAggregate aggregate, params string[] keys) {
-			if (ClusterNodes.Count > 1) throw new Exception("此功能在集群模式下不可用");
-			var pool = ClusterNodes.First().Value;
-			destinationKey = string.Concat(pool.Prefix, destinationKey);
-			string[] rkeys = new string[keys.Length];
-			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(pool.Prefix, keys[a]);
-			if (rkeys.Length == 0) return 0;
-			using (var conn = pool.GetConnection()) {
-				return conn.Client.ZUnionStore(destinationKey, null, aggregate, rkeys);
-			}
-		}
+		private long ZUnionStore(string destinationKey, RedisAggregate aggregate, params string[] keys) => ClusterNodesNotSupport(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.ZUnionStore(k.First(), null, aggregate, k.Where((ki, kj) => kj > 0).ToArray()));
 		#endregion
 
 		/// <summary>

@@ -75,6 +75,12 @@ partial class RedisHelper {
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <returns></returns>
+	public static Task<string[]> MGetAsync(params string[] key) => Instance.MGetAsync(key);
+	/// <summary>
+	/// 获取多个指定 key 的值(数组)
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <returns></returns>
 	public static Task<string[]> GetStringsAsync(params string[] key) => Instance.MGetAsync(key);
 	/// <summary>
 	/// 获取指定 key 的值(字节流)
@@ -311,6 +317,95 @@ partial class RedisHelper {
 	public static Task<bool> LTrimAsync(string key, long start, long stop) => Instance.LTrimAsync(key, start, stop);
 	#endregion
 
+	#region Set 操作
+	/// <summary>
+	/// 向集合添加一个或多个成员
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="members">一个或多个成员</param>
+	/// <returns></returns>
+	public static Task<long> SAddAsync(string key, params string[] members) => Instance.SAddAsync(key, members);
+	/// <summary>
+	/// 获取集合的成员数
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<long> SCardAsync(string key) => Instance.SCardAsync(key);
+	/// <summary>
+	/// 返回给定所有集合的差集，警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="keys">不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string[]> SDiffAsync(params string[] keys) => Instance.SDiffAsync(keys);
+	/// <summary>
+	/// 返回给定所有集合的差集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<long> SDiffStoreAsync(string destinationKey, params string[] keys) => Instance.SDiffStoreAsync(destinationKey, keys);
+	/// <summary>
+	/// 返回给定所有集合的交集，警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="keys">不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string[]> SInterAsync(params string[] keys) => Instance.SInterAsync(keys);
+	/// <summary>
+	/// 返回给定所有集合的交集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<long> SInterStoreAsync(string destinationKey, params string[] keys) => Instance.SInterStoreAsync(destinationKey, keys);
+	/// <summary>
+	/// 返回集合中的所有成员
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string[]> SMembersAsync(string key) => Instance.SMembersAsync(key);
+	/// <summary>
+	/// 将 member 元素从 source 集合移动到 destination 集合
+	/// </summary>
+	/// <param name="sourceKey">无序集合key，不含prefix前辍</param>
+	/// <param name="destinationKey">目标无序集合key，不含prefix前辍</param>
+	/// <param name="member">成员</param>
+	/// <returns></returns>
+	public static Task<bool> SMoveAsync(string sourceKey, string destinationKey, string member) => Instance.SMoveAsync(sourceKey, destinationKey, member);
+	/// <summary>
+	/// 移除并返回集合中的一个随机元素
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string> SPopAsync(string key) => Instance.SPopAsync(key);
+	/// <summary>
+	/// 返回集合中一个或多个随机数的元素
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="count">返回个数</param>
+	/// <returns></returns>
+	public static Task<string[]> SRandMemberAsync(string key, int count = 1) => Instance.SRandMemberAsync(key, count);
+	/// <summary>
+	/// 移除集合中一个或多个成员
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="members">一个或多个成员</param>
+	/// <returns></returns>
+	public static Task<long> SRemAsync(string key, params string[] members) => Instance.SRemAsync(key, members);
+	/// <summary>
+	/// 返回所有给定集合的并集，警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="keys">不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string[]> SUnionAsync(params string[] keys) => Instance.SUnionAsync(keys);
+	/// <summary>
+	/// 所有给定集合的并集存储在 destination 集合中，警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<long> SUnionStoreAsync(string destinationKey, params string[] keys) => Instance.SUnionStoreAsync(destinationKey, keys);
+	#endregion
+
 	#region Sorted Set 操作
 	/// <summary>
 	/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
@@ -344,21 +439,21 @@ partial class RedisHelper {
 
 	#region 多个有序集合 交集
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中
+	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
 	/// </summary>
 	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
 	public static Task<long> ZInterStoreMaxAsync(string destinationKey, params string[] keys) => Instance.ZInterStoreMaxAsync(destinationKey, keys);
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中
+	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
 	/// </summary>
 	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
 	public static Task<long> ZInterStoreMinAsync(string destinationKey, params string[] keys) => Instance.ZInterStoreMinAsync(destinationKey, keys);
 	/// <summary>
-	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中
+	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
 	/// </summary>
 	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
@@ -368,21 +463,21 @@ partial class RedisHelper {
 
 	#region 多个有序集合 并集
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination
+	/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 	/// </summary>
 	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
 	public static Task<long> ZUnionStoreMaxAsync(string destinationKey, params string[] keys) => Instance.ZUnionStoreMaxAsync(destinationKey, keys);
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination
+	/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 	/// </summary>
 	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
 	public static Task<long> ZUnionStoreMinAsync(string destinationKey, params string[] keys) => Instance.ZUnionStoreMinAsync(destinationKey, keys);
 	/// <summary>
-	/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination
+	/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 	/// </summary>
 	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
