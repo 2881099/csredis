@@ -79,7 +79,8 @@ namespace CSRedis.Internal.Commands
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 long count = reader.ReadInt(false);
-                T[] array = new T[count];
+				if (count == -1) return default(T); //使用 BLPop 命令在 RedisArray.cs 中报错的解决办法。 #22
+				T[] array = new T[count];
                 for (int i = 0; i < array.Length; i++)
                     array[i] = _command.Parse(reader);
                 return array[_index];
