@@ -14,7 +14,9 @@ namespace CSRedis.Internal.Commands
         public override Tuple<string, string> Parse(RedisReader reader)
         {
             reader.ExpectType(RedisMessage.MultiBulk);
-            reader.ExpectSize(2);
+			long count = reader.ReadInt(false);
+			if (count != 2) return null; //使用 BLPop 命令在 RedisArray.cs 中报错的解决办法。 #22
+			//reader.ExpectSize(2);
             return Tuple.Create(reader.ReadBulkString(), reader.ReadBulkString());
         }
 

@@ -574,16 +574,97 @@ namespace CSRedis
         {
             return WriteAsync(RedisCommands.HVals(key));
         }
-        #endregion
+		#endregion
 
-        #region Lists
-        /// <summary>
-        /// Get an element from a list by its index
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="index">Zero-based index of item to return</param>
-        /// <returns>Element at index</returns>
-        public Task<string> LIndexAsync(string key, long index)
+		#region Lists
+		/// <summary>
+		/// Remove and get the first element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		public Task<Tuple<string, string>> BLPopWithKeyAsync(int timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BLPopWithKey(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the first element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		public Task<Tuple<string, string>> BLPopWithKeyAsync(TimeSpan timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BLPopWithKey(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the first element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List value</returns>
+		public Task<string> BLPopAsync(int timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BLPop(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the first element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List value</returns>
+		public Task<string> BLPopAsync(TimeSpan timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BLPop(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the last element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		public Task<Tuple<string, string>> BRPopWithKeyAsync(int timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BRPopWithKey(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the last element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		public Task<Tuple<string, string>> BRPopWithKeyAsync(TimeSpan timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BRPopWithKey(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the last element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List value</param>
+		/// <returns></returns>
+		public Task<string> BRPopAsync(int timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BRPop(timeout, keys));
+		}
+
+		/// <summary>
+		/// Remove and get the last element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List value</returns>
+		public Task<string> BRPopAsync(TimeSpan timeout, params string[] keys) {
+			return WriteAsync(RedisCommands.BRPop(timeout, keys));
+		}
+
+
+		/// <summary>
+		/// Get an element from a list by its index
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="index">Zero-based index of item to return</param>
+		/// <returns>Element at index</returns>
+		public Task<string> LIndexAsync(string key, long index)
         {
             return WriteAsync(RedisCommands.LIndex(key, index));
         }

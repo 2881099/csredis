@@ -229,6 +229,34 @@ partial class RedisHelper {
 
 	#region List 操作
 	/// <summary>
+	/// 它是 LPOP 命令的阻塞版本，当给定列表内没有任何元素可供弹出的时候，连接将被 BLPOP 命令阻塞，直到等待超时或发现可弹出元素为止，超时返回null。警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="timeOut">超时(秒)</param>
+	/// <param name="keys">一个或多个列表，不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string> BLPopAsync(int timeOut, params string[] keys) => Instance.BLPopAsync(timeOut, keys);
+	/// <summary>
+	/// 它是 LPOP 命令的阻塞版本，当给定列表内没有任何元素可供弹出的时候，连接将被 BLPOP 命令阻塞，直到等待超时或发现可弹出元素为止，超时返回null。警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="timeOut"></param>
+	/// <param name="keys"></param>
+	/// <returns></returns>
+	public static Task<(string key, string value)?> BLPopWithKeyAsync(int timeOut, params string[] keys) => Instance.BLPopWithKeyAsync(timeOut, keys);
+	/// <summary>
+	/// 它是 RPOP 命令的阻塞版本，当给定列表内没有任何元素可供弹出的时候，连接将被 BRPOP 命令阻塞，直到等待超时或发现可弹出元素为止，超时返回null。警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="timeOut">超时(秒)</param>
+	/// <param name="keys">一个或多个列表，不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<string> BRPopAsync(int timeOut, params string[] keys) => Instance.BRPopAsync(timeOut, keys);
+	/// <summary>
+	/// 它是 RPOP 命令的阻塞版本，当给定列表内没有任何元素可供弹出的时候，连接将被 BRPOP 命令阻塞，直到等待超时或发现可弹出元素为止，超时返回null。警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="timeOut">超时(秒)</param>
+	/// <param name="keys">一个或多个列表，不含prefix前辍</param>
+	/// <returns></returns>
+	public static Task<(string key, string value)?> BRPopWithKeyAsync(int timeOut, params string[] keys) => Instance.BRPopWithKeyAsync(timeOut, keys);
+	/// <summary>
 	/// 通过索引获取列表中的元素
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
