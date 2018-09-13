@@ -96,14 +96,20 @@ namespace CSRedis.Internal.IO
 
                 var args = _asyncTransferPool.Acquire();
 				int bytes;
-                try
-                {
-                    bytes = _io.Writer.Write(token.Command, args.Buffer, args.Offset);
-                }
-                catch (ArgumentException e)
-                {
-                    throw new RedisClientException("Could not write command '" + token.Command.Command + "'. Argument size exceeds buffer allocation of " + args.Count + ".", e);
-                }
+				try
+				{
+					bytes = _io.Writer.Write(token.Command, args.Buffer, args.Offset);
+				}
+				catch (ArgumentException e)
+				{
+					OnSocketSent(args, e);
+					throw new RedisClientException("Could not write command '" + token.Command.Command + "'. Argument size exceeds buffer allocation of " + args.Count + ".", e);
+				}
+				catch (Exception e)
+				{
+					OnSocketSent(args, e);
+					throw e;
+				}
                 args.SetBuffer(args.Offset, bytes);
 
                 if (!_redisSocket.SendAsync(args))
@@ -134,7 +140,7 @@ namespace CSRedis.Internal.IO
 			_connectionTaskSource.SetResult(_redisSocket.Connected);
 		}
 
-        void OnSocketSent(SocketAsyncEventArgs args)
+        void OnSocketSent(SocketAsyncEventArgs args, Exception ex = null)
         {
             _asyncTransferPool.Release(args);
 
@@ -145,7 +151,10 @@ namespace CSRedis.Internal.IO
                 {
                     try
                     {
-                        token.SetResult(_io.Reader);
+						if (ex != null)
+							token.SetException(ex);
+                        else
+							token.SetResult(_io.Reader);
                     }
                     /*catch (IOException) // TODO implement async retry
                     {
