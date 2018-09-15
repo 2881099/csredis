@@ -120,7 +120,7 @@ namespace CSRedis {
 		#region 集群方式 Execute
 		async private Task<T> ExecuteScalarAsync<T>(string key, Func<RedisClient, string, Task<T>> hander) {
 			if (key == null) return default(T);
-			var pool = _clusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(_clusterRule(key), out var b) ? b : ClusterNodes.First().Value);
+			var pool = ClusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(ClusterRule(key), out var b) ? b : ClusterNodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
 			using (var conn = await pool.GetConnectionAsync()) {
 				return await hander(conn.Client, key);
@@ -128,7 +128,7 @@ namespace CSRedis {
 		}
 		async private Task<T[]> ExeucteArrayAsync<T>(string[] key, Func<RedisClient, string[], Task<T[]>> hander) {
 			if (key == null || key.Any() == false) return new T[0];
-			if (_clusterRule == null || ClusterNodes.Count == 1) {
+			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				using (var conn = await pool.GetConnectionAsync()) {
@@ -137,7 +137,7 @@ namespace CSRedis {
 			}
 			var rules = new Dictionary<string, List<(string, int)>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = _clusterRule(key[a]);
+				var rule = ClusterRule(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add((key[a], a));
 				else rules.Add(rule, new List<(string, int)> { (key[a], a) });
 			}
@@ -156,7 +156,7 @@ namespace CSRedis {
 		}
 		async private Task<long> ExecuteNonQueryAsync(string[] key, Func<RedisClient, string[], Task<long>> hander) {
 			if (key == null || key.Any() == false) return 0;
-			if (_clusterRule == null || ClusterNodes.Count == 1) {
+			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				using (var conn = await pool.GetConnectionAsync()) {
@@ -165,7 +165,7 @@ namespace CSRedis {
 			}
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = _clusterRule(key[a]);
+				var rule = ClusterRule(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add(key[a]);
 				else rules.Add(rule, new List<string> { key[a] });
 			}
@@ -586,8 +586,8 @@ namespace CSRedis {
 		async public Task<bool> SMoveAsync(string sourceKey, string destinationKey, string member) {
 			string rule = string.Empty;
 			if (ClusterNodes.Count > 1) {
-				var rule1 = _clusterRule(sourceKey);
-				var rule2 = _clusterRule(destinationKey);
+				var rule1 = ClusterRule(sourceKey);
+				var rule2 = ClusterRule(destinationKey);
 				if (rule1 != rule2) {
 					if (await SRemAsync(sourceKey, member) <= 0) return false;
 					return await SAddAsync(destinationKey, member) > 0;
@@ -641,7 +641,7 @@ namespace CSRedis {
 
 		async private Task<T> ClusterNodesNotSupportAsync<T>(string[] keys, T defaultValue, Func<RedisClient, string[], Task<T>> callbackAsync) {
 			if (keys == null || keys.Any() == false) return defaultValue;
-			var rules = ClusterNodes.Count > 1 ? keys.Select(a => _clusterRule(a)).Distinct() : new[] { ClusterNodes.FirstOrDefault().Key };
+			var rules = ClusterNodes.Count > 1 ? keys.Select(a => ClusterRule(a)).Distinct() : new[] { ClusterNodes.FirstOrDefault().Key };
 			if (rules.Count() > 1) throw new Exception("由于开启了群集模式，keys 分散在多个节点，无法使用此功能");
 			var pool = ClusterNodes.TryGetValue(rules.First(), out var b) ? b : ClusterNodes.First().Value;
 			string[] rkeys = new string[keys.Length];

@@ -94,6 +94,20 @@ public abstract partial class RedisHelper {
 		Instance.CacheShell(key, fields, timeoutSeconds, getData, serialize ?? new Func<(T, long), string>(value => Serialize(value)), deserialize ?? new Func<string, (T, long)>(data => ((T, long))Deserialize(data, typeof((T, long)))));
 
 	/// <summary>
+	/// 创建管道传输
+	/// </summary>
+	/// <param name="handler"></param>
+	/// <returns></returns>
+	public static object[] StartPipe(Action<CSRedisClientPipe> handler) => Instance.StartPipe(handler);
+
+	/// <summary>
+	/// 创建管道传输，打包提交如：RedisHelper.StartPipe().Set("a", "1").HashSet("b", "f", "2").EndPipe();
+	/// </summary>
+	/// <returns></returns>
+	[Obsolete("警告：本方法必须有 EndPipe() 提交，否则会造成连接池耗尽。")]
+	public static CSRedisClientPipe StartPipe() => Instance.StartPipe();
+
+	/// <summary>
 	/// 设置指定 key 的值
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>

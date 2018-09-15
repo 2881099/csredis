@@ -112,6 +112,18 @@ var t3 = RedisHelper.CacheShell("test", new [] { "1", "2" }, 10, notCacheFields 
 });
 ```
 
+# Pipeline
+
+使用管道模式，打包多条命令一起执行，从而提高性能。
+
+```csharp
+var ret1 = RedisHelper.StartPipe().Set("a", "1").Get("a").EndPipe();
+
+var ret2 = RedisHelper.StartPipe(p => p.Set("a", "1").Get("a"));
+
+var ret3 = RedisHelper.StartPipe().Get("b").Get("a").Get("a").EndPipe();
+```
+
 # Benchmark
 
 ![](https://img2018.cnblogs.com/blog/31407/201809/31407-20180915145859354-1024651127.png)

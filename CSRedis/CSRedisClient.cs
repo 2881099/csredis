@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace CSRedis {
 	public partial class CSRedisClient {
 		public Dictionary<string, ConnectionPool> ClusterNodes { get; } = new Dictionary<string, ConnectionPool>();
-		private List<string> _clusterKeys;
-		private Func<string, string> _clusterRule;
+		internal List<string> ClusterKeys;
+		internal Func<string, string> ClusterRule;
 
 		/// <summary>
 		/// 创建redis访问类
@@ -22,10 +22,10 @@ namespace CSRedis {
 		/// <param name="clusterRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
 		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
 		public CSRedisClient(Func<string, string> clusterRule, params string[] connectionStrings) {
-			_clusterRule = clusterRule;
-			if (_clusterRule == null) _clusterRule = key => {
+			ClusterRule = clusterRule;
+			if (ClusterRule == null) ClusterRule = key => {
 				var idx = Math.Abs(string.Concat(key).GetHashCode()) % ClusterNodes.Count;
-				return idx < 0 || idx >= _clusterKeys.Count ? _clusterKeys.First() : _clusterKeys[idx];
+				return idx < 0 || idx >= ClusterKeys.Count ? ClusterKeys.First() : ClusterKeys[idx];
 			};
 			if (connectionStrings == null || connectionStrings.Any() == false) throw new Exception("Redis ConnectionString 未设置");
 			foreach (var connectionString in connectionStrings) {
@@ -37,7 +37,7 @@ namespace CSRedis {
 				if (ClusterNodes.ContainsKey(pool.ClusterKey)) throw new Exception($"ClusterName: {pool.ClusterKey} 重复，请检查");
 				ClusterNodes.Add(pool.ClusterKey, pool);
 			}
-			_clusterKeys = ClusterNodes.Keys.ToList();
+			ClusterKeys = ClusterNodes.Keys.ToList();
 		}
 
 		private DateTime dt1970 = new DateTime(1970, 1, 1);
@@ -154,7 +154,7 @@ namespace CSRedis {
 		#region 集群方式 Execute
 		private T ExecuteScalar<T>(string key, Func<RedisClient, string, T> hander) {
 			if (key == null) return default(T);
-			var pool = _clusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(_clusterRule(key), out var b) ? b : ClusterNodes.First().Value);
+			var pool = ClusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(ClusterRule(key), out var b) ? b : ClusterNodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
 			using (var conn = pool.GetConnection()) {
 				return hander(conn.Client, key);
@@ -162,7 +162,7 @@ namespace CSRedis {
 		}
 		private T[] ExeucteArray<T>(string[] key, Func<RedisClient, string[], T[]> hander) {
 			if (key == null || key.Any() == false) return new T[0];
-			if (_clusterRule == null || ClusterNodes.Count == 1) {
+			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				using (var conn = pool.GetConnection()) {
@@ -171,7 +171,7 @@ namespace CSRedis {
 			}
 			var rules = new Dictionary<string, List<(string, int)>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = _clusterRule(key[a]);
+				var rule = ClusterRule(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add((key[a], a));
 				else rules.Add(rule, new List<(string, int)> { (key[a], a) });
 			}
@@ -190,7 +190,7 @@ namespace CSRedis {
 		}
 		private long ExecuteNonQuery(string[] key, Func<RedisClient, string[], long> hander) {
 			if (key == null || key.Any() == false) return 0;
-			if (_clusterRule == null || ClusterNodes.Count == 1) {
+			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				using (var conn = pool.GetConnection()) {
@@ -199,7 +199,7 @@ namespace CSRedis {
 			}
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = _clusterRule(key[a]);
+				var rule = ClusterRule(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add(key[a]);
 				else rules.Add(rule, new List<string> { key[a] });
 			}
@@ -214,6 +214,27 @@ namespace CSRedis {
 			return affrows;
 		}
 		#endregion
+
+		/// <summary>
+		/// 创建管道传输
+		/// </summary>
+		/// <param name="handler"></param>
+		/// <returns></returns>
+		public object[] StartPipe(Action<CSRedisClientPipe> handler) {
+			if (handler == null) return new object[0];
+			var pipe = new CSRedisClientPipe(this);
+			handler(pipe);
+			return pipe.EndPipe();
+		}
+
+		/// <summary>
+		/// 创建管道传输，打包提交如：RedisHelper.StartPipe().Set("a", "1").HashSet("b", "f", "2").EndPipe();
+		/// </summary>
+		/// <returns></returns>
+		[Obsolete("警告：本方法必须有 EndPipe() 提交，否则会造成连接池耗尽。")]
+		public CSRedisClientPipe StartPipe() {
+			return new CSRedisClientPipe(this);
+		}
 
 		/// <summary>
 		/// 设置指定 key 的值
@@ -373,7 +394,7 @@ namespace CSRedis {
 
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < chans.Length; a++) {
-				var rule = _clusterRule(chans[a]);
+				var rule = ClusterRule(chans[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add(chans[a]);
 				else rules.Add(rule, new List<string> { chans[a] });
 			}
@@ -817,8 +838,8 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		public bool SMove(string sourceKey, string destinationKey, string member) {
 			string rule = string.Empty;
 			if (ClusterNodes.Count > 1) {
-				var rule1 = _clusterRule(sourceKey);
-				var rule2 = _clusterRule(destinationKey);
+				var rule1 = ClusterRule(sourceKey);
+				var rule2 = ClusterRule(destinationKey);
 				if (rule1 != rule2) {
 					if (SRem(sourceKey, member) <= 0) return false;
 					return SAdd(destinationKey, member) > 0;
@@ -881,7 +902,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 
 		private T ClusterNodesNotSupport<T>(string[] keys, T defaultValue, Func<RedisClient, string[], T> callback) {
 			if (keys == null || keys.Any() == false) return defaultValue;
-			var rules = ClusterNodes.Count > 1 ? keys.Select(a => _clusterRule(a)).Distinct() : new[] { ClusterNodes.FirstOrDefault().Key };
+			var rules = ClusterNodes.Count > 1 ? keys.Select(a => ClusterRule(a)).Distinct() : new[] { ClusterNodes.FirstOrDefault().Key };
 			if (rules.Count() > 1) throw new Exception("由于开启了群集模式，keys 分散在多个节点，无法使用此功能");
 			var pool = ClusterNodes.TryGetValue(rules.First(), out var b) ? b : ClusterNodes.First().Value;
 			string[] rkeys = new string[keys.Length];
