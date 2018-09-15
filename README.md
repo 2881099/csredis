@@ -111,3 +111,7 @@ var t3 = RedisHelper.CacheShell("test", new [] { "1", "2" }, 10, notCacheFields 
   ("2", Test.Select.WhereId(2).ToOne())
 });
 ```
+
+# Benchmark
+
+![](https://img2018.cnblogs.com/blog/31407/201809/31407-20180915145859354-1024651127.png)
