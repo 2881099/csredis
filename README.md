@@ -118,10 +118,10 @@ var t3 = RedisHelper.CacheShell("test", new [] { "1", "2" }, 10, notCacheFields 
 
 ```csharp
 var ret1 = RedisHelper.StartPipe().Set("a", "1").Get("a").EndPipe();
-
 var ret2 = RedisHelper.StartPipe(p => p.Set("a", "1").Get("a"));
 
 var ret3 = RedisHelper.StartPipe().Get("b").Get("a").Get("a").EndPipe();
+//与 RedisHelper.MGet("b", "a", "a") 性能相比，经测试差之毫厘
 ```
 
 # Benchmark
