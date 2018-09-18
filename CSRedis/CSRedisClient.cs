@@ -556,6 +556,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public string HashSetExpire(string key, TimeSpan expire, params object[] keyValues) {
 			if (keyValues == null || keyValues.Any() == false) return null;
+			if (keyValues.Length % 2 != 0) throw new Exception("keyValues 参数是键值对，不应该出现奇数，请检查使用姿势。");
 			if (expire > TimeSpan.Zero) {
 				var lua = "ARGV[1] = redis.call('HMSET', KEYS[1]";
 				var argv = new List<object>();
