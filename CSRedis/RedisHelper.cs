@@ -126,6 +126,25 @@ public abstract partial class RedisHelper {
 	/// <returns></returns>
 	public static bool SetBytes(string key, byte[] value, int expireSeconds = -1, CSRedisExistence? exists = null) => Instance.SetBytes(key, value, expireSeconds, exists);
 	/// <summary>
+	/// 只有在 key 不存在时设置 key 的值。
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="value">字符串值</param>
+	/// <returns></returns>
+	public static bool SetNx(string key, string value) => Instance.SetNx(key, value);
+	/// <summary>
+	/// 同时设置一个或多个 key-value 对。
+	/// </summary>
+	/// <param name="keyValues">key1 value1 [key2 value2]</param>
+	/// <returns></returns>
+	public static bool MSet(params string[] keyValues) => Instance.MSet(keyValues);
+	/// <summary>
+	/// 同时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在。警告：群集模式下，若keys分散在多个节点时，将报错
+	/// </summary>
+	/// <param name="keyValues">key1 value1 [key2 value2]</param>
+	/// <returns></returns>
+	public static bool MSetNx(params string[] keyValues) => Instance.MSetNx(keyValues);
+	/// <summary>
 	/// 获取指定 key 的值
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
@@ -228,6 +247,14 @@ public abstract partial class RedisHelper {
 	/// <param name="keyValues">field1 value1 [field2 value2]</param>
 	/// <returns></returns>
 	public static string HashSetExpire(string key, TimeSpan expire, params object[] keyValues) => Instance.HashSetExpire(key, expire, keyValues);
+	/// <summary>
+	/// 只有在字段 field 不存在时，设置哈希表字段的值。
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="field">字段</param>
+	/// <param name="value">值</param>
+	/// <returns></returns>
+	public static bool HashSetNx(string key, string field, object value) => Instance.HashSetNx(key, field, value);
 	/// <summary>
 	/// 获取存储在哈希表中指定字段的值
 	/// </summary>

@@ -4,7 +4,7 @@
     <AssemblyName>CSRedisCore</AssemblyName>
     <PackageId>CSRedisCore</PackageId>
     <RootNamespace>CSRedisCore</RootNamespace>
-    <Version>2.6.5</Version>
+    <Version>2.6.6</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/csredis</PackageProjectUrl>
     <Description>CSRedis 是国外大神写的，增加 CSRedisClient 现实集群与连接池管理、RedisHelper 静态类，现已支持 .NETCore</Description>
