@@ -152,7 +152,7 @@ namespace CSRedis {
 		}
 
 		#region 集群方式 Execute
-		private T ExecuteScalar<T>(string key, Func<RedisConnection2, string, T> hander) {
+		internal T ExecuteScalar<T>(string key, Func<RedisConnection2, string, T> hander) {
 			if (key == null) return default(T);
 			var pool = ClusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(ClusterRule(key), out var b) ? b : ClusterNodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
@@ -160,7 +160,7 @@ namespace CSRedis {
 				return hander(conn, key);
 			}
 		}
-		private T[] ExeucteArray<T>(string[] key, Func<RedisConnection2, string[], T[]> hander) {
+		internal T[] ExeucteArray<T>(string[] key, Func<RedisConnection2, string[], T[]> hander) {
 			if (key == null || key.Any() == false) return new T[0];
 			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
@@ -188,7 +188,7 @@ namespace CSRedis {
 			}
 			return ret;
 		}
-		private long ExecuteNonQuery(string[] key, Func<RedisConnection2, string[], long> hander) {
+		internal long ExecuteNonQuery(string[] key, Func<RedisConnection2, string[], long> hander) {
 			if (key == null || key.Any() == false) return 0;
 			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
@@ -1128,6 +1128,40 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public double? ZScore(string key, string member) => ExecuteScalar(key, (c, k) => c.Client.ZScore(k, member));
 		#endregion
+
+		/// <summary>
+		/// 开启分布式锁，若超时返回null
+		/// </summary>
+		/// <param name="name">锁名称</param>
+		/// <param name="timeoutSeconds">超时（秒）</param>
+		/// <returns></returns>
+		public CSRedisLock Lock(string name, int timeoutSeconds) {
+			name = $"CSRedisLock:{name}";
+			var startTime = DateTime.Now;
+			while (DateTime.Now.Subtract(startTime).TotalSeconds < timeoutSeconds) {
+				if (this.SetNx(name, "1") == true) {
+					this.Expire(name, TimeSpan.FromSeconds(timeoutSeconds));
+					return new CSRedisLock { Name = name, _client = this };
+				}
+				Thread.CurrentThread.Join(3);
+			}
+			return null;
+		}
+	}
+
+	public class CSRedisLock : IDisposable {
+
+		internal string Name { get; set; }
+		internal CSRedis.CSRedisClient _client;
+
+		/// <summary>
+		/// 释放分布式锁
+		/// </summary>
+		public void Unlock() => _client.Remove(this.Name);
+
+		public void Dispose() {
+			this.Unlock();
+		}
 	}
 }
 
