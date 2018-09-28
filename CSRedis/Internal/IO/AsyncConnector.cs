@@ -62,9 +62,10 @@ namespace CSRedis.Internal.IO
                             OnSocketConnected(_asyncConnectArgs);
                     }
                 }
-            }
+            } else if (_connectionTaskSource.Task.IsCompleted == false)
+				_connectionTaskSource.SetResult(false);
 
-            return _connectionTaskSource.Task;
+			return _connectionTaskSource.Task;
         }
 
         public Task<T> CallAsync<T>(RedisCommand<T> command)
@@ -122,7 +123,11 @@ namespace CSRedis.Internal.IO
             switch (e.LastOperation)
             {
                 case SocketAsyncOperation.Connect:
-                    OnSocketConnected(e);
+					try {
+						OnSocketConnected(e);
+					} catch (Exception socketConnectedException) {
+						_connectionTaskSource.TrySetException(socketConnectedException);
+					}
                     break;
                 case SocketAsyncOperation.Send:
                     OnSocketSent(e);
