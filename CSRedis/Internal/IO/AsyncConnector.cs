@@ -179,6 +179,14 @@ namespace CSRedis.Internal.IO
 
         public void Dispose()
         {
+			while (_asyncReadQueue.TryDequeue(out var token))
+				try { token.SetException(new Exception("Error: Disposing...")); } catch { }
+
+			while (_asyncWriteQueue.TryDequeue(out var token))
+				try { token.SetException(new Exception("Error: Disposing...")); } catch { }
+
+			_connectionTaskSource.TrySetCanceled();
+
             _asyncTransferPool.Dispose();
             _asyncConnectArgs.Dispose();
         }

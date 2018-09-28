@@ -97,6 +97,7 @@ namespace CSRedis {
 				} catch {
 					var ips = Dns.GetHostAddresses(_ip);
 					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					try { conn.Client.Dispose(); } catch { }
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}
@@ -119,6 +120,7 @@ namespace CSRedis {
 				} catch {
 					var ips = Dns.GetHostAddresses(_ip);
 					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+					try { conn.Client.Dispose(); } catch { }
 					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
 					conn.Client.Connected += Connected;
 				}
@@ -130,11 +132,10 @@ namespace CSRedis {
 
 		public void ReleaseConnection(RedisConnection2 conn, bool isReset = false) {
 			if (isReset) {
-				try {
-					conn.Client.Quit();
-				} catch { }
+				try { conn.Client.Quit(); } catch { }
 				var ips = Dns.GetHostAddresses(_ip);
 				if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+				try { conn.Client.Dispose(); } catch { }
 				conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
 				conn.Client.Connected += Connected;
 			}

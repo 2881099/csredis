@@ -57,8 +57,11 @@ namespace CSRedis.Internal.IO
         public void Dispose()
         {
             Array.Clear(_buffer, 0, _buffer.Length);
-            for (int i = 0; i < _pool.Count; i++)
+			GC.SuppressFinalize(_buffer);
+			while(_pool.Any())
                 _pool.Pop().Dispose();
+
+			try { _acquisitionGate.Release(); } catch { }
         }
 
         void OnSocketCompleted(object sender, SocketAsyncEventArgs e)
