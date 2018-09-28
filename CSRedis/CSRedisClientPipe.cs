@@ -29,8 +29,15 @@ namespace CSRedis {
 		public object[] EndPipe() {
 			var ret = new object[Parsers.Count];
 			foreach (var conn in Conns) {
-				var tmp = conn.Value.conn.Client.EndPipe();
-				conn.Value.conn.Pool.ReleaseConnection(conn.Value.conn);
+				object[] tmp = null;
+				try {
+					tmp = conn.Value.conn.Client.EndPipe();
+				} catch (Exception ex) {
+					conn.Value.conn.Pool.RequirePing(ex);
+					throw ex;
+				} finally {
+					conn.Value.conn.Pool.ReleaseConnection(conn.Value.conn);
+				}
 				for (var a = 0; a < tmp.Length; a++) {
 					var retIdx = conn.Value.indexes[a];
 					ret[retIdx] = tmp[a];
@@ -57,10 +64,24 @@ namespace CSRedis {
 			if (ClusterNodes.TryGetValue(clusterKey, out var pool)) ClusterNodes.TryGetValue(clusterKey = ClusterKeys[0], out pool);
 			if (Conns.TryGetValue(clusterKey, out var conn) == false) {
 				Conns.Add(clusterKey, conn = (new List<int>(), pool.GetConnection()));
-				conn.conn.Client.StartPipe();
+				try {
+					conn.conn.Client.StartPipe();
+				} catch (Exception ex) {
+					pool.RequirePing(ex);
+					throw ex;
+				} finally {
+					pool.ReleaseConnection(conn.conn);
+				}
 			}
 			key = string.Concat(pool.Prefix, key);
-			hander(conn.conn, key);
+			try {
+				hander(conn.conn, key);
+			} catch (Exception ex) {
+				pool.RequirePing(ex);
+				throw ex;
+			} finally {
+				pool.ReleaseConnection(conn.conn);
+			}
 			conn.indexes.Add(Parsers.Count);
 			Parsers.Enqueue(parser);
 			return this;

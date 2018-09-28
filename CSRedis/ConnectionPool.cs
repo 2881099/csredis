@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -128,6 +129,33 @@ namespace CSRedis {
 			conn.LastActive = DateTime.Now;
 			Interlocked.Increment(ref conn.UseSum);
 			return conn;
+		}
+
+		DateTime requirePingPrevTime;
+		/// <summary>
+		/// redis-server 断开重启后，因连接池内所有连接状态无法更新，导致每个连接在重启后的第一次操作仍会失败。
+		/// csredis 内部统一处理错误，一量发现错误，连接池内所有连接下次操作将触发 Ping() 条件，解决上述问题。
+		/// 缺陷：如果错误为非 socket 错误，将导致性能下降。根据异常信息优化程序使用方法，可以解决这个缺陷。
+		/// </summary>
+		/// <param name="ex"></param>
+		internal void RequirePing(Exception ex) {
+			var lastActive = new DateTime(2000, 1, 1);
+			foreach (var conn in AllConnections) conn.LastActive = lastActive;
+			var now = DateTime.Now;
+			if (now.Subtract(requirePingPrevTime).TotalSeconds > 5) {
+				requirePingPrevTime = now;
+				var fcolor = Console.ForegroundColor;
+				Console.WriteLine($"");
+				Console.ForegroundColor = ConsoleColor.DarkYellow;
+				Console.WriteLine($"csreids 错误【{ClusterKey}】：{ex.Message}");
+				Console.ForegroundColor = ConsoleColor.DarkGreen;
+				Console.WriteLine($"redis-server 断开重启后，因连接池内所有连接状态无法更新，导致每个连接在重启后的第一次操作仍会失败。");
+				Console.WriteLine($"csredis 内部统一处理错误，一量发现错误，连接池内所有连接下次操作将触发 Ping() 条件，解决上述问题。");
+				Console.ForegroundColor = ConsoleColor.Yellow;
+				Console.WriteLine($"缺陷：如果错误为非 socket 错误，将导致性能下降。根据异常信息优化程序使用方法，可以解决这个缺陷。");
+				Console.ForegroundColor = fcolor;
+				Console.WriteLine($"");
+			}
 		}
 
 		public void ReleaseConnection(RedisConnection2 conn, bool isReset = false) {

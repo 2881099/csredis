@@ -39,6 +39,17 @@ namespace CSRedis {
 			}
 			ClusterKeys = ClusterNodes.Keys.ToList();
 		}
+		
+		T GetConnectionAndExecute<T>(ConnectionPool pool, Func<RedisConnection2, T> handle) {
+			using (var conn = pool.GetConnection()) {
+				try {
+					return handle(conn);
+				} catch(Exception ex) {
+					pool.RequirePing(ex);
+					throw ex;
+				}
+			}
+		}
 
 		private DateTime dt1970 = new DateTime(1970, 1, 1);
 		/// <summary>
@@ -156,18 +167,14 @@ namespace CSRedis {
 			if (key == null) return default(T);
 			var pool = ClusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(ClusterRule(key), out var b) ? b : ClusterNodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
-			using (var conn = pool.GetConnection()) {
-				return hander(conn, key);
-			}
+			return GetConnectionAndExecute(pool, conn => hander(conn, key));
 		}
 		internal T[] ExeucteArray<T>(string[] key, Func<RedisConnection2, string[], T[]> hander) {
 			if (key == null || key.Any() == false) return new T[0];
 			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
-				using (var conn = pool.GetConnection()) {
-					return hander(conn, keys);
-				}
+				return GetConnectionAndExecute(pool, conn => hander(conn, keys));
 			}
 			var rules = new Dictionary<string, List<(string, int)>>();
 			for (var a = 0; a < key.Length; a++) {
@@ -179,12 +186,13 @@ namespace CSRedis {
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var b) ? b : ClusterNodes.First().Value;
 				var keys = r.Value.Select(a => string.Concat(pool.Prefix, a.Item1)).ToArray();
-				using (var conn = pool.GetConnection()) {
+				GetConnectionAndExecute(pool, conn => {
 					var vals = hander(conn, keys);
 					for (var z = 0; z < r.Value.Count; z++) {
 						ret[r.Value[z].Item2] = vals == null || z >= vals.Length ? default(T) : vals[z];
 					}
-				}
+					return 0;
+				});
 			}
 			return ret;
 		}
@@ -193,9 +201,7 @@ namespace CSRedis {
 			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
-				using (var conn = pool.GetConnection()) {
-					return hander(conn, keys);
-				}
+				return GetConnectionAndExecute(pool, conn => hander(conn, keys));
 			}
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < key.Length; a++) {
@@ -207,9 +213,7 @@ namespace CSRedis {
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var b) ? b : ClusterNodes.First().Value;
 				var keys = r.Value.Select(a => string.Concat(pool.Prefix, a)).ToArray();
-				using (var conn = pool.GetConnection()) {
-					affrows += hander(conn, keys);
-				}
+				affrows += GetConnectionAndExecute(pool, conn => hander(conn, keys));
 			}
 			return affrows;
 		}
@@ -365,9 +369,7 @@ namespace CSRedis {
 		public string[] Keys(string pattern) {
 			List<string> ret = new List<string>();
 			foreach (var pool in ClusterNodes)
-				using (var conn = pool.Value.GetConnection()) {
-					ret.AddRange(conn.Client.Keys(pattern));
-				}
+				ret.AddRange(GetConnectionAndExecute(pool.Value, conn => conn.Client.Keys(pattern)));
 			return ret.ToArray();
 		}
 		/// <summary>
@@ -897,9 +899,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 			var pool = ClusterNodes.TryGetValue(rule, out var b) ? b : ClusterNodes.First().Value;
 			var key1 = string.Concat(pool.Prefix, sourceKey);
 			var key2 = string.Concat(pool.Prefix, destinationKey);
-			using (var conn = pool.GetConnection()) {
-				return conn.Client.SMove(key1, key2, member);
-			}
+			return GetConnectionAndExecute(pool, conn => conn.Client.SMove(key1, key2, member));
 		}
 		/// <summary>
 		/// 移除并返回集合中的一个随机元素
@@ -956,9 +956,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(pool.Prefix, keys[a]);
 			if (rkeys.Length == 0) return defaultValue;
-			using (var conn = pool.GetConnection()) {
-				return callback(conn, rkeys);
-			}
+			return GetConnectionAndExecute(pool, conn => callback(conn, rkeys));
 		}
 
 		#region Sorted Set 操作

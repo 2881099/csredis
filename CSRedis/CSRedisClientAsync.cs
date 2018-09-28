@@ -7,6 +7,18 @@ using System.Threading.Tasks;
 
 namespace CSRedis {
 	partial class CSRedisClient {
+
+		async Task<T> GetConnectionAndExecuteAsync<T>(ConnectionPool pool, Func<RedisConnection2, Task<T>> handle) {
+			using (var conn = await pool.GetConnectionAsync()) {
+				try {
+					return await handle(conn);
+				} catch (Exception ex) {
+					pool.RequirePing(ex);
+					throw ex;
+				}
+			}
+		}
+
 		/// <summary>
 		/// 缓存壳
 		/// </summary>
@@ -118,22 +130,18 @@ namespace CSRedis {
 		}
 
 		#region 集群方式 Execute
-		async private Task<T> ExecuteScalarAsync<T>(string key, Func<RedisConnection2, string, Task<T>> hander) {
-			if (key == null) return default(T);
+		private Task<T> ExecuteScalarAsync<T>(string key, Func<RedisConnection2, string, Task<T>> hander) {
+			if (key == null) return Task.FromResult(default(T));
 			var pool = ClusterRule == null || ClusterNodes.Count == 1 ? ClusterNodes.First().Value : (ClusterNodes.TryGetValue(ClusterRule(key), out var b) ? b : ClusterNodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
-			using (var conn = await pool.GetConnectionAsync()) {
-				return await hander(conn, key);
-			}
+			return GetConnectionAndExecuteAsync(pool, conn => hander(conn, key));
 		}
 		async private Task<T[]> ExeucteArrayAsync<T>(string[] key, Func<RedisConnection2, string[], Task<T[]>> hander) {
 			if (key == null || key.Any() == false) return new T[0];
 			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
-				using (var conn = await pool.GetConnectionAsync()) {
-					return await hander(conn, keys);
-				}
+				return await GetConnectionAndExecuteAsync(pool, conn => hander(conn, keys));
 			}
 			var rules = new Dictionary<string, List<(string, int)>>();
 			for (var a = 0; a < key.Length; a++) {
@@ -145,12 +153,13 @@ namespace CSRedis {
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var b) ? b : ClusterNodes.First().Value;
 				var keys = r.Value.Select(a => string.Concat(pool.Prefix, a.Item1)).ToArray();
-				using (var conn = await pool.GetConnectionAsync()) {
+				await GetConnectionAndExecuteAsync(pool, async conn => {
 					var vals = await hander(conn, keys);
 					for (var z = 0; z < r.Value.Count; z++) {
 						ret[r.Value[z].Item2] = vals == null || z >= vals.Length ? default(T) : vals[z];
 					}
-				}
+					return 0;
+				});
 			}
 			return ret;
 		}
@@ -159,9 +168,7 @@ namespace CSRedis {
 			if (ClusterRule == null || ClusterNodes.Count == 1) {
 				var pool = ClusterNodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
-				using (var conn = await pool.GetConnectionAsync()) {
-					return await hander(conn, keys);
-				}
+				return await GetConnectionAndExecuteAsync(pool, conn => hander(conn, keys));
 			}
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < key.Length; a++) {
@@ -173,9 +180,7 @@ namespace CSRedis {
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var b) ? b : ClusterNodes.First().Value;
 				var keys = r.Value.Select(a => string.Concat(pool.Prefix, a)).ToArray();
-				using (var conn = await pool.GetConnectionAsync()) {
-					affrows += await hander(conn, keys);
-				}
+				affrows += await GetConnectionAndExecuteAsync(pool, conn => hander(conn, keys));
 			}
 			return affrows;
 		}
@@ -310,9 +315,7 @@ namespace CSRedis {
 		async public Task<string[]> KeysAsync(string pattern) {
 			List<string> ret = new List<string>();
 			foreach (var pool in ClusterNodes)
-				using (var conn = await pool.Value.GetConnectionAsync()) {
-					ret.AddRange(await conn.Client.KeysAsync(pattern));
-				}
+				ret.AddRange(await GetConnectionAndExecuteAsync(pool.Value, conn => conn.Client.KeysAsync(pattern)));
 			return ret.ToArray();
 		}
 		/// <summary>
@@ -645,9 +648,7 @@ namespace CSRedis {
 			var pool = ClusterNodes.TryGetValue(rule, out var b) ? b : ClusterNodes.First().Value;
 			var key1 = string.Concat(pool.Prefix, sourceKey);
 			var key2 = string.Concat(pool.Prefix, destinationKey);
-			using (var conn = await pool.GetConnectionAsync()) {
-				return await conn.Client.SMoveAsync(key1, key2, member);
-			}
+			return await GetConnectionAndExecuteAsync(pool, conn => conn.Client.SMoveAsync(key1, key2, member));
 		}
 		/// <summary>
 		/// 移除并返回集合中的一个随机元素
@@ -695,9 +696,7 @@ namespace CSRedis {
 			string[] rkeys = new string[keys.Length];
 			for (int a = 0; a < keys.Length; a++) rkeys[a] = string.Concat(pool.Prefix, keys[a]);
 			if (rkeys.Length == 0) return defaultValue;
-			using (var conn = await pool.GetConnectionAsync()) {
-				return await callbackAsync(conn, rkeys);
-			}
+			return await GetConnectionAndExecuteAsync(pool, conn => callbackAsync(conn, rkeys));
 		}
 
 		#region Sorted Set 操作
