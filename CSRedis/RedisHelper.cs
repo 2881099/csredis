@@ -222,25 +222,28 @@ public abstract partial class RedisHelper {
 	/// <returns></returns>
 	public static long Publish(string channel, string data) => Instance.Publish(channel, data);
 	/// <summary>
-	/// 订阅，根据集群规则，Subscribe(("chan1", msg => Console.WriteLine(msg.Body)), ("chan2", msg => Console.WriteLine(msg.Body)))，注意：redis服务重启无法重连
+	/// 订阅，根据集群规则返回SubscribeObject，Subscribe(("chan1", msg => Console.WriteLine(msg.Body)), ("chan2", msg => Console.WriteLine(msg.Body)))
 	/// </summary>
-	/// <param name="channels">频道</param>
-	public static void Subscribe(params (string, Action<CSRedisClient.SubscribeMessageEventArgs>)[] channels) => Instance.Subscribe(channels);
+	/// <param name="channels">频道和接收器</param>
+	/// <returns>返回可停止订阅的对象</returns>
+	public static CSRedisClient.SubscribeObject Subscribe(params (string, Action<CSRedisClient.SubscribeMessageEventArgs>)[] channels) => Instance.Subscribe(channels);
 	/// <summary>
-	/// 模糊订阅，订阅所有集群节点(同条消息只处理一次），PSubscribe(new [] { "chan1*", "chan2*" }, msg => Console.WriteLine(msg.Body))，注意：redis服务重启无法重连
+	/// 模糊订阅，订阅所有集群节点(同条消息只处理一次），返回SubscribeObject，PSubscribe(new [] { "chan1*", "chan2*" }, msg => Console.WriteLine(msg.Body))
 	/// </summary>
 	/// <param name="channelPatterns">模糊频道</param>
-	public static void PSubscribe(string[] channelPatterns, Action<CSRedisClient.PSubscribePMessageEventArgs> pmessage) => Instance.PSubscribe(channelPatterns, pmessage);
+	/// <param name="pmessage">接收器</param>
+	/// <returns>返回可停止模糊订阅的对象</returns>
+	public static CSRedisClient.PSubscribeObject PSubscribe(string[] channelPatterns, Action<CSRedisClient.PSubscribePMessageEventArgs> pmessage) => Instance.PSubscribe(channelPatterns, pmessage);
 	#region Hash 操作
 	/// <summary>
-	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="keyValues">field1 value1 [field2 value2]</param>
 	/// <returns></returns>
 	public static string HashSet(string key, params object[] keyValues) => Instance.HashSet(key, keyValues);
 	/// <summary>
-	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="expire">过期时间</param>
@@ -252,7 +255,7 @@ public abstract partial class RedisHelper {
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="field">字段</param>
-	/// <param name="value">值</param>
+	/// <param name="value">值(string 或 byte[])</param>
 	/// <returns></returns>
 	public static bool HashSetNx(string key, string field, object value) => Instance.HashSetNx(key, field, value);
 	/// <summary>
@@ -263,12 +266,26 @@ public abstract partial class RedisHelper {
 	/// <returns></returns>
 	public static string HashGet(string key, string field) => Instance.HashGet(key, field);
 	/// <summary>
+	/// 获取存储在哈希表中指定字段的值，返回 byte[]
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="field">字段</param>
+	/// <returns>byte[]</returns>
+	public static byte[] HashGetBytes(string key, string field) => Instance.HashGetBytes(key, field);
+	/// <summary>
 	/// 获取存储在哈希表中多个字段的值
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="fields">字段</param>
 	/// <returns></returns>
 	public static string[] HashMGet(string key, params string[] fields) => Instance.HashMGet(key, fields);
+	/// <summary>
+	/// 获取存储在哈希表中多个字段的值，每个 field 的值类型返回 byte[]
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="fields">字段</param>
+	/// <returns>byte[][]</returns>
+	public static byte[][] HashMGetBytes(string key, params string[] fields) => Instance.HashMGetBytes(key, fields);
 	/// <summary>
 	/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 	/// </summary>

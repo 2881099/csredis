@@ -93,8 +93,12 @@ namespace CSRedis.Internal.Commands
                 : base(new RedisString(command, args))
             { }
         }
+		public class Bytes : Generic<byte[]> {
+			public Bytes(string command, params object[] args)
+				: base(new RedisBytes(command, args)) { }
+		}
 
-        public class StrongPairs<T1, T2> : Generic<Tuple<T1, T2>>
+		public class StrongPairs<T1, T2> : Generic<Tuple<T1, T2>>
         {
             public StrongPairs(RedisCommand<T1> command1, RedisCommand<T2> command2, string command, params object[] args)
                 : base(new RedisTuple.Generic<T1, T2>.Repeating(command1, command2, command, args))

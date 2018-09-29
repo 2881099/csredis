@@ -10,7 +10,6 @@ namespace CSRedis {
 		public Dictionary<string, ConnectionPool> ClusterNodes { get; } = new Dictionary<string, ConnectionPool>();
 		internal List<string> ClusterKeys;
 		internal Func<string, string> ClusterRule;
-		internal bool IsUnloaded = false;
 
 		/// <summary>
 		/// 创建redis访问类
@@ -23,10 +22,6 @@ namespace CSRedis {
 		/// <param name="clusterRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
 		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
 		public CSRedisClient(Func<string, string> clusterRule, params string[] connectionStrings) {
-			AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
-				IsUnloaded = true;
-			};
-
 			ClusterRule = clusterRule;
 			if (ClusterRule == null) ClusterRule = key => {
 				var idx = Math.Abs(string.Concat(key).GetHashCode()) % ClusterNodes.Count;
@@ -387,56 +382,14 @@ namespace CSRedis {
 			var msgid = HashIncrement("CSRedisPublishMsgId", channel, 1);
 			return ExecuteScalar(channel, (c, k) => c.Client.Publish(channel, $"{msgid}|{data}"));
 		}
-		private Dictionary<string, List<RedisConnection2>> _subscrsDic = new Dictionary<string, List<RedisConnection2>>();
-		private object _subscrsDic_lock = new object();
 		/// <summary>
-		/// 订阅，根据集群规则返回RedisClient数组，Subscribe(("chan1", msg => Console.WriteLine(msg.Body)), ("chan2", msg => Console.WriteLine(msg.Body)))，注意：redis服务重启无法重连
+		/// 订阅，根据集群规则返回SubscribeObject，Subscribe(("chan1", msg => Console.WriteLine(msg.Body)), ("chan2", msg => Console.WriteLine(msg.Body)))
 		/// </summary>
-		/// <param name="channels">频道</param>
-		public IRedisClient[] Subscribe(params (string, Action<SubscribeMessageEventArgs>)[] channels) {
+		/// <param name="channels">频道和接收器</param>
+		/// <returns>返回可停止订阅的对象</returns>
+		public SubscribeObject Subscribe(params (string, Action<SubscribeMessageEventArgs>)[] channels) {
 			var chans = channels.Select(a => a.Item1).Distinct().ToArray();
 			var onmessages = channels.ToDictionary(a => a.Item1, b => b.Item2);
-			var subscrKey = string.Join("SpLiT", chans);
-
-			EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
-			};
-			EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
-				try {
-					if (b.Message.Type == "message" && onmessages.TryGetValue(b.Message.Channel, out var action)) {
-						var msgidIdx = b.Message.Body.IndexOf('|');
-						if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong))
-							action(new SubscribeMessageEventArgs {
-								MessageId = trylong,
-								Body = b.Message.Body.Substring(msgidIdx + 1),
-								Channel = b.Message.Channel
-							});
-						else action(new SubscribeMessageEventArgs {
-							MessageId = 0,
-							Body = b.Message.Body,
-							Channel = b.Message.Channel
-						});
-					}
-				} catch (Exception ex) {
-					Console.WriteLine($"订阅方法出错(channel:{b.Message.Channel})：{ex.Message}\r\n{ex.StackTrace}");
-				}
-			};
-			
-			lock (_subscrsDic_lock)
-				if (_subscrsDic.TryGetValue(subscrKey, out var subscrs2)) {
-					foreach (var subscr in subscrs2) {
-						try {
-							subscr.Client.MonitorReceived -= MonitorReceived;
-							subscr.Client.SubscriptionReceived -= SubscriptionReceived;
-							subscr.Client.Unsubscribe();
-							//subscr.Client.Quit();
-							//subscr.Client.ClientKill();
-							subscr.Client.Dispose();
-						} catch {
-						}
-						subscr.Pool.ReleaseConnection(subscr, true);
-					}
-					_subscrsDic.Remove(subscrKey);
-				}
 
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < chans.Length; a++) {
@@ -444,42 +397,127 @@ namespace CSRedis {
 				if (rules.ContainsKey(rule)) rules[rule].Add(chans[a]);
 				else rules.Add(rule, new List<string> { chans[a] });
 			}
-			var subscrs = new List<RedisConnection2>();
-			var incrNext = 0;
+			
+			List<(string[] keys, RedisConnection2 conn)> subscrs = new List<(string[] keys, RedisConnection2 conn)>();
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var p) ? p : ClusterNodes.First().Value;
-				var subscr = pool.GetConnection();
-				subscr.Client.MonitorReceived += MonitorReceived;
-				subscr.Client.SubscriptionReceived += SubscriptionReceived;
-				subscrs.Add(subscr);
-
-				new Thread(() => {
-					try {
-						subscr.Client.Subscribe(r.Value.ToArray());
-
-						//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
-						if (subscr.Client.IsConnected == false)
-							throw new Exception("redis-server 连接已断开");
-					} catch (Exception ex) {
-						if (IsUnloaded == false && Interlocked.Increment(ref incrNext) == 1) {
-							var bgcolor = Console.BackgroundColor;
-							var forecolor = Console.ForegroundColor;
-							Console.BackgroundColor = ConsoleColor.Yellow;
-							Console.ForegroundColor = ConsoleColor.Red;
-							Console.Write($"订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，3秒后重连。。。");
-							Console.BackgroundColor = bgcolor;
-							Console.ForegroundColor = forecolor;
-							Console.WriteLine();
-							Thread.CurrentThread.Join(1000 * 3);
-							Subscribe(channels);
-						}
-					}
-				}).Start();
+				Task.Run(async () => subscrs.Add((r.Value.ToArray(), await pool.GetConnectionAsync()))).Wait();
 			}
-			lock (_subscrsDic_lock)
-				_subscrsDic.Add(subscrKey, subscrs);
 
-			return subscrs.Select(a => a.Client).ToArray();
+			var so = new SubscribeObject(this, chans, subscrs.ToArray(), onmessages);
+			return so;
+		}
+		public class SubscribeObject : IDisposable {
+			internal CSRedisClient Redis;
+			public string[] Channels { get; }
+			public (string[] chans, RedisConnection2 conn)[] Subscrs { get; }
+			internal Dictionary<string, Action<SubscribeMessageEventArgs>> OnMessageDic;
+			public bool IsUnsubscribed { get; private set; } = true;
+
+			internal SubscribeObject(CSRedisClient redis, string[] channels, (string[] chans, RedisConnection2 conn)[] subscrs, Dictionary<string, Action<SubscribeMessageEventArgs>> onMessageDic) {
+				this.Redis = redis;
+				this.Channels = channels;
+				this.Subscrs = subscrs;
+				this.OnMessageDic = onMessageDic;
+				this.IsUnsubscribed = false;
+
+				AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
+					this.Dispose();
+				};
+				Console.CancelKeyPress += (s1, e1) => {
+					this.Dispose();
+				};
+
+				foreach (var subscr in this.Subscrs) {
+					new Thread(Subscribe).Start(subscr);
+				}
+			}
+
+			private void Subscribe(object state) {
+				var subscr = ((string[] chans, RedisConnection2 conn))state;
+
+				EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
+				};
+				EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
+					try {
+						if (b.Message.Type == "message" && this.OnMessageDic != null && this.OnMessageDic.TryGetValue(b.Message.Channel, out var action) == true) {
+							var msgidIdx = b.Message.Body.IndexOf('|');
+							if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong))
+								action(new SubscribeMessageEventArgs {
+									MessageId = trylong,
+									Body = b.Message.Body.Substring(msgidIdx + 1),
+									Channel = b.Message.Channel
+								});
+							else action(new SubscribeMessageEventArgs {
+								MessageId = 0,
+								Body = b.Message.Body,
+								Channel = b.Message.Channel
+							});
+						}
+					} catch (Exception ex) {
+						Console.WriteLine($"订阅方法执行出错【{subscr.conn.Pool.ClusterKey}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}\r\n{ex.StackTrace}");
+					}
+				};
+				subscr.conn.Client.MonitorReceived += MonitorReceived;
+				subscr.conn.Client.SubscriptionReceived += SubscriptionReceived;
+
+				while (IsUnsubscribed == false) {
+					try {
+						subscr.conn.Client.Ping();
+
+						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
+						Console.BackgroundColor = ConsoleColor.DarkGreen;
+						Console.ForegroundColor = ConsoleColor.White;
+						Console.Write($"正在订阅【{subscr.conn.Pool.ClusterKey}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})");
+						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
+
+						subscr.conn.Client.Subscribe(subscr.chans);
+
+						if (IsUnsubscribed == false) {
+							subscr.conn.Pool.ResetConnection(subscr.conn);
+							subscr.conn.Client.MonitorReceived += MonitorReceived;
+							subscr.conn.Client.SubscriptionReceived += SubscriptionReceived;
+
+							//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
+							if (subscr.conn.Client.IsConnected == false)
+								throw new Exception("redis-server 连接已断开");
+						}
+					} catch (Exception ex) {
+						if (IsUnsubscribed) break;
+
+						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
+						Console.BackgroundColor = ConsoleColor.Yellow;
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.Write($"订阅出错【{subscr.conn.Pool.ClusterKey}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}，3秒后重连。。。");
+						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
+						Thread.CurrentThread.Join(1000 * 3);
+					}
+				}
+			}
+
+			public void Unsubscribe() {
+				this.Dispose();
+			}
+
+			~SubscribeObject() {
+				this.Dispose();
+			}
+
+			public void Dispose() {
+				this.IsUnsubscribed = true;
+				if (this.Subscrs != null) {
+					foreach(var subscr in this.Subscrs) {
+						try { subscr.conn.Client.Unsubscribe(); } catch { }
+						subscr.conn.Pool.ReleaseConnection(subscr.conn, true);
+					}
+				}
+			}
 		}
 		public class SubscribeMessageEventArgs {
 			/// <summary>
@@ -496,101 +534,147 @@ namespace CSRedis {
 			public string Body { get; set; }
 		}
 		/// <summary>
-		/// 模糊订阅，订阅所有集群节点(同条消息只处理一次），返回数组RedisClient PSubscribe(new [] { "chan1*", "chan2*" }, msg => Console.WriteLine(msg.Body))，注意：redis服务重启无法重连
+		/// 模糊订阅，订阅所有集群节点(同条消息只处理一次），返回SubscribeObject，PSubscribe(new [] { "chan1*", "chan2*" }, msg => Console.WriteLine(msg.Body))
 		/// </summary>
 		/// <param name="channelPatterns">模糊频道</param>
-		public IRedisClient[] PSubscribe(string[] channelPatterns, Action<PSubscribePMessageEventArgs> pmessage) {
+		/// <param name="pmessage">接收器</param>
+		/// <returns>返回可停止模糊订阅的对象</returns>
+		public PSubscribeObject PSubscribe(string[] channelPatterns, Action<PSubscribePMessageEventArgs> pmessage) {
 			var chans = channelPatterns.Distinct().ToArray();
-			var subscrKey = string.Join("pSpLiT", chans);
 
-			EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
-			};
-			EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
-				try {
-					if (b.Message.Type == "pmessage" && pmessage != null) {
-						var msgidIdx = b.Message.Body.IndexOf('|');
-						if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong)) {
-							var readed = Eval($@"
+			List<RedisConnection2> redisConnections = new List<RedisConnection2>();
+			foreach (var pool in ClusterNodes) {
+				Task.Run(async () => redisConnections.Add(await pool.Value.GetConnectionAsync())).Wait();
+			}
+
+			var so = new PSubscribeObject(this, chans, redisConnections.ToArray(), pmessage);
+			return so;
+		}
+		public class PSubscribeObject : IDisposable {
+			internal CSRedisClient Redis;
+			public string[] Channels { get; }
+			internal Action<PSubscribePMessageEventArgs> OnPMessage;
+			public RedisConnection2[] RedisConnections { get; }
+			public bool IsPUnsubscribed { get; private set; } = true;
+
+			internal PSubscribeObject(CSRedisClient redis, string[] channels, RedisConnection2[] redisConnections, Action<PSubscribePMessageEventArgs> onPMessage) {
+				this.Redis = redis;
+				this.Channels = channels;
+				this.RedisConnections = redisConnections;
+				this.OnPMessage = onPMessage;
+				this.IsPUnsubscribed = false;
+
+				AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
+					this.Dispose();
+				};
+				Console.CancelKeyPress += (s1, e1) => {
+					this.Dispose();
+				};
+
+				foreach (var conn in this.RedisConnections) {
+					new Thread(PSubscribe).Start(conn);
+				}
+			}
+
+			private void PSubscribe(object state) {
+				var conn = (RedisConnection2)state;
+				var psubscribeKey = string.Join("pSpLiT", Channels);
+
+				EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
+				};
+				EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
+					try {
+						if (b.Message.Type == "pmessage" && this.OnPMessage != null) {
+							var msgidIdx = b.Message.Body.IndexOf('|');
+							if (msgidIdx != -1 && long.TryParse(b.Message.Body.Substring(0, msgidIdx), out var trylong)) {
+								var readed = Redis.Eval($@"
 ARGV[1] = redis.call('HGET', KEYS[1], '{b.Message.Channel}')
 if ARGV[1] ~= ARGV[2] then
   redis.call('HSET', KEYS[1], '{b.Message.Channel}', ARGV[2])
   return 1
 end
-return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
-							if (readed?.ToString() == "1")
-								pmessage(new PSubscribePMessageEventArgs {
-									Body = b.Message.Body.Substring(msgidIdx + 1),
+return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
+								if (readed?.ToString() == "1")
+									this.OnPMessage(new PSubscribePMessageEventArgs {
+										Body = b.Message.Body.Substring(msgidIdx + 1),
+										Channel = b.Message.Channel,
+										MessageId = trylong,
+										Pattern = b.Message.Pattern
+									});
+								//else
+								//	Console.WriteLine($"消息被处理过：id:{trylong} channel:{b.Message.Channel} pattern:{b.Message.Pattern} body:{b.Message.Body.Substring(msgidIdx + 1)}");
+							} else
+								this.OnPMessage(new PSubscribePMessageEventArgs {
+									Body = b.Message.Body,
 									Channel = b.Message.Channel,
-									MessageId = trylong,
+									MessageId = 0,
 									Pattern = b.Message.Pattern
 								});
-							//else
-							//	Console.WriteLine($"消息被处理过：id:{trylong} channel:{b.Message.Channel} pattern:{b.Message.Pattern} body:{b.Message.Body.Substring(msgidIdx + 1)}");
-						} else
-							pmessage(new PSubscribePMessageEventArgs {
-								Body = b.Message.Body,
-								Channel = b.Message.Channel,
-								MessageId = 0,
-								Pattern = b.Message.Pattern
-							});
-					}
-				} catch (Exception ex) {
-					Console.WriteLine($"模糊订阅方法出错(channel:{b.Message.Channel})：{ex.Message}\r\n{ex.StackTrace}");
-				}
-			};
-			
-			lock (_subscrsDic_lock)
-				if (_subscrsDic.TryGetValue(subscrKey, out var subscrs2)) {
-					foreach (var subscr in subscrs2) {
-						try {
-							subscr.Client.MonitorReceived -= MonitorReceived;
-							subscr.Client.SubscriptionReceived -= SubscriptionReceived;
-							subscr.Client.PUnsubscribe();
-							//subscr.Client.Quit();
-							//subscr.Client.ClientKill();
-							subscr.Client.Dispose();
-						} catch {
 						}
-						subscr.Pool.ReleaseConnection(subscr, true);
-					}
-					_subscrsDic.Remove(subscrKey);
-				}
-
-			var subscrs = new List<RedisConnection2>();
-			var incrNext = 0;
-			foreach (var pool in ClusterNodes) {
-				var subscr = pool.Value.GetConnection();
-				subscr.Client.MonitorReceived += MonitorReceived;
-				subscr.Client.SubscriptionReceived += SubscriptionReceived;
-				subscrs.Add(subscr);
-
-				new Thread(() => {
-					try {
-						subscr.Client.PSubscribe(chans);
-
-						//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
-						if (subscr.Client.IsConnected == false)
-							throw new Exception("redis-server 连接已断开");
 					} catch (Exception ex) {
-						if (IsUnloaded == false && Interlocked.Increment(ref incrNext) == 1) {
-							var bgcolor = Console.BackgroundColor;
-							var forecolor = Console.ForegroundColor;
-							Console.BackgroundColor = ConsoleColor.Yellow;
-							Console.ForegroundColor = ConsoleColor.Red;
-							Console.Write($"模糊订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，3秒后重连。。。");
-							Console.BackgroundColor = bgcolor;
-							Console.ForegroundColor = forecolor;
-							Console.WriteLine();
-							Thread.CurrentThread.Join(1000 * 3);
-							PSubscribe(channelPatterns, pmessage);
-						}
+						Console.WriteLine($"模糊订阅出错【{conn.Pool.ClusterKey}】(channels:{string.Join(",", Channels)})：{ex.Message}\r\n{ex.StackTrace}");
 					}
-				}).Start();
-			}
-			lock (_subscrsDic_lock)
-				_subscrsDic.Add(subscrKey, subscrs);
+				};
+				conn.Client.MonitorReceived += MonitorReceived;
+				conn.Client.SubscriptionReceived += SubscriptionReceived;
 
-			return subscrs.Select(a => a.Client).ToArray();
+				while (true) {
+					try {
+						conn.Client.Ping();
+
+						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
+						Console.BackgroundColor = ConsoleColor.DarkGreen;
+						Console.ForegroundColor = ConsoleColor.White;
+						Console.Write($"正在模糊订阅【{conn.Pool.ClusterKey}】(channels:{string.Join(",", Channels)})");
+						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
+
+						conn.Client.PSubscribe(this.Channels);
+
+						if (IsPUnsubscribed == false) {
+							conn.Pool.ResetConnection(conn);
+							conn.Client.MonitorReceived += MonitorReceived;
+							conn.Client.SubscriptionReceived += SubscriptionReceived;
+
+							//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
+							if (conn.Client.IsConnected == false)
+								throw new Exception("redis-server 连接已断开");
+						}
+					} catch (Exception ex) {
+						if (IsPUnsubscribed) break;
+
+						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
+						Console.BackgroundColor = ConsoleColor.Yellow;
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.Write($"模糊订阅出错【{conn.Pool.ClusterKey}】(channels:{string.Join(",", Channels)})：{ex.Message}，3秒后重连。。。");
+						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
+						Thread.CurrentThread.Join(1000 * 3);
+					}
+				}
+			}
+
+			public void PUnsubscribe() {
+				this.Dispose();
+			}
+
+			~PSubscribeObject() {
+				this.Dispose();
+			}
+
+			public void Dispose() {
+				this.IsPUnsubscribed = true;
+				if (this.RedisConnections != null) {
+					foreach (var conn in this.RedisConnections) {
+						try { conn.Client.PUnsubscribe(); } catch { }
+						conn.Pool.ReleaseConnection(conn, true);
+					}
+				}
+			}
 		}
 		public class PSubscribePMessageEventArgs : SubscribeMessageEventArgs {
 			/// <summary>
@@ -601,14 +685,14 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 
 		#region Hash 操作
 		/// <summary>
-		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="keyValues">field1 value1 [field2 value2]</param>
 		/// <returns></returns>
 		public string HashSet(string key, params object[] keyValues) => HashSetExpire(key, TimeSpan.Zero, keyValues);
 		/// <summary>
-		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="expire">过期时间</param>
@@ -635,7 +719,7 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="field">字段</param>
-		/// <param name="value">值</param>
+		/// <param name="value">值(string 或 byte[])</param>
 		/// <returns></returns>
 		public bool HashSetNx(string key, string field, object value) => ExecuteScalar(key, (c, k) => c.Client.HSetNx(k, field, value));
 		/// <summary>
@@ -646,12 +730,26 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public string HashGet(string key, string field) => ExecuteScalar(key, (c, k) => c.Client.HGet(k, field));
 		/// <summary>
+		/// 获取存储在哈希表中指定字段的值，返回 byte[]
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="field">字段</param>
+		/// <returns>byte[]</returns>
+		public byte[] HashGetBytes(string key, string field) => ExecuteScalar(key, (c, k) => c.Client.HGetBytes(k, field));
+		/// <summary>
 		/// 获取存储在哈希表中多个字段的值
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="fields">字段</param>
 		/// <returns></returns>
 		public string[] HashMGet(string key, params string[] fields) => ExecuteScalar(key, (c, k) => c.Client.HMGet(k, fields));
+		/// <summary>
+		/// 获取存储在哈希表中多个字段的值，每个 field 的值类型返回 byte[]
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="fields">字段</param>
+		/// <returns>byte[][]</returns>
+		public byte[][] HashMGetBytes(string key, params string[] fields) => ExecuteScalar(key, (c, k) => c.Client.HMGetBytes(k, fields));
 		/// <summary>
 		/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 		/// </summary>

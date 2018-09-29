@@ -331,14 +331,14 @@ namespace CSRedis {
 
 		#region Hash 操作
 		/// <summary>
-		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="keyValues">field1 value1 [field2 value2]</param>
 		/// <returns></returns>
 		public Task<string> HashSetAsync(string key, params object[] keyValues) => HashSetExpireAsync(key, TimeSpan.Zero, keyValues);
 		/// <summary>
-		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="expire">过期时间</param>
@@ -365,7 +365,7 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="field">字段</param>
-		/// <param name="value">值</param>
+		/// <param name="value">值(string 或 byte[])</param>
 		/// <returns></returns>
 		public Task<bool> HashSetNxAsync(string key, string field, object value) => ExecuteScalar(key, (c, k) => c.Client.HSetNxAsync(k, field, value));
 		/// <summary>
@@ -376,12 +376,26 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Task<string> HashGetAsync(string key, string field) => ExecuteScalarAsync(key, (c, k) => c.Client.HGetAsync(k, field));
 		/// <summary>
+		/// 获取存储在哈希表中指定字段的值，返回 byte[]
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="field">字段</param>
+		/// <returns>byte[]</returns>
+		public Task<byte[]> HashGetBytesAsync(string key, string field) => ExecuteScalarAsync(key, (c, k) => c.Client.HGetBytesAsync(k, field));
+		/// <summary>
 		/// 获取存储在哈希表中多个字段的值
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="fields">字段</param>
 		/// <returns></returns>
 		public Task<string[]> HashMGetAsync(string key, params string[] fields) => ExecuteScalarAsync(key, (c, k) => c.Client.HMGetAsync(k, fields));
+		/// <summary>
+		/// 获取存储在哈希表中多个字段的值，每个 field 的值类型返回 byte[]
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="fields">字段</param>
+		/// <returns>byte[][]</returns>
+		public Task<byte[][]> HashMGetBytesAsync(string key, params string[] fields) => ExecuteScalarAsync(key, (c, k) => c.Client.HMGetBytesAsync(k, fields));
 		/// <summary>
 		/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 		/// </summary>

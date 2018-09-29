@@ -162,14 +162,14 @@ partial class RedisHelper {
 	public static Task<long> PublishAsync(string channel, string data) => Instance.PublishAsync(channel, data);
 	#region Hash 操作
 	/// <summary>
-	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="keyValues">field1 value1 [field2 value2]</param>
 	/// <returns></returns>
 	public static Task<string> HashSetAsync(string key, params object[] keyValues) => Instance.HashSetAsync(key, keyValues);
 	/// <summary>
-	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+	/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="expire">过期时间</param>
@@ -181,7 +181,7 @@ partial class RedisHelper {
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="field">字段</param>
-	/// <param name="value">值</param>
+	/// <param name="value">值(string 或 byte[])</param>
 	/// <returns></returns>
 	public static Task<bool> HashSetNxAsync(string key, string field, object value) => Instance.HashSetNxAsync(key, field, value);
 	/// <summary>
@@ -192,12 +192,26 @@ partial class RedisHelper {
 	/// <returns></returns>
 	public static Task<string> HashGetAsync(string key, string field) => Instance.HashGetAsync(key, field);
 	/// <summary>
+	/// 获取存储在哈希表中指定字段的值，返回 byte[]
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="field">字段</param>
+	/// <returns>byte[]</returns>
+	public static Task<byte[]> HashGetBytesAsync(string key, string field) => Instance.HashGetBytesAsync(key, field);
+	/// <summary>
 	/// 获取存储在哈希表中多个字段的值
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="fields">字段</param>
 	/// <returns></returns>
 	public static Task<string[]> HashMGetAsync(string key, params string[] fields) => Instance.HashMGetAsync(key, fields);
+	/// <summary>
+	/// 获取存储在哈希表中多个字段的值，每个 field 的值类型返回 byte[]
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="fields">字段</param>
+	/// <returns>byte[][]</returns>
+	public static Task<byte[][]> HashMGetBytesAsync(string key, params string[] fields) => Instance.HashMGetBytesAsync(key, fields);
 	/// <summary>
 	/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 	/// </summary>

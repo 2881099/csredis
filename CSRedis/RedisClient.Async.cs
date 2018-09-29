@@ -428,6 +428,10 @@ namespace CSRedis
         {
             return WriteAsync(RedisCommands.HGet(key, field));
         }
+		public Task<byte[]> HGetBytesAsync(string key, string field)
+        {
+            return WriteAsync(RedisCommands.HGetBytes(key, field));
+        }
 
         /// <summary>
         /// Get all the fields and values in a hash
@@ -504,6 +508,10 @@ namespace CSRedis
         public Task<string[]> HMGetAsync(string key, params string[] fields)
         {
             return WriteAsync(RedisCommands.HMGet(key, fields));
+        }
+		public Task<byte[][]> HMGetBytesAsync(string key, params string[] fields)
+        {
+            return WriteAsync(RedisCommands.HMGetBytes(key, fields));
         }
 
         /// <summary>
@@ -1566,7 +1574,8 @@ namespace CSRedis
         {
             return WriteAsync(RedisCommands.Get(key));
         }
-		public Task<byte[]> GetBytesAsync(string key) {
+		public Task<byte[]> GetBytesAsync(string key)
+		{
 			return WriteAsync(RedisCommands.GetBytes(key));
 		}
 

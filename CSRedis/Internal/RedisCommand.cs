@@ -213,6 +213,10 @@ namespace CSRedis
         {
             return new RedisString("HGET", key, field);
         }
+		public static RedisBytes HGetBytes(string key, string field)
+        {
+            return new RedisBytes("HGET", key, field);
+        }
         public static RedisHash.Generic<T> HGetAll<T>(string key)
             where T : class
         {
@@ -242,6 +246,11 @@ namespace CSRedis
         {
 			object[] args = RedisArgs.Concat(key, fields);
             return new RedisArray.Strings("HMGET", args);
+        }
+		public static RedisArray.Bytes HMGetBytes(string key, params string[] fields)
+        {
+			object[] args = RedisArgs.Concat(key, fields);
+            return new RedisArray.Bytes("HMGET", args);
         }
         public static RedisStatus HMSet(string key, Dictionary<string, object> dict)
         {

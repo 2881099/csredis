@@ -19,7 +19,7 @@ namespace CSRedis.Internal
 
         public void Send(RedisSubscription command)
         {
-            Write(command);
+			Write(command);
             if (!Listening)
                 Listen(command.Parse);
         }

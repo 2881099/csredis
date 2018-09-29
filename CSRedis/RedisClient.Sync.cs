@@ -445,6 +445,10 @@ namespace CSRedis
         {
 			return Write(RedisCommands.HGet(key, field));
 		}
+		public byte[] HGetBytes(string key, string field)
+        {
+			return Write(RedisCommands.HGetBytes(key, field));
+		}
 
         /// <summary>
         /// Get all the fields and values in a hash
@@ -521,6 +525,10 @@ namespace CSRedis
         public string[] HMGet(string key, params string[] fields)
         {
             return Write(RedisCommands.HMGet(key, fields));
+        }
+		public byte[][] HMGetBytes(string key, params string[] fields)
+        {
+            return Write(RedisCommands.HMGetBytes(key, fields));
         }
 
         /// <summary>
@@ -1688,7 +1696,8 @@ namespace CSRedis
         {
             return Write(RedisCommands.Get(key));
         }
-		public byte[] GetBytes(string key) {
+		public byte[] GetBytes(string key)
+		{
 			return Write(RedisCommands.GetBytes(key));
 		}
 

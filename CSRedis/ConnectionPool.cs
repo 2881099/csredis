@@ -74,10 +74,7 @@ namespace CSRedis {
 					}
 				if (conn != null) {
 					conn.Pool = this;
-					var ips = Dns.GetHostAddresses(_ip);
-					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
-					conn.Client.Connected += Connected;
+					ResetConnection(conn);
 				}
 			}
 			return conn;
@@ -97,11 +94,7 @@ namespace CSRedis {
 				try {
 					conn.Client.Ping();
 				} catch {
-					var ips = Dns.GetHostAddresses(_ip);
-					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-					try { conn.Client.Dispose(); } catch { }
-					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
-					conn.Client.Connected += Connected;
+					ResetConnection(conn);
 				}
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
@@ -121,11 +114,7 @@ namespace CSRedis {
 				try {
 					await conn.Client.PingAsync();
 				} catch {
-					var ips = Dns.GetHostAddresses(_ip);
-					if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-					try { conn.Client.Dispose(); } catch { }
-					conn.Client = new RedisClient(new IPEndPoint(ips[0], _port));
-					conn.Client.Connected += Connected;
+					ResetConnection(conn);
 				}
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
@@ -162,14 +151,7 @@ namespace CSRedis {
 		}
 
 		public void ReleaseConnection(RedisConnection2 conn, bool isReset = false) {
-			if (isReset) {
-				try { conn.Client.Quit(); } catch { }
-				var ips = Dns.GetHostAddresses(_ip);
-				if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-				try { conn.Client.Dispose(); } catch { }
-				conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
-				conn.Client.Connected += Connected;
-			}
+			if (isReset) ResetConnection(conn);
 			
 			//Console.WriteLine($"ReleaseConnection: {FreeConnections.Count}/{AllConnections.Count}, {GetConnectionQueue.Count}|{GetConnectionAsyncQueue.Count}");
 
@@ -199,6 +181,15 @@ namespace CSRedis {
 						queueItem.Dispose();
 				}
 			}
+		}
+
+		internal void ResetConnection(RedisConnection2 conn) {
+			if (conn.Client != null && conn.Client.IsConnected) try { conn.Client.Quit(); } catch { }
+			var ips = Dns.GetHostAddresses(_ip);
+			if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+			if (conn.Client != null) try { conn.Client.Dispose(); } catch { }
+			conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
+			conn.Client.Connected += Connected;
 		}
 
 		public class GetConnectionQueueItem : IDisposable {

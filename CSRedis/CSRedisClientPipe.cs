@@ -186,14 +186,14 @@ namespace CSRedis {
 
 		#region Hash 操作
 		/// <summary>
-		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="keyValues">field1 value1 [field2 value2]</param>
 		/// <returns></returns>
 		public CSRedisClientPipe HashSet(string key, params object[] keyValues) => HashSetExpire(key, TimeSpan.Zero, keyValues);
 		/// <summary>
-		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
+		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中，value 可以是 string 或 byte[]
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="expire">过期时间</param>
@@ -219,7 +219,7 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="field">字段</param>
-		/// <param name="value">值</param>
+		/// <param name="value">值(string 或 byte[])</param>
 		/// <returns></returns>
 		public CSRedisClientPipe HashSetNx(string key, string field, object value) => PipeCommand(key, (c, k) => c.Client.HSetNx(k, field, value));
 		/// <summary>
@@ -230,12 +230,26 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe HashGet(string key, string field) => PipeCommand(key, (c, k) => c.Client.HGet(k, field));
 		/// <summary>
+		/// 获取存储在哈希表中指定字段的值，返回 byte[]
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="field">字段</param>
+		/// <returns>byte[]</returns>
+		public CSRedisClientPipe HashGetBytes(string key, string field) => PipeCommand(key, (c, k) => c.Client.HGetBytes(k, field));
+		/// <summary>
 		/// 获取存储在哈希表中多个字段的值
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="fields">字段</param>
 		/// <returns></returns>
 		public CSRedisClientPipe HashMGet(string key, params string[] fields) => PipeCommand(key, (c, k) => c.Client.HMGet(k, fields));
+		/// <summary>
+		/// 获取存储在哈希表中多个字段的值，每个 field 的值类型返回 byte[]
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="fields">字段</param>
+		/// <returns>byte[][]</returns>
+		public CSRedisClientPipe HashMGetBytes(string key, params string[] fields) => PipeCommand(key, (c, k) => c.Client.HMGetBytes(k, fields));
 		/// <summary>
 		/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 		/// </summary>
