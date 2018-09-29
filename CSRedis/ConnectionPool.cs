@@ -19,7 +19,7 @@ namespace CSRedis {
 		internal string Prefix { get; set; }
 		public List<RedisConnection2> AllConnections = new List<RedisConnection2>();
 		public Queue<RedisConnection2> FreeConnections = new Queue<RedisConnection2>();
-		public Queue<ManualResetEventSlim> GetConnectionQueue = new Queue<ManualResetEventSlim>();
+		public Queue<GetConnectionQueueItem> GetConnectionQueue = new Queue<GetConnectionQueueItem>();
 		public Queue<TaskCompletionSource<RedisConnection2>> GetConnectionAsyncQueue = new Queue<TaskCompletionSource<RedisConnection2>>();
 		private static object _lock = new object();
 		private static object _lock_GetConnectionQueue = new object();
@@ -85,11 +85,12 @@ namespace CSRedis {
 		public RedisConnection2 GetConnection () {
 			var conn = GetFreeConnection();
 			if (conn == null) {
-				ManualResetEventSlim wait = new ManualResetEventSlim(false);
+				var queueItem = new GetConnectionQueueItem();
 				lock (_lock_GetConnectionQueue)
-					GetConnectionQueue.Enqueue(wait);
-				if (wait.Wait(TimeSpan.FromSeconds(10)))
+					GetConnectionQueue.Enqueue(queueItem);
+				if (queueItem.Wait.Wait(TimeSpan.FromSeconds(10)))
 					return GetConnection();
+				queueItem.IsTimeout = true;
 				throw new Exception("CSRedis.ConnectionPool.GetConnection 连接池获取超时（10秒）");
 			}
 			if (conn.Client.IsConnected == false || DateTime.Now.Subtract(conn.LastActive).TotalSeconds > 60)
@@ -105,6 +106,7 @@ namespace CSRedis {
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
 			Interlocked.Increment(ref conn.UseSum);
+			//Console.WriteLine($"GetConnection: {FreeConnections.Count}/{AllConnections.Count}, {GetConnectionQueue.Count}|{GetConnectionAsyncQueue.Count}");
 			return conn;
 		}
 		async public Task<RedisConnection2> GetConnectionAsync() {
@@ -128,6 +130,7 @@ namespace CSRedis {
 			conn.ThreadId = Thread.CurrentThread.ManagedThreadId;
 			conn.LastActive = DateTime.Now;
 			Interlocked.Increment(ref conn.UseSum);
+			//Console.WriteLine($"GetConnectionAsync: {FreeConnections.Count}/{AllConnections.Count}, {GetConnectionQueue.Count}|{GetConnectionAsyncQueue.Count}");
 			return conn;
 		}
 
@@ -167,8 +170,8 @@ namespace CSRedis {
 				conn.Client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
 				conn.Client.Connected += Connected;
 			}
-			lock (_lock)
-				FreeConnections.Enqueue(conn);
+			
+			//Console.WriteLine($"ReleaseConnection: {FreeConnections.Count}/{AllConnections.Count}, {GetConnectionQueue.Count}|{GetConnectionAsyncQueue.Count}");
 
 			bool isAsync = false;
 			if (GetConnectionAsyncQueue.Count > 0) {
@@ -176,14 +179,35 @@ namespace CSRedis {
 				lock (_lock_GetConnectionQueue)
 					if (GetConnectionAsyncQueue.Count > 0)
 						tcs = GetConnectionAsyncQueue.Dequeue();
-				if (isAsync = (tcs != null)) tcs.SetResult(GetConnectionAsync().Result);
+				if (isAsync = (tcs != null)) tcs.SetResult(conn);
 			}
-			if (isAsync == false && GetConnectionQueue.Count > 0) {
-				ManualResetEventSlim wait = null;
-				lock (_lock_GetConnectionQueue)
-					if (GetConnectionQueue.Count > 0)
-						wait = GetConnectionQueue.Dequeue();
-				if (wait != null) wait.Set();
+			if (isAsync == false) {
+				lock (_lock)
+					FreeConnections.Enqueue(conn);
+
+				while (GetConnectionQueue.Count > 0) {
+					GetConnectionQueueItem queueItem = null;
+					lock (_lock_GetConnectionQueue)
+						if (GetConnectionQueue.Count > 0)
+							queueItem = GetConnectionQueue.Dequeue();
+					if (queueItem != null && queueItem.IsTimeout == false) {
+						queueItem.Wait.Set();
+						queueItem.Dispose();
+						break;
+					}
+					if (queueItem != null)
+						queueItem.Dispose();
+				}
+			}
+		}
+
+		public class GetConnectionQueueItem : IDisposable {
+			public ManualResetEventSlim Wait { get; set; } = new ManualResetEventSlim();
+			public bool IsTimeout { get; set; } = false;
+			public void Dispose() {
+				try {
+					if (Wait != null) Wait.Dispose();
+				} catch { }
 			}
 		}
 	}
