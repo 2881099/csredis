@@ -27,12 +27,12 @@ namespace CSRedis.Internal
             {
                 try
                 {
-                    TResponse value = _connection.Read(func);
-                    OnParsed(value);
+					TResponse value = _connection.Read(func);
+					OnParsed(value);
                 }
                 catch (IOException)
                 {
-                    if (_connection.IsConnected)
+					if (_connection.IsConnected)
                         throw;
                     break;
                 }

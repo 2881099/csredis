@@ -10,6 +10,7 @@ namespace CSRedis {
 		public Dictionary<string, ConnectionPool> ClusterNodes { get; } = new Dictionary<string, ConnectionPool>();
 		internal List<string> ClusterKeys;
 		internal Func<string, string> ClusterRule;
+		internal bool IsUnloaded = false;
 
 		/// <summary>
 		/// 创建redis访问类
@@ -22,6 +23,10 @@ namespace CSRedis {
 		/// <param name="clusterRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
 		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
 		public CSRedisClient(Func<string, string> clusterRule, params string[] connectionStrings) {
+			AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
+				IsUnloaded = true;
+			};
+
 			ClusterRule = clusterRule;
 			if (ClusterRule == null) ClusterRule = key => {
 				var idx = Math.Abs(string.Concat(key).GetHashCode()) % ClusterNodes.Count;
@@ -440,6 +445,7 @@ namespace CSRedis {
 				else rules.Add(rule, new List<string> { chans[a] });
 			}
 			var subscrs = new List<RedisConnection2>();
+			var incrNext = 0;
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var p) ? p : ClusterNodes.First().Value;
 				var subscr = pool.GetConnection();
@@ -447,22 +453,28 @@ namespace CSRedis {
 				subscr.Client.SubscriptionReceived += SubscriptionReceived;
 				subscrs.Add(subscr);
 
-				Task.Run(() => {
+				new Thread(() => {
 					try {
 						subscr.Client.Subscribe(r.Value.ToArray());
+
+						//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
+						if (subscr.Client.IsConnected == false)
+							throw new Exception("redis-server 连接已断开");
 					} catch (Exception ex) {
-						var bgcolor = Console.BackgroundColor;
-						var forecolor = Console.ForegroundColor;
-						Console.BackgroundColor = ConsoleColor.Yellow;
-						Console.ForegroundColor = ConsoleColor.Red;
-						Console.Write($"订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，5秒后重连。。。");
-						Console.BackgroundColor = bgcolor;
-						Console.ForegroundColor = forecolor;
-						Console.WriteLine();
-						Thread.CurrentThread.Join(1000 * 5);
-						Subscribe(channels);
+						if (IsUnloaded == false && Interlocked.Increment(ref incrNext) == 1) {
+							var bgcolor = Console.BackgroundColor;
+							var forecolor = Console.ForegroundColor;
+							Console.BackgroundColor = ConsoleColor.Yellow;
+							Console.ForegroundColor = ConsoleColor.Red;
+							Console.Write($"订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，3秒后重连。。。");
+							Console.BackgroundColor = bgcolor;
+							Console.ForegroundColor = forecolor;
+							Console.WriteLine();
+							Thread.CurrentThread.Join(1000 * 3);
+							Subscribe(channels);
+						}
 					}
-				});
+				}).Start();
 			}
 			lock (_subscrsDic_lock)
 				_subscrsDic.Add(subscrKey, subscrs);
@@ -545,28 +557,35 @@ return 0", $"CSRedisPSubscribe{subscrKey}", "", trylong.ToString());
 				}
 
 			var subscrs = new List<RedisConnection2>();
+			var incrNext = 0;
 			foreach (var pool in ClusterNodes) {
 				var subscr = pool.Value.GetConnection();
 				subscr.Client.MonitorReceived += MonitorReceived;
 				subscr.Client.SubscriptionReceived += SubscriptionReceived;
 				subscrs.Add(subscr);
 
-				Task.Run(() => {
+				new Thread(() => {
 					try {
 						subscr.Client.PSubscribe(chans);
+
+						//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
+						if (subscr.Client.IsConnected == false)
+							throw new Exception("redis-server 连接已断开");
 					} catch (Exception ex) {
-						var bgcolor = Console.BackgroundColor;
-						var forecolor = Console.ForegroundColor;
-						Console.BackgroundColor = ConsoleColor.Yellow;
-						Console.ForegroundColor = ConsoleColor.Red;
-						Console.Write($"模糊订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，5秒后重连。。。");
-						Console.BackgroundColor = bgcolor;
-						Console.ForegroundColor = forecolor;
-						Console.WriteLine();
-						Thread.CurrentThread.Join(1000 * 5);
-						PSubscribe(channelPatterns, pmessage);
+						if (IsUnloaded == false && Interlocked.Increment(ref incrNext) == 1) {
+							var bgcolor = Console.BackgroundColor;
+							var forecolor = Console.ForegroundColor;
+							Console.BackgroundColor = ConsoleColor.Yellow;
+							Console.ForegroundColor = ConsoleColor.Red;
+							Console.Write($"模糊订阅出错(channel:{string.Join(",", chans)}：{ex.Message}，3秒后重连。。。");
+							Console.BackgroundColor = bgcolor;
+							Console.ForegroundColor = forecolor;
+							Console.WriteLine();
+							Thread.CurrentThread.Join(1000 * 3);
+							PSubscribe(channelPatterns, pmessage);
+						}
 					}
-				});
+				}).Start();
 			}
 			lock (_subscrsDic_lock)
 				_subscrsDic.Add(subscrKey, subscrs);
