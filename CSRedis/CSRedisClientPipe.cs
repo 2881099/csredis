@@ -58,7 +58,8 @@ namespace CSRedis {
 			this.EndPipe();
 		}
 
-		private CSRedisClientPipe PipeCommand(string key, Action<RedisConnection2, string> hander, Func<object, object> parser = null) {
+		private CSRedisClientPipe PipeCommand(string key, Action<RedisConnection2, string> handle) => PipeCommand(key, handle, null);
+		private CSRedisClientPipe PipeCommand(string key, Action<RedisConnection2, string> handle, Func<object, object> parser) {
 			if (key == null) return this;
 			var clusterKey = ClusterRule == null || ClusterNodes.Count == 1 ? ClusterKeys[0] : ClusterRule(key);
 			if (ClusterNodes.TryGetValue(clusterKey, out var pool)) ClusterNodes.TryGetValue(clusterKey = ClusterKeys[0], out pool);
@@ -75,7 +76,7 @@ namespace CSRedis {
 			}
 			key = string.Concat(pool.Prefix, key);
 			try {
-				hander(conn.conn, key);
+				handle(conn.conn, key);
 			} catch (Exception ex) {
 				pool.RequirePing(ex);
 				throw ex;
@@ -501,6 +502,23 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => PipeCommand(key, (c, k) => c.Client.ZRangeByScore(k, minScore, maxScore, false, false, false, offset, limit));
 		/// <summary>
+		/// 通过分数返回有序集合指定区间内的成员和分数
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="minScore">最小分数</param>
+		/// <param name="maxScore">最大分数</param>
+		/// <param name="limit">返回多少成员</param>
+		/// <param name="offset">返回条件偏移位置</param>
+		/// <returns></returns>
+		public CSRedisClientPipe ZRangeByScoreWithScores(string key, double maxScore, double minScore, long? limit = null, long? offset = 0) => PipeCommand(key, (c, k) => c.Client.ZRangeByScore(k, maxScore, minScore, true, false, false, offset, limit), value => {
+			var res = value as string[];
+			var ret = new List<(string member, double score)>();
+			if (res != null && res.Length % 2 == 0)
+				for (var a = 0; a < res.Length; a += 2)
+					ret.Add((res[a], double.TryParse(res[a + 1], out var tryd) ? tryd : 0));
+			return ret.ToArray();
+		});
+		/// <summary>
 		/// 返回有序集合中指定成员的索引
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
@@ -548,6 +566,23 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		public CSRedisClientPipe ZRevRangeByScore(string key, double maxScore, double minScore, long? limit = null, long? offset = 0) => PipeCommand(key, (c, k) => c.Client.ZRevRangeByScore(k, maxScore, minScore, false, false, false, offset, limit));
+		/// <summary>
+		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="minScore">最小分数</param>
+		/// <param name="maxScore">最大分数</param>
+		/// <param name="limit">返回多少成员</param>
+		/// <param name="offset">返回条件偏移位置</param>
+		/// <returns></returns>
+		public CSRedisClientPipe ZRevRangeByScoreWithScores(string key, double maxScore, double minScore, long? limit = null, long? offset = 0) => PipeCommand(key, (c, k) => c.Client.ZRevRangeByScore(k, maxScore, minScore, true, false, false, offset, limit), value => {
+			var res = value as string[];
+			var ret = new List<(string member, double score)>();
+			if (res != null && res.Length % 2 == 0)
+				for (var a = 0; a < res.Length; a += 2)
+					ret.Add((res[a], double.TryParse(res[a + 1], out var tryd) ? tryd : 0));
+			return ret.ToArray();
+		});
 		/// <summary>
 		/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
 		/// </summary>

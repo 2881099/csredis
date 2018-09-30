@@ -39,12 +39,12 @@ namespace CSRedis {
 			}
 			ClusterKeys = ClusterNodes.Keys.ToList();
 		}
-		
+
 		T GetConnectionAndExecute<T>(ConnectionPool pool, Func<RedisConnection2, T> handle) {
 			using (var conn = pool.GetConnection()) {
 				try {
 					return handle(conn);
-				} catch(Exception ex) {
+				} catch (Exception ex) {
 					pool.RequirePing(ex);
 					throw ex;
 				}
@@ -101,7 +101,7 @@ namespace CSRedis {
 				}
 			}
 			var ret = getData();
-			HashSet(key, field, serialize((ret, (long) DateTime.Now.Subtract(dt1970).TotalSeconds)));
+			HashSet(key, field, serialize((ret, (long)DateTime.Now.Subtract(dt1970).TotalSeconds)));
 			return ret;
 		}
 		/// <summary>
@@ -281,7 +281,7 @@ namespace CSRedis {
 			if (keyValues == null || keyValues.Any() == false) return false;
 			if (keyValues.Length % 2 != 0) throw new Exception("keyValues 参数是键值对，不应该出现奇数(数量)，请检查使用姿势。");
 			var dic = new Dictionary<string, string>();
-			for (var a = 0; a < keyValues.Length; a+= 2) {
+			for (var a = 0; a < keyValues.Length; a += 2) {
 				if (dic.ContainsKey(keyValues[a])) dic[keyValues[a]] = dic[keyValues[a + 1]];
 				else dic.Add(keyValues[a], keyValues[a + 1]);
 			}
@@ -397,7 +397,7 @@ namespace CSRedis {
 				if (rules.ContainsKey(rule)) rules[rule].Add(chans[a]);
 				else rules.Add(rule, new List<string> { chans[a] });
 			}
-			
+
 			List<(string[] keys, RedisConnection2 conn)> subscrs = new List<(string[] keys, RedisConnection2 conn)>();
 			foreach (var r in rules) {
 				var pool = ClusterNodes.TryGetValue(r.Key, out var p) ? p : ClusterNodes.First().Value;
@@ -512,7 +512,7 @@ namespace CSRedis {
 			public void Dispose() {
 				this.IsUnsubscribed = true;
 				if (this.Subscrs != null) {
-					foreach(var subscr in this.Subscrs) {
+					foreach (var subscr in this.Subscrs) {
 						try { subscr.conn.Client.Unsubscribe(); } catch { }
 						subscr.conn.Pool.ReleaseConnection(subscr.conn, true);
 					}
@@ -709,7 +709,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 					argv.Add(keyValues[a + 1]);
 				}
 				lua += @") redis.call('EXPIRE', KEYS[1], ARGV[2]) return ARGV[1]";
-				argv.InsertRange(0, new object[] { "", (long) expire.TotalSeconds });
+				argv.InsertRange(0, new object[] { "", (long)expire.TotalSeconds });
 				return Eval(lua, key, argv.ToArray())?.ToString();
 			}
 			return ExecuteScalar(key, (c, k) => c.Client.HMSet(k, keyValues));
@@ -1181,6 +1181,23 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public string[] ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => ExecuteScalar(key, (c, k) => c.Client.ZRangeByScore(k, minScore, maxScore, false, false, false, offset, limit));
 		/// <summary>
+		/// 通过分数返回有序集合指定区间内的成员和分数
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="minScore">最小分数</param>
+		/// <param name="maxScore">最大分数</param>
+		/// <param name="limit">返回多少成员</param>
+		/// <param name="offset">返回条件偏移位置</param>
+		/// <returns></returns>
+		public (string member, double score)[] ZRangeByScoreWithScores(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
+			var res = ExecuteScalar(key, (c, k) => c.Client.ZRangeByScore(k, minScore, maxScore, true, false, false, offset, limit));
+			var ret = new List<(string member, double score)>();
+			if (res != null && res.Length % 2 == 0)
+				for (var a = 0; a < res.Length; a+=2)
+					ret.Add((res[a], double.TryParse(res[a + 1], out var tryd) ? tryd : 0));
+			return ret.ToArray();
+		}
+		/// <summary>
 		/// 返回有序集合中指定成员的索引
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
@@ -1228,6 +1245,23 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		public string[] ZRevRangeByScore(string key, double maxScore, double minScore, long? limit = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Client.ZRevRangeByScore(k, maxScore, minScore, false, false, false, offset, limit));
+		/// <summary>
+		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="minScore">最小分数</param>
+		/// <param name="maxScore">最大分数</param>
+		/// <param name="limit">返回多少成员</param>
+		/// <param name="offset">返回条件偏移位置</param>
+		/// <returns></returns>
+		public (string member, double score)[] ZRevRangeByScoreWithScores(string key, double maxScore, double minScore, long? limit = null, long offset = 0) {
+			var res = ExecuteScalar(key, (c, k) => c.Client.ZRevRangeByScore(k, maxScore, minScore, true, false, false, offset, limit));
+			var ret = new List<(string member, double score)>();
+			if (res != null && res.Length % 2 == 0)
+				for (var a = 0; a < res.Length; a += 2)
+					ret.Add((res[a], double.TryParse(res[a + 1], out var tryd) ? tryd : 0));
+			return ret.ToArray();
+		}
 		/// <summary>
 		/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
 		/// </summary>

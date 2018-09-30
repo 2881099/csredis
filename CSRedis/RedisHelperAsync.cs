@@ -573,6 +573,16 @@ partial class RedisHelper {
 	/// <returns></returns>
 	public static Task<string[]> ZRangeByScoreAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync(key, minScore, maxScore, limit, offset);
 	/// <summary>
+	/// 通过分数返回有序集合指定区间内的成员和分数
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="minScore">最小分数</param>
+	/// <param name="maxScore">最大分数</param>
+	/// <param name="limit">返回多少成员</param>
+	/// <param name="offset">返回条件偏移位置</param>
+	/// <returns></returns>
+	public static Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => Instance.ZRangeByScoreWithScoresAsync(key, minScore, maxScore, limit, offset);
+	/// <summary>
 	/// 返回有序集合中指定成员的索引
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
@@ -619,7 +629,17 @@ partial class RedisHelper {
 	/// <param name="limit">返回多少成员</param>
 	/// <param name="offset">返回条件偏移位置</param>
 	/// <returns></returns>
-	public static Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long? offset = null) => Instance.ZRevRangeByScoreAsync(key, maxScore, minScore, limit, offset);
+	public static Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreAsync(key, maxScore, minScore, limit, offset);
+	/// <summary>
+	/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
+	/// </summary>
+	/// <param name="key">不含prefix前辍</param>
+	/// <param name="minScore">最小分数</param>
+	/// <param name="maxScore">最大分数</param>
+	/// <param name="limit">返回多少成员</param>
+	/// <param name="offset">返回条件偏移位置</param>
+	/// <returns></returns>
+	public static Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double maxScore, double minScore, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreWithScoresAsync(key, maxScore, minScore, limit, offset);
 	/// <summary>
 	/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
 	/// </summary>
