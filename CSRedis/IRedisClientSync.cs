@@ -257,14 +257,14 @@ namespace CSRedis
         bool RenameNx(string key, string newKey);
 
 
-        /// <summary>
-        /// Create a key using the provided serialized value, previously obtained using dump
-        /// </summary>
-        /// <param name="key">Key to restore</param>
-        /// <param name="ttl">Time-to-live in milliseconds</param>
-        /// <param name="serializedValue">Serialized value from DUMP</param>
-        /// <returns>Status code</returns>
-        string Restore(string key, long ttl, string serializedValue);
+		/// <summary>
+		/// Create a key using the provided serialized value, previously obtained using dump
+		/// </summary>
+		/// <param name="key">Key to restore</param>
+		/// <param name="ttlMilliseconds">Time-to-live in milliseconds</param>
+		/// <param name="serializedValue">Serialized value from DUMP</param>
+		/// <returns>Status code</returns>
+		string Restore(string key, long ttlMilliseconds, byte[] serializedValue);
 
         /// <summary>
         /// Sort the elements in a list, set or sorted set
@@ -280,19 +280,19 @@ namespace CSRedis
         string[] Sort(string key, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get);
 
 
-        /// <summary>
-        /// Sort the elements in a list, set or sorted set, then store the result in a new list
-        /// </summary>
-        /// <param name="key">Key to sort</param>
-        /// <param name="destination">Destination key name of stored sort</param>
-        /// <param name="offset">Number of elements to skip</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <param name="by">Sort by external key</param>
-        /// <param name="dir">Sort direction</param>
-        /// <param name="isAlpha">Sort lexicographically</param>
-        /// <param name="get">Retrieve external keys</param>
-        /// <returns>Number of elements stored</returns>
-        long SortAndStore(string key, string destination, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = false, params string[] get);
+		/// <summary>
+		/// Sort the elements in a list, set or sorted set, then store the result in a new list
+		/// </summary>
+		/// <param name="key">Key to sort</param>
+		/// <param name="destination">Destination key name of stored sort</param>
+		/// <param name="offset">Number of elements to skip</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <param name="by">Sort by external key</param>
+		/// <param name="dir">Sort direction</param>
+		/// <param name="isAlpha">Sort lexicographically</param>
+		/// <param name="get">Retrieve external keys</param>
+		/// <returns>Number of elements stored</returns>
+		long SortAndStore(string key, string destination, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = false, params string[] get);
 
 
         /// <summary>
@@ -318,18 +318,19 @@ namespace CSRedis
         /// <param name="pattern">Glob-style pattern to filter returned elements</param>
         /// <param name="count">Set the maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
-        RedisScan<string> Scan(long cursor, string pattern = null, long? count = null);
+        RedisScan<T> Scan<T>(long cursor, string pattern = null, long? count = null);
+		RedisScan<byte[]> ScanBytes(long cursor, string pattern = null, long? count = null);
 
-        #endregion
+		#endregion
 
-        #region Hashes
-        /// <summary>
-        /// Delete one or more hash fields
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="fields">Fields to delete</param>
-        /// <returns>Number of fields removed from hash</returns>
-        long HDel(string key, params string[] fields);
+		#region Hashes
+		/// <summary>
+		/// Delete one or more hash fields
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="fields">Fields to delete</param>
+		/// <returns>Number of fields removed from hash</returns>
+		long HDel(string key, params string[] fields);
 
 
         /// <summary>
@@ -348,15 +349,15 @@ namespace CSRedis
         /// <param name="field">Field to get</param>
         /// <returns>Value of hash field</returns>
         string HGet(string key, string field);
+		byte[] HGetBytes(string key, string field);
 
-
-        /// <summary>
-        /// Get all the fields and values in a hash
-        /// </summary>
-        /// <typeparam name="T">Object to map hash</typeparam>
-        /// <param name="key">Hash key</param>
-        /// <returns>Strongly typed object mapped from hash</returns>
-        T HGetAll<T>(string key)
+		/// <summary>
+		/// Get all the fields and values in a hash
+		/// </summary>
+		/// <typeparam name="T">Object to map hash</typeparam>
+		/// <param name="key">Hash key</param>
+		/// <returns>Strongly typed object mapped from hash</returns>
+		T HGetAll<T>(string key)
                     where T : class;
 
         /// <summary>
@@ -365,16 +366,16 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <returns>Dictionary mapped from string</returns>
         Dictionary<string, string> HGetAll(string key);
+		Dictionary<string, byte[]> HGetAllBytes(string key);
 
-
-        /// <summary>
-        /// Increment the integer value of a hash field by the given number
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="field">Field to increment</param>
-        /// <param name="increment">Increment value</param>
-        /// <returns>Value of field after increment</returns>
-        long HIncrBy(string key, string field, long increment);
+		/// <summary>
+		/// Increment the integer value of a hash field by the given number
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="field">Field to increment</param>
+		/// <param name="increment">Increment value</param>
+		/// <returns>Value of field after increment</returns>
+		long HIncrBy(string key, string field, long increment);
 
 
         /// <summary>
@@ -410,15 +411,15 @@ namespace CSRedis
 		/// <param name="fields">Fields to return</param>
 		/// <returns>Values of given fields</returns>
 		string[] HMGet(string key, params string[] fields);
+		byte[][] HMGetBytes(string key, params string[] fields);
 
-
-        /// <summary>
-        /// Set multiple hash fields to multiple values
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="dict">Dictionary mapping of hash</param>
-        /// <returns>Status code</returns>
-        string HMSet(string key, Dictionary<string, object> dict);
+		/// <summary>
+		/// Set multiple hash fields to multiple values
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="dict">Dictionary mapping of hash</param>
+		/// <returns>Status code</returns>
+		string HMSet(string key, Dictionary<string, object> dict);
 
 
         /// <summary>
@@ -467,131 +468,138 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <returns>Array of all values in hash</returns>
         string[] HVals(string key);
+		byte[][] HValsBytes(string key);
 
 
-        /// <summary>
-        /// Iterate the keys and values of a hash field
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="cursor">The cursor returned by the server in the previous call, or 0 if this is the first call</param>
-        /// <param name="pattern">Glob-style pattern to filter returned elements</param>
-        /// <param name="count">Maximum number of elements to return</param>
-        /// <returns>Updated cursor and result set</returns>
-        RedisScan<Tuple<string, string>> HScan(string key, long cursor, string pattern = null, long? count = null);
+		/// <summary>
+		/// Iterate the keys and values of a hash field
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="cursor">The cursor returned by the server in the previous call, or 0 if this is the first call</param>
+		/// <param name="pattern">Glob-style pattern to filter returned elements</param>
+		/// <param name="count">Maximum number of elements to return</param>
+		/// <returns>Updated cursor and result set</returns>
+		RedisScan<Tuple<string, string>> HScan(string key, long cursor, string pattern = null, long? count = null);
+		RedisScan<Tuple<string, byte[]>> HScanBytes(string key, long cursor, string pattern = null, long? count = null);
 
-        #endregion
+		#endregion
 
-        #region Lists
-        /// <summary>
-        /// Remove and get the first element and key in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List key and list value</returns>
-        Tuple<string, string> BLPopWithKey(int timeout, params string[] keys);
-
-
-        /// <summary>
-        /// Remove and get the first element and key in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List key and list value</returns>
-        Tuple<string, string> BLPopWithKey(TimeSpan timeout, params string[] keys);
+		#region Lists
+		/// <summary>
+		/// Remove and get the first element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		Tuple<string, string> BLPopWithKey(int timeout, params string[] keys);
+		Tuple<string, byte[]> BLPopBytesWithKey(int timeout, params string[] keys);
 
 
-        /// <summary>
-        /// Remove and get the first element value in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List value</returns>
-        string BLPop(int timeout, params string[] keys);
+		/// <summary>
+		/// Remove and get the first element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		Tuple<string, string> BLPopWithKey(TimeSpan timeout, params string[] keys);
+		Tuple<string, byte[]> BLPopBytesWithKey(TimeSpan timeout, params string[] keys);
 
 
-        /// <summary>
-        /// Remove and get the first element value in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List value</returns>
-        string BLPop(TimeSpan timeout, params string[] keys);
+		/// <summary>
+		/// Remove and get the first element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List value</returns>
+		string BLPop(int timeout, params string[] keys);
+		byte[] BLPopBytes(int timeout, params string[] keys);
 
 
-        /// <summary>
-        /// Remove and get the last element and key in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List key and list value</returns>
-        Tuple<string, string> BRPopWithKey(int timeout, params string[] keys);
+		/// <summary>
+		/// Remove and get the first element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List value</returns>
+		string BLPop(TimeSpan timeout, params string[] keys);
+		byte[] BLPopBytes(TimeSpan timeout, params string[] keys);
 
 
-        /// <summary>
-        /// Remove and get the last element and key in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List key and list value</returns>
-        Tuple<string, string> BRPopWithKey(TimeSpan timeout, params string[] keys);
+		/// <summary>
+		/// Remove and get the last element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		Tuple<string, string> BRPopWithKey(int timeout, params string[] keys);
+		Tuple<string, byte[]> BRPopBytesWithKey(int timeout, params string[] keys);
 
 
-        /// <summary>
-        /// Remove and get the last element value in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List value</param>
-        /// <returns></returns>
-        string BRPop(int timeout, params string[] keys);
+		/// <summary>
+		/// Remove and get the last element and key in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List key and list value</returns>
+		Tuple<string, string> BRPopWithKey(TimeSpan timeout, params string[] keys);
+		Tuple<string, byte[]> BRPopBytesWithKey(TimeSpan timeout, params string[] keys);
 
+		/// <summary>
+		/// Remove and get the last element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List value</param>
+		/// <returns></returns>
+		string BRPop(int timeout, params string[] keys);
+		byte[] BRPopBytes(int timeout, params string[] keys);
 
-        /// <summary>
-        /// Remove and get the last element value in a list, or block until one is available
-        /// </summary>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <param name="keys">List keys</param>
-        /// <returns>List value</returns>
-        string BRPop(TimeSpan timeout, params string[] keys);
+		/// <summary>
+		/// Remove and get the last element value in a list, or block until one is available
+		/// </summary>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <param name="keys">List keys</param>
+		/// <returns>List value</returns>
+		string BRPop(TimeSpan timeout, params string[] keys);
+		byte[] BRPopBytes(TimeSpan timeout, params string[] keys);
 
+		/// <summary>
+		/// Pop a value from a list, push it to another list and return it; or block until one is available
+		/// </summary>
+		/// <param name="source">Source list key</param>
+		/// <param name="destination">Destination key</param>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <returns>Element popped</returns>
+		string BRPopLPush(string source, string destination, int timeout);
+		byte[] BRPopBytesLPush(string source, string destination, int timeout);
 
-        /// <summary>
-        /// Pop a value from a list, push it to another list and return it; or block until one is available
-        /// </summary>
-        /// <param name="source">Source list key</param>
-        /// <param name="destination">Destination key</param>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <returns>Element popped</returns>
-        string BRPopLPush(string source, string destination, int timeout);
+		/// <summary>
+		/// Pop a value from a list, push it to another list and return it; or block until one is available
+		/// </summary>
+		/// <param name="source">Source list key</param>
+		/// <param name="destination">Destination key</param>
+		/// <param name="timeout">Timeout in seconds</param>
+		/// <returns>Element popped</returns>
+		string BRPopLPush(string source, string destination, TimeSpan timeout);
+		byte[] BRPopBytesLPush(string source, string destination, TimeSpan timeout);
 
+		/// <summary>
+		/// Get an element from a list by its index
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="index">Zero-based index of item to return</param>
+		/// <returns>Element at index</returns>
+		string LIndex(string key, long index);
+		byte[] LIndexBytes(string key, long index);
 
-        /// <summary>
-        /// Pop a value from a list, push it to another list and return it; or block until one is available
-        /// </summary>
-        /// <param name="source">Source list key</param>
-        /// <param name="destination">Destination key</param>
-        /// <param name="timeout">Timeout in seconds</param>
-        /// <returns>Element popped</returns>
-        string BRPopLPush(string source, string destination, TimeSpan timeout);
-
-
-        /// <summary>
-        /// Get an element from a list by its index
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="index">Zero-based index of item to return</param>
-        /// <returns>Element at index</returns>
-        string LIndex(string key, long index);
-
-
-        /// <summary>
-        /// Insert an element before or after another element in a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="insertType">Relative position</param>
-        /// <param name="pivot">Relative element</param>
-        /// <param name="value">Element to insert</param>
-        /// <returns>Length of list after insert or -1 if pivot not found</returns>
-        long LInsert(string key, RedisInsert insertType, string pivot, object value);
+		/// <summary>
+		/// Insert an element before or after another element in a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="insertType">Relative position</param>
+		/// <param name="pivot">Relative element</param>
+		/// <param name="value">Element to insert</param>
+		/// <returns>Length of list after insert or -1 if pivot not found</returns>
+		long LInsert(string key, RedisInsert insertType, string pivot, object value);
 
 
         /// <summary>
@@ -608,15 +616,15 @@ namespace CSRedis
         /// <param name="key">List key</param>
         /// <returns>First element in list</returns>
         string LPop(string key);
+		byte[] LPopBytes(string key);
 
-
-        /// <summary>
-        /// Prepend one or multiple values to a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
-        /// <returns>Length of list after push</returns>
-        long LPush(string key, params object[] values);
+		/// <summary>
+		/// Prepend one or multiple values to a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="values">Values to push</param>
+		/// <returns>Length of list after push</returns>
+		long LPush(string key, params object[] values);
 
         /// <summary>
         /// Prepend a value to a list, only if the list exists
@@ -635,16 +643,16 @@ namespace CSRedis
         /// <param name="stop">Stop offset</param>
         /// <returns>List of elements in range</returns>
         string[] LRange(string key, long start, long stop);
+		byte[][] LRangeBytes(string key, long start, long stop);
 
-
-        /// <summary>
-        /// Remove elements from a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="count">&gt;0: remove N elements from head to tail; &lt;0: remove N elements from tail to head; =0: remove all elements</param>
-        /// <param name="value">Remove elements equal to value</param>
-        /// <returns>Number of removed elements</returns>
-        long LRem(string key, long count, object value);
+		/// <summary>
+		/// Remove elements from a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="count">&gt;0: remove N elements from head to tail; &lt;0: remove N elements from tail to head; =0: remove all elements</param>
+		/// <param name="value">Remove elements equal to value</param>
+		/// <returns>Number of removed elements</returns>
+		long LRem(string key, long count, object value);
 
 
         /// <summary>
@@ -671,31 +679,32 @@ namespace CSRedis
         /// <param name="key">List key</param>
         /// <returns>Value of last list element</returns>
         string RPop(string key);
+		byte[] RPopBytes(string key);
 
+		/// <summary>
+		/// Remove the last elment in a list, append it to another list and return it
+		/// </summary>
+		/// <param name="source">List source key</param>
+		/// <param name="destination">Destination key</param>
+		/// <returns>Element being popped and pushed</returns>
+		string RPopLPush(string source, string destination);
+		byte[] RPopBytesLPush(string source, string destination);
 
-        /// <summary>
-        /// Remove the last elment in a list, append it to another list and return it
-        /// </summary>
-        /// <param name="source">List source key</param>
-        /// <param name="destination">Destination key</param>
-        /// <returns>Element being popped and pushed</returns>
-        string RPopLPush(string source, string destination);
-
-        /// <summary>
-        /// Append one or multiple values to a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
-        /// <returns>Length of list after push</returns>
-        long RPush(string key, params object[] values);
+		/// <summary>
+		/// Append one or multiple values to a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="values">Values to push</param>
+		/// <returns>Length of list after push</returns>
+		long RPush(string key, params object[] values);
 
         /// <summary>
         /// Append a value to a list, only if the list exists
         /// </summary>
         /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
+        /// <param name="value">Value to push</param>
         /// <returns>Length of list after push</returns>
-        long RPushX(string key, params object[] values);
+        long RPushX(string key, object value);
         #endregion
 
         #region Sets
@@ -720,14 +729,15 @@ namespace CSRedis
         /// <param name="keys">Set keys to subtract</param>
         /// <returns>Array of elements in resulting set</returns>
         string[] SDiff(params string[] keys);
+		byte[][] SDiffBytes(params string[] keys);
 
-        /// <summary>
-        /// Subtract multiple sets and store the resulting set in a key
-        /// </summary>
-        /// <param name="destination">Destination key</param>
-        /// <param name="keys">Set keys to subtract</param>
-        /// <returns>Number of elements in the resulting set</returns>
-        long SDiffStore(string destination, params string[] keys);
+		/// <summary>
+		/// Subtract multiple sets and store the resulting set in a key
+		/// </summary>
+		/// <param name="destination">Destination key</param>
+		/// <param name="keys">Set keys to subtract</param>
+		/// <returns>Number of elements in the resulting set</returns>
+		long SDiffStore(string destination, params string[] keys);
 
 
         /// <summary>
@@ -736,17 +746,17 @@ namespace CSRedis
         /// <param name="keys">Set keys to intersect</param>
         /// <returns>Array of elements in resulting set</returns>
         string[] SInter(params string[] keys);
+		byte[][] SInterBytes(params string[] keys);
 
 
 
-
-        /// <summary>
-        /// Intersect multiple sets and store the resulting set in a key
-        /// </summary>
-        /// <param name="destination">Destination key</param>
-        /// <param name="keys">Set keys to intersect</param>
-        /// <returns>Number of elements in resulting set</returns>
-        long SInterStore(string destination, params string[] keys);
+		/// <summary>
+		/// Intersect multiple sets and store the resulting set in a key
+		/// </summary>
+		/// <param name="destination">Destination key</param>
+		/// <param name="keys">Set keys to intersect</param>
+		/// <returns>Number of elements in resulting set</returns>
+		long SInterStore(string destination, params string[] keys);
 
 
 
@@ -768,18 +778,18 @@ namespace CSRedis
         /// <param name="key">Set key</param>
         /// <returns>All elements in the set</returns>
         string[] SMembers(string key);
+		byte[][] SMembersBytes(string key);
 
 
 
-
-        /// <summary>
-        /// Move a member from one set to another
-        /// </summary>
-        /// <param name="source">Source key</param>
-        /// <param name="destination">Destination key</param>
-        /// <param name="member">Member to move</param>
-        /// <returns>True if element was moved</returns>
-        bool SMove(string source, string destination, object member);
+		/// <summary>
+		/// Move a member from one set to another
+		/// </summary>
+		/// <param name="source">Source key</param>
+		/// <param name="destination">Destination key</param>
+		/// <param name="member">Member to move</param>
+		/// <returns>True if element was moved</returns>
+		bool SMove(string source, string destination, object member);
 
 
 
@@ -790,38 +800,38 @@ namespace CSRedis
         /// <param name="key">Set key</param>
         /// <returns>The removed element</returns>
         string SPop(string key);
+		byte[] SPopBytes(string key);
 
 
 
-
-        /// <summary>
-        /// Get a random member from a set
-        /// </summary>
-        /// <param name="key">Set key</param>
-        /// <returns>One random element from set</returns>
-        string SRandMember(string key);
-
-
-
-
-        /// <summary>
-        /// Get one or more random members from a set
-        /// </summary>
-        /// <param name="key">Set key</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>One or more random elements from set</returns>
-        string[] SRandMember(string key, long count);
+		/// <summary>
+		/// Get a random member from a set
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <returns>One random element from set</returns>
+		string SRandMember(string key);
+		byte[] SRandMemberBytes(string key);
 
 
 
+		/// <summary>
+		/// Get one or more random members from a set
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>One or more random elements from set</returns>
+		string[] SRandMembers(string key, long count);
+		byte[][] SRandMembersBytes(string key, long count);
 
-        /// <summary>
-        /// Remove one or more members from a set
-        /// </summary>
-        /// <param name="key">Set key</param>
-        /// <param name="members">Set members to remove</param>
-        /// <returns>Number of elements removed from set</returns>
-        long SRem(string key, params object[] members);
+
+
+		/// <summary>
+		/// Remove one or more members from a set
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <param name="members">Set members to remove</param>
+		/// <returns>Number of elements removed from set</returns>
+		long SRem(string key, params object[] members);
 
 
 
@@ -832,17 +842,17 @@ namespace CSRedis
         /// <param name="keys">Set keys to union</param>
         /// <returns>Array of elements in resulting set</returns>
         string[] SUnion(params string[] keys);
+		byte[][] SUnionBytes(params string[] keys);
 
 
 
-
-        /// <summary>
-        /// Add multiple sets and store the resulting set in a key
-        /// </summary>
-        /// <param name="destination">Destination key</param>
-        /// <param name="keys">Set keys to union</param>
-        /// <returns>Number of elements in resulting set</returns>
-        long SUnionStore(string destination, params string[] keys);
+		/// <summary>
+		/// Add multiple sets and store the resulting set in a key
+		/// </summary>
+		/// <param name="destination">Destination key</param>
+		/// <param name="keys">Set keys to union</param>
+		/// <returns>Number of elements in resulting set</returns>
+		long SUnionStore(string destination, params string[] keys);
 
 
 
@@ -856,19 +866,19 @@ namespace CSRedis
         /// <param name="count">Maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
         RedisScan<string> SScan(string key, long cursor, string pattern = null, long? count = null);
+		RedisScan<byte[]> SScanBytes(string key, long cursor, string pattern = null, long? count = null);
 
 
+		#endregion
 
-        #endregion
-
-        #region Sorted Sets
-        /// <summary>
-        /// Add one or more members to a sorted set, or update its score if it already exists
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="memberScores">Array of member scores to add to sorted set</param>
-        /// <returns>Number of elements added to the sorted set (not including member updates);</returns>
-        long ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores);
+		#region Sorted Sets
+		/// <summary>
+		/// Add one or more members to a sorted set, or update its score if it already exists
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="memberScores">Array of member scores to add to sorted set</param>
+		/// <returns>Number of elements added to the sorted set (not including member updates);</returns>
+		long ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores);
 
 
 
@@ -879,7 +889,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="memberScores">Array of member scores [s1, m1, s2, m2, ..]</param>
         /// <returns>Number of elements added to the sorted set (not including member updates);</returns>
-        long ZAdd(string key, params string[] memberScores);
+        long ZAdd(string key, params object[] memberScores);
 
 
 
@@ -965,91 +975,92 @@ namespace CSRedis
         /// <param name="withScores">Include scores in result</param>
         /// <returns>Array of elements in the specified range (with optional scores);</returns>
         string[] ZRange(string key, long start, long stop, bool withScores = false);
+		byte[][] ZRangeBytes(string key, long start, long stop, bool withScores = false);
 
 
 
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="start">Start offset</param>
-        /// <param name="stop">Stop offset</param>
-        /// <returns>Array of elements in the specified range with scores</returns>
-        Tuple<string, double>[] ZRangeWithScores(string key, long start, long stop);
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="start">Start offset</param>
+		/// <param name="stop">Stop offset</param>
+		/// <returns>Array of elements in the specified range with scores</returns>
+		Tuple<string, double>[] ZRangeWithScores(string key, long start, long stop);
+		Tuple<byte[], double>[] ZRangeBytesWithScores(string key, long start, long stop);
 
 
 
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores);</returns>
-        string[] ZRangeByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-
-
-
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores);</returns>
-        string[] ZRangeByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null);
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores);</returns>
+		string[] ZRangeByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+		byte[][] ZRangeBytesByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores);</returns>
-        Tuple<string, double>[] ZRangeByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores);</returns>
+		string[] ZRangeByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null);
+		byte[][] ZRangeBytesByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null);
 
 
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores);</returns>
-        Tuple<string, double>[] ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores);</returns>
+		Tuple<string, double>[] ZRangeByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+		Tuple<byte[], double>[] ZRangeBytesByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores);</returns>
+		Tuple<string, double>[] ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
+		Tuple<byte[], double>[] ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
 
-        /// <summary>
-        /// Determine the index of a member in a sorted set
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="member">Member to lookup</param>
-        /// <returns>Rank of member or null if key does not exist</returns>
-        long? ZRank(string key, string member);
+
+
+		/// <summary>
+		/// Determine the index of a member in a sorted set
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="member">Member to lookup</param>
+		/// <returns>Rank of member or null if key does not exist</returns>
+		long? ZRank(string key, object member);
 
 
 
@@ -1100,91 +1111,92 @@ namespace CSRedis
         /// <param name="withScores">Include scores in result</param>
         /// <returns>List of elements in the specified range (with optional scores);</returns>
         string[] ZRevRange(string key, long start, long stop, bool withScores = false);
+		byte[][] ZRevRangeBytes(string key, long start, long stop, bool withScores = false);
+
+
+
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="start">Start offset</param>
+		/// <param name="stop">Stop offset</param>
+		/// <returns>List of elements in the specified range (with optional scores);</returns>
+		Tuple<string, double>[] ZRevRangeWithScores(string key, long start, long stop);
+		Tuple<byte[], double>[] ZRevRangeBytesWithScores(string key, long start, long stop);
 
 
 
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="start">Start offset</param>
-        /// <param name="stop">Stop offset</param>
-        /// <returns>List of elements in the specified range (with optional scores);</returns>
-        Tuple<string, double>[] ZRevRangeWithScores(string key, long start, long stop);
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores);</returns>
+		string[] ZRevRangeByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		byte[][] ZRevRangeBytesByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        string[] ZRevRangeByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores);</returns>
+		string[] ZRevRangeByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null);
+		byte[][] ZRevRangeBytesByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null);
 
 
 
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        string[] ZRevRangeByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null);
-
-
-
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        Tuple<string, double>[] ZRevRangeByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores);</returns>
+		Tuple<string, double>[] ZRevRangeByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		Tuple<byte[], double>[] ZRevRangeBytesByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        Tuple<string, double>[] ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
-
-
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores);</returns>
+		Tuple<string, double>[] ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
+		Tuple<byte[], double>[] ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
 
 
-        /// <summary>
-        /// Determine the index of a member in a sorted set, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="member">Member to lookup</param>
-        /// <returns>Rank of member, or null if member does not exist</returns>
-        long? ZRevRank(string key, string member);
+
+		/// <summary>
+		/// Determine the index of a member in a sorted set, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="member">Member to lookup</param>
+		/// <returns>Rank of member, or null if member does not exist</returns>
+		long? ZRevRank(string key, object member);
 
 
 
@@ -1195,7 +1207,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Score of member, or null if member does not exist</returns>
-        double? ZScore(string key, string member);
+        double? ZScore(string key, object member);
 
 
 
@@ -1233,32 +1245,32 @@ namespace CSRedis
         /// <param name="count">Maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
         RedisScan<Tuple<string, double>> ZScan(string key, long cursor, string pattern = null, long? count = null);
+		RedisScan<Tuple<byte[], double>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null);
 
 
 
-
-        /// <summary>
-        /// Retrieve all the elements in a sorted set with a value between min and max
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <param name="offset">Limit result set by offset</param>
-        /// <param name="count">Limimt result set by size</param>
-        /// <returns>List of elements in the specified range</returns>
-        string[] ZRangeByLex(string key, string min, string max, long? offset = null, long? count = null);
-
-
+		/// <summary>
+		/// Retrieve all the elements in a sorted set with a value between min and max
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <param name="offset">Limit result set by offset</param>
+		/// <param name="count">Limimt result set by size</param>
+		/// <returns>List of elements in the specified range</returns>
+		string[] ZRangeByLex(string key, string min, string max, long? offset = null, long? count = null);
+		byte[][] ZRangeBytesByLex(string key, string min, string max, long? offset = null, long? count = null);
 
 
-        /// <summary>
-        /// Remove all elements in the sorted set with a value between min and max
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <returns>Number of elements removed</returns>
-        long ZRemRangeByLex(string key, string min, string max);
+
+		/// <summary>
+		/// Remove all elements in the sorted set with a value between min and max
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <returns>Number of elements removed</returns>
+		long ZRemRangeByLex(string key, string min, string max);
 
 
 
@@ -1491,17 +1503,18 @@ namespace CSRedis
         /// <param name="key">Key to lookup</param>
         /// <returns>Value of key</returns>
         string Get(string key);
+		byte[] GetBytes(string key);
 
 
 
 
-        /// <summary>
-        /// Returns the bit value at offset in the string value stored at key
-        /// </summary>
-        /// <param name="key">Key to lookup</param>
-        /// <param name="offset">Offset of key to check</param>
-        /// <returns>Bit value stored at offset</returns>
-        bool GetBit(string key, uint offset);
+		/// <summary>
+		/// Returns the bit value at offset in the string value stored at key
+		/// </summary>
+		/// <param name="key">Key to lookup</param>
+		/// <param name="offset">Offset of key to check</param>
+		/// <returns>Bit value stored at offset</returns>
+		bool GetBit(string key, uint offset);
 
 
 
@@ -1514,27 +1527,27 @@ namespace CSRedis
         /// <param name="end">End offset</param>
         /// <returns>Substring in the specified range</returns>
         string GetRange(string key, long start, long end);
+		byte[] GetRangeBytes(string key, long start, long end);
 
 
 
-
-        /// <summary>
-        /// Set the string value of a key and
-        /// </summary>
-        /// <param name="key">Key to modify</param>
-        /// <param name="value">Value to set</param>
-        /// <returns>Old value stored at key, or null if key did not exist</returns>
-        string GetSet(string key, object value);
-
-
+		/// <summary>
+		/// Set the string value of a key and
+		/// </summary>
+		/// <param name="key">Key to modify</param>
+		/// <param name="value">Value to set</param>
+		/// <returns>Old value stored at key, or null if key did not exist</returns>
+		string GetSet(string key, object value);
+		byte[] GetSetBytes(string key, object value);
 
 
-        /// <summary>
-        /// Increment the integer value of a key by one
-        /// </summary>
-        /// <param name="key">Key to modify</param>
-        /// <returns>Value of key after increment</returns>
-        long Incr(string key);
+
+		/// <summary>
+		/// Increment the integer value of a key by one
+		/// </summary>
+		/// <param name="key">Key to modify</param>
+		/// <returns>Value of key after increment</returns>
+		long Incr(string key);
 
 
 
@@ -1567,16 +1580,16 @@ namespace CSRedis
         /// <param name="keys">Keys to lookup</param>
         /// <returns>Array of values at the specified keys</returns>
         string[] MGet(params string[] keys);
+		byte[][] MGetBytes(params string[] keys);
 
 
 
-
-        /// <summary>
-        /// Set multiple keys to multiple values
-        /// </summary>
-        /// <param name="keyValues">Key values to set</param>
-        /// <returns>Status code</returns>
-        string MSet(params Tuple<string, string>[] keyValues);
+		/// <summary>
+		/// Set multiple keys to multiple values
+		/// </summary>
+		/// <param name="keyValues">Key values to set</param>
+		/// <returns>Status code</returns>
+		string MSet(params Tuple<string, object>[] keyValues);
 
 
 
@@ -1586,7 +1599,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set [k1, v1, k2, v2, ..]</param>
         /// <returns>Status code</returns>
-        string MSet(params string[] keyValues);
+        string MSet(params object[] keyValues);
 
 
 
@@ -1596,7 +1609,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set</param>
         /// <returns>True if all keys were set</returns>
-        bool MSetNx(params Tuple<string, string>[] keyValues);
+        bool MSetNx(params Tuple<string, object>[] keyValues);
 
 
 
@@ -1606,7 +1619,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set [k1, v1, k2, v2, ..]</param>
         /// <returns>True if all keys were set</returns>
-        bool MSetNx(params string[] keyValues);
+        bool MSetNx(params object[] keyValues);
 
 
 

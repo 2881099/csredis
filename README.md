@@ -6,7 +6,7 @@ StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经�
 
 CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙人作了以下扩展：
 
-1、增加了 CSRedisClient 现实集群与连接池管理，和 RedisHelper 静态类快速上手
+1、增加了 CSRedisClient 现实分区与连接池管理，和 RedisHelper 静态类快速上手
 
 > nuget Install-Package CSRedisCore
 
@@ -16,9 +16,9 @@ CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙
 var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍");
 ```
 
-# 集群模式
+# 分区模式
 
-本功能现实多节点分担存储，与官方的集群、高可用方案不同。
+本功能现实多节点分担存储，与官方的分区、集群、高可用方案不同。
 
 > 例如：缓存数据达到500G，如果使用一台redis-server服务器光靠内存存储将非常吃力，使用硬盘又影响性能。
 > 可使用此功能自动管理N台redis-server服务器分担存储，每台服务器只需约 (500/N)G 内存，且每台服务器匀可以配置官方高可用架构。
@@ -75,12 +75,12 @@ RedisHelper.PSubscribe(new[] { "test*", "*test001", "test*002" }, msg => {
   Console.WriteLine($"PSUB   {msg.MessageId}:{msg.Body}    {msg.Pattern}: chan:{msg.Channel}");
 });
 //模式订阅已经解决的难题：
-//1、集群的节点匹配规则，导致通配符最大可能匹配全部节点，所以全部节点都要订阅
+//1、分区的节点匹配规则，导致通配符最大可能匹配全部节点，所以全部节点都要订阅
 //2、本组 "test*", "*test001", "test*002" 订阅全部节点时，需要解决同一条消息不可执行多次
 
 //发布，
 RedisHelper.Publish("chan1", "123123123");
-//无论是集群或普通模式，RedisHelper.Publish 都能正常通信
+//无论是分区或普通模式，RedisHelper.Publish 都能正常通信
 ```
 
 ## 3、缓存壳

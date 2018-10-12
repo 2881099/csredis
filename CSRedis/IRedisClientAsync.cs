@@ -323,14 +323,14 @@ namespace CSRedis
 
 
 
-        /// <summary>
-        /// Create a key using the provided serialized value, previously obtained using dump
-        /// </summary>
-        /// <param name="key">Key to restore</param>
-        /// <param name="ttl">Time-to-live in milliseconds</param>
-        /// <param name="serializedValue">Serialized value from DUMP</param>
-        /// <returns></returns>
-        Task<string> RestoreAsync(string key, long ttl, string serializedValue);
+		/// <summary>
+		/// Create a key using the provided serialized value, previously obtained using dump
+		/// </summary>
+		/// <param name="key">Key to restore</param>
+		/// <param name="ttlMilliseconds">Time-to-live in milliseconds</param>
+		/// <param name="serializedValue">Serialized value from DUMP</param>
+		/// <returns></returns>
+		Task<string> RestoreAsync(string key, long ttlMilliseconds, byte[] serializedValue);
 
 
 
@@ -386,17 +386,26 @@ namespace CSRedis
         Task<string> TypeAsync(string key);
 
 
+		/// <summary>
+		/// Iterate the set of keys in the currently selected Redis database
+		/// </summary>
+		/// <param name="cursor">The cursor returned by the server in the previous call, or 0 if this is the first call</param>
+		/// <param name="pattern">Glob-style pattern to filter returned elements</param>
+		/// <param name="count">Set the maximum number of elements to return</param>
+		/// <returns>Updated cursor and result set</returns>
+		Task<RedisScan<string>> ScanAsync(long cursor, string pattern = null, long? count = null);
+		Task<RedisScan<byte[]>> ScanBytesAsync(long cursor, string pattern = null, long? count = null);
 
-        #endregion
+		#endregion
 
-        #region Hashes
-        /// <summary>
-        /// Delete one or more hash fields
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="fields">Fields to delete</param>
-        /// <returns>Number of fields removed from hash</returns>
-        Task<long> HDelAsync(string key, params string[] fields);
+		#region Hashes
+		/// <summary>
+		/// Delete one or more hash fields
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="fields">Fields to delete</param>
+		/// <returns>Number of fields removed from hash</returns>
+		Task<long> HDelAsync(string key, params string[] fields);
 
 
 
@@ -419,17 +428,17 @@ namespace CSRedis
         /// <param name="field">Field to get</param>
         /// <returns>Value of hash field</returns>
         Task<string> HGetAsync(string key, string field);
+		Task<byte[]> HGetBytesAsync(string key, string field);
 
 
 
-
-        /// <summary>
-        /// Get all the fields and values in a hash
-        /// </summary>
-        /// <typeparam name="T">Object to map hash</typeparam>
-        /// <param name="key">Hash key</param>
-        /// <returns>Strongly typed object mapped from hash</returns>
-        Task<T> HGetAllAsync<T>(string key)
+		/// <summary>
+		/// Get all the fields and values in a hash
+		/// </summary>
+		/// <typeparam name="T">Object to map hash</typeparam>
+		/// <param name="key">Hash key</param>
+		/// <returns>Strongly typed object mapped from hash</returns>
+		Task<T> HGetAllAsync<T>(string key)
                     where T : class;
 
 
@@ -441,18 +450,18 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <returns>Dictionary mapped from string</returns>
         Task<Dictionary<string, string>> HGetAllAsync(string key);
+		Task<Dictionary<string, byte[]>> HGetAllBytesAsync(string key);
 
 
 
-
-        /// <summary>
-        /// Increment the integer value of a hash field by the given number
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="field">Field to increment</param>
-        /// <param name="increment">Increment value</param>
-        /// <returns>Value of field after increment</returns>
-        Task<long> HIncrByAsync(string key, string field, long increment);
+		/// <summary>
+		/// Increment the integer value of a hash field by the given number
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="field">Field to increment</param>
+		/// <param name="increment">Increment value</param>
+		/// <returns>Value of field after increment</returns>
+		Task<long> HIncrByAsync(string key, string field, long increment);
 
 
 
@@ -496,17 +505,17 @@ namespace CSRedis
         /// <param name="fields">Fields to return</param>
         /// <returns>Values of given fields</returns>
         Task<string[]> HMGetAsync(string key, params string[] fields);
+		Task<byte[][]> HMGetBytesAsync(string key, params string[] fields);
 
 
 
-
-        /// <summary>
-        /// Set multiple hash fields to multiple values
-        /// </summary>
-        /// <param name="key">Hash key</param>
-        /// <param name="dict">Dictionary mapping of hash</param>
-        /// <returns>Status code</returns>
-        Task<string> HMSetAsync(string key, Dictionary<string, object> dict);
+		/// <summary>
+		/// Set multiple hash fields to multiple values
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="dict">Dictionary mapping of hash</param>
+		/// <returns>Status code</returns>
+		Task<string> HMSetAsync(string key, Dictionary<string, object> dict);
 
 
 
@@ -565,32 +574,42 @@ namespace CSRedis
         /// <param name="key">Hash key</param>
         /// <returns>Array of all values in hash</returns>
         Task<string[]> HValsAsync(string key);
+		Task<byte[][]> HValsBytesAsync(string key);
+
+		/// <summary>
+		/// Iterate the keys and values of a hash field
+		/// </summary>
+		/// <param name="key">Hash key</param>
+		/// <param name="cursor">The cursor returned by the server in the previous call, or 0 if this is the first call</param>
+		/// <param name="pattern">Glob-style pattern to filter returned elements</param>
+		/// <param name="count">Maximum number of elements to return</param>
+		/// <returns>Updated cursor and result set</returns>
+		Task<RedisScan<Tuple<string, string>>> HScanAsync(string key, long cursor, string pattern = null, long? count = null);
+		Task<RedisScan<Tuple<string, byte[]>>> HScanBytesAsync(string key, long cursor, string pattern = null, long? count = null);
+
+		#endregion
+
+		#region Lists
+		/// <summary>
+		/// Get an element from a list by its index
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="index">Zero-based index of item to return</param>
+		/// <returns>Element at index</returns>
+		Task<string> LIndexAsync(string key, long index);
+		Task<byte[]> LIndexBytesAsync(string key, long index);
 
 
 
-        #endregion
-
-        #region Lists
-        /// <summary>
-        /// Get an element from a list by its index
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="index">Zero-based index of item to return</param>
-        /// <returns>Element at index</returns>
-        Task<string> LIndexAsync(string key, long index);
-
-
-
-
-        /// <summary>
-        /// Insert an element before or after another element in a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="insertType">Relative position</param>
-        /// <param name="pivot">Relative element</param>
-        /// <param name="value">Element to insert</param>
-        /// <returns>Length of list after insert or -1 if pivot not found</returns>
-        Task<long> LInsertAsync(string key, RedisInsert insertType, string pivot, object value);
+		/// <summary>
+		/// Insert an element before or after another element in a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="insertType">Relative position</param>
+		/// <param name="pivot">Relative element</param>
+		/// <param name="value">Element to insert</param>
+		/// <returns>Length of list after insert or -1 if pivot not found</returns>
+		Task<long> LInsertAsync(string key, RedisInsert insertType, string pivot, object value);
 
 
 
@@ -611,17 +630,17 @@ namespace CSRedis
         /// <param name="key">List key</param>
         /// <returns>First element in list</returns>
         Task<string> LPopAsync(string key);
+		Task<byte[]> LPopBytesAsync(string key);
 
 
 
-
-        /// <summary>
-        /// Prepend one or multiple values to a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
-        /// <returns>Length of list after push</returns>
-        Task<long> LPushAsync(string key, params object[] values);
+		/// <summary>
+		/// Prepend one or multiple values to a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="values">Values to push</param>
+		/// <returns>Length of list after push</returns>
+		Task<long> LPushAsync(string key, params object[] values);
 
 
 
@@ -645,18 +664,18 @@ namespace CSRedis
         /// <param name="stop">Stop offset</param>
         /// <returns>List of elements in range</returns>
         Task<string[]> LRangeAsync(string key, long start, long stop);
+		Task<byte[][]> LRangeBytesAsync(string key, long start, long stop);
 
 
 
-
-        /// <summary>
-        /// Remove elements from a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="count">&gt;0: remove N elements from head to tail; &lt;0: remove N elements from tail to head; =0: remove all elements</param>
-        /// <param name="value">Remove elements equal to value</param>
-        /// <returns>Number of removed elements</returns>
-        Task<long> LRemAsync(string key, long count, object value);
+		/// <summary>
+		/// Remove elements from a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="count">&gt;0: remove N elements from head to tail; &lt;0: remove N elements from tail to head; =0: remove all elements</param>
+		/// <param name="value">Remove elements equal to value</param>
+		/// <returns>Number of removed elements</returns>
+		Task<long> LRemAsync(string key, long count, object value);
 
 
 
@@ -691,28 +710,28 @@ namespace CSRedis
         /// <param name="key">List key</param>
         /// <returns>Value of last list element</returns>
         Task<string> RPopAsync(string key);
+		Task<byte[]> RPopBytesAsync(string key);
 
 
 
-
-        /// <summary>
-        /// Remove the last elment in a list, append it to another list and return it
-        /// </summary>
-        /// <param name="source">List source key</param>
-        /// <param name="destination">Destination key</param>
-        /// <returns>Element being popped and pushed</returns>
-        Task<string> RPopLPushAsync(string source, string destination);
-
-
+		/// <summary>
+		/// Remove the last elment in a list, append it to another list and return it
+		/// </summary>
+		/// <param name="source">List source key</param>
+		/// <param name="destination">Destination key</param>
+		/// <returns>Element being popped and pushed</returns>
+		Task<string> RPopLPushAsync(string source, string destination);
+		Task<byte[]> RPopBytesLPushAsync(string source, string destination);
 
 
-        /// <summary>
-        /// Append one or multiple values to a list
-        /// </summary>
-        /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
-        /// <returns>Length of list after push</returns>
-        Task<long> RPushAsync(string key, params object[] values);
+
+		/// <summary>
+		/// Append one or multiple values to a list
+		/// </summary>
+		/// <param name="key">List key</param>
+		/// <param name="values">Values to push</param>
+		/// <returns>Length of list after push</returns>
+		Task<long> RPushAsync(string key, params object[] values);
 
 
 
@@ -721,9 +740,9 @@ namespace CSRedis
         /// Append a value to a list, only if the list exists
         /// </summary>
         /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
+        /// <param name="value">Value to push</param>
         /// <returns>Length of list after push</returns>
-        Task<long> RPushXAsync(string key, params object[] values);
+        Task<long> RPushXAsync(string key, object value);
 
 
 
@@ -757,17 +776,17 @@ namespace CSRedis
         /// <param name="keys">Set keys to subtract</param>
         /// <returns>Array of elements in resulting set</returns>
         Task<string[]> SDiffAsync(params string[] keys);
+		Task<byte[][]> SDiffBytesAsync(params string[] keys);
 
 
 
-
-        /// <summary>
-        /// Subtract multiple sets and store the resulting set in a key
-        /// </summary>
-        /// <param name="destination">Destination key</param>
-        /// <param name="keys">Set keys to subtract</param>
-        /// <returns>Number of elements in the resulting set</returns>
-        Task<long> SDiffStoreAsync(string destination, params string[] keys);
+		/// <summary>
+		/// Subtract multiple sets and store the resulting set in a key
+		/// </summary>
+		/// <param name="destination">Destination key</param>
+		/// <param name="keys">Set keys to subtract</param>
+		/// <returns>Number of elements in the resulting set</returns>
+		Task<long> SDiffStoreAsync(string destination, params string[] keys);
 
 
 
@@ -778,17 +797,17 @@ namespace CSRedis
         /// <param name="keys">Set keys to intersect</param>
         /// <returns>Array of elements in resulting set</returns>
         Task<string[]> SInterAsync(params string[] keys);
+		Task<byte[][]> SInterBytesAsync(params string[] keys);
 
 
 
-
-        /// <summary>
-        /// Intersect multiple sets and store the resulting set in a key
-        /// </summary>
-        /// <param name="destination">Destination key</param>
-        /// <param name="keys">Set keys to intersect</param>
-        /// <returns>Number of elements in resulting set</returns>
-        Task<long> SInterStoreAsync(string destination, params string[] keys);
+		/// <summary>
+		/// Intersect multiple sets and store the resulting set in a key
+		/// </summary>
+		/// <param name="destination">Destination key</param>
+		/// <param name="keys">Set keys to intersect</param>
+		/// <returns>Number of elements in resulting set</returns>
+		Task<long> SInterStoreAsync(string destination, params string[] keys);
 
 
 
@@ -810,18 +829,18 @@ namespace CSRedis
         /// <param name="key">Set key</param>
         /// <returns>All elements in the set</returns>
         Task<string[]> SMembersAsync(string key);
+		Task<byte[][]> SMembersBytesAsync(string key);
 
 
 
-
-        /// <summary>
-        /// Move a member from one set to another
-        /// </summary>
-        /// <param name="source">Source key</param>
-        /// <param name="destination">Destination key</param>
-        /// <param name="member">Member to move</param>
-        /// <returns>True if element was moved</returns>
-        Task<bool> SMoveAsync(string source, string destination, object member);
+		/// <summary>
+		/// Move a member from one set to another
+		/// </summary>
+		/// <param name="source">Source key</param>
+		/// <param name="destination">Destination key</param>
+		/// <param name="member">Member to move</param>
+		/// <returns>True if element was moved</returns>
+		Task<bool> SMoveAsync(string source, string destination, object member);
 
 
 
@@ -832,38 +851,38 @@ namespace CSRedis
         /// <param name="key">Set key</param>
         /// <returns>The removed element</returns>
         Task<string> SPopAsync(string key);
+		Task<byte[]> SPopBytesAsync(string key);
 
 
 
-
-        /// <summary>
-        /// Get a random member from a set
-        /// </summary>
-        /// <param name="key">Set key</param>
-        /// <returns>One random element from set</returns>
-        Task<string> SRandMemberAsync(string key);
-
-
-
-
-        /// <summary>
-        /// Get one or more random members from a set
-        /// </summary>
-        /// <param name="key">Set key</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>One or more random elements from set</returns>
-        Task<string[]> SRandMemberAsync(string key, long count);
+		/// <summary>
+		/// Get a random member from a set
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <returns>One random element from set</returns>
+		Task<string> SRandMemberAsync(string key);
+		Task<byte[]> SRandMemberBytesAsync(string key);
 
 
 
+		/// <summary>
+		/// Get one or more random members from a set
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>One or more random elements from set</returns>
+		Task<string[]> SRandMembersAsync(string key, long count);
+		Task<byte[][]> SRandMembersBytesAsync(string key, long count);
 
-        /// <summary>
-        /// Remove one or more members from a set
-        /// </summary>
-        /// <param name="key">Set key</param>
-        /// <param name="members">Set members to remove</param>
-        /// <returns>Number of elements removed from set</returns>
-        Task<long> SRemAsync(string key, params object[] members);
+
+
+		/// <summary>
+		/// Remove one or more members from a set
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <param name="members">Set members to remove</param>
+		/// <returns>Number of elements removed from set</returns>
+		Task<long> SRemAsync(string key, params object[] members);
 
 
 
@@ -874,30 +893,43 @@ namespace CSRedis
         /// <param name="keys">Set keys to union</param>
         /// <returns>Array of elements in resulting set</returns>
         Task<string[]> SUnionAsync(params string[] keys);
+		Task<byte[][]> SUnionBytesAsync(params string[] keys);
+
+
+
+		/// <summary>
+		/// Add multiple sets and store the resulting set in a key
+		/// </summary>
+		/// <param name="destination">Destination key</param>
+		/// <param name="keys">Set keys to union</param>
+		/// <returns>Number of elements in resulting set</returns>
+		Task<long> SUnionStoreAsync(string destination, params string[] keys);
 
 
 
 
-        /// <summary>
-        /// Add multiple sets and store the resulting set in a key
-        /// </summary>
-        /// <param name="destination">Destination key</param>
-        /// <param name="keys">Set keys to union</param>
-        /// <returns>Number of elements in resulting set</returns>
-        Task<long> SUnionStoreAsync(string destination, params string[] keys);
+		/// <summary>
+		/// Iterate the elements of a set field
+		/// </summary>
+		/// <param name="key">Set key</param>
+		/// <param name="cursor">The cursor returned by the server in the previous call, or 0 if this is the first call</param>
+		/// <param name="pattern">Glob-style pattern to filter returned elements</param>
+		/// <param name="count">Maximum number of elements to return</param>
+		/// <returns>Updated cursor and result set</returns>
+		Task<RedisScan<string>> SScanAsync(string key, long cursor, string pattern = null, long? count = null);
+		Task<RedisScan<byte[]>> SScanBytesAsync(string key, long cursor, string pattern = null, long? count = null);
 
 
+		#endregion
 
-        #endregion
-
-        #region Sorted Sets
-        /// <summary>
-        /// Add one or more members to a sorted set, or update its score if it already exists
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="memberScores">Array of member scores to add to sorted set</param>
-        /// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-        Task<long> ZAddAsync<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores);
+		#region Sorted Sets
+		/// <summary>
+		/// Add one or more members to a sorted set, or update its score if it already exists
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="memberScores">Array of member scores to add to sorted set</param>
+		/// <returns>Number of elements added to the sorted set (not including member updates)</returns>
+		Task<long> ZAddAsync<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores);
 
 
 
@@ -908,7 +940,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="memberScores">Array of member scores [s1, m1, s2, m2, ..]</param>
         /// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-        Task<long> ZAddAsync(string key, params string[] memberScores);
+        Task<long> ZAddAsync(string key, params object[] memberScores);
 
 
 
@@ -994,91 +1026,92 @@ namespace CSRedis
         /// <param name="withScores">Include scores in result</param>
         /// <returns>Array of elements in the specified range (with optional scores)</returns>
         Task<string[]> ZRangeAsync(string key, long start, long stop, bool withScores = false);
+		Task<byte[][]> ZRangeBytesAsync(string key, long start, long stop, bool withScores = false);
 
 
 
 
-        /// <summary>
-        /// Return a range of members in a sorted set, by index, with scores
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="start">Start offset</param>
-        /// <param name="stop">Stop offset</param>
-        /// <returns>Array of elements in the specified range with scores</returns>
-        Task<Tuple<string, double>[]> ZRangeWithScoresAsync(string key, long start, long stop);
+		/// <summary>
+		/// Return a range of members in a sorted set, by index, with scores
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="start">Start offset</param>
+		/// <param name="stop">Stop offset</param>
+		/// <returns>Array of elements in the specified range with scores</returns>
+		Task<Tuple<string, double>[]> ZRangeWithScoresAsync(string key, long start, long stop);
+		Task<Tuple<byte[], double>[]> ZRangeBytesWithScoresAsync(string key, long start, long stop);
 
 
 
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by score
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<string[]> ZRangeByScoreAsync(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-
-
-
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by score
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<string[]> ZRangeByScoreAsync(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null);
+		/// <summary>
+		/// Return a range of members in a sorted set, by score
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores)</returns>
+		Task<string[]> ZRangeByScoreAsync(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+		Task<byte[][]> ZRangeBytesByScoreAsync(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by score, with scores
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-
+		/// <summary>
+		/// Return a range of members in a sorted set, by score
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores)</returns>
+		Task<string[]> ZRangeByScoreAsync(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null);
+		Task<byte[][]> ZRangeBytesByScoreAsync(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null);
 
 
 
-        /// <summary>
-        /// Return a range of members in a sorted set, by score, with scores
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
+		/// <summary>
+		/// Return a range of members in a sorted set, by score, with scores
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores)</returns>
+		Task<Tuple<string, double>[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+		Task<Tuple<byte[], double>[]> ZRangeBytesByScoreWithScoresAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
+		/// <summary>
+		/// Return a range of members in a sorted set, by score, with scores
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified range (with optional scores)</returns>
+		Task<Tuple<string, double>[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
+		Task<Tuple<byte[], double>[]> ZRangeBytesByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
 
-        /// <summary>
-        /// Determine the index of a member in a sorted set
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="member">Member to lookup</param>
-        /// <returns>Rank of member or null if key does not exist</returns>
-        Task<long?> ZRankAsync(string key, string member);
+
+
+		/// <summary>
+		/// Determine the index of a member in a sorted set
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="member">Member to lookup</param>
+		/// <returns>Rank of member or null if key does not exist</returns>
+		Task<long?> ZRankAsync(string key, object member);
 
 
 
@@ -1129,91 +1162,91 @@ namespace CSRedis
         /// <param name="withScores">Include scores in result</param>
         /// <returns>List of elements in the specified range (with optional scores)</returns>
         Task<string[]> ZRevRangeAsync(string key, long start, long stop, bool withScores = false);
+		Task<byte[][]> ZRevRangeBytesAsync(string key, long start, long stop, bool withScores = false);
 
 
 
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by index, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="start">Start offset</param>
-        /// <param name="stop">Stop offset</param>
-        /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRevRangeWithScoresAsync(string key, long start, long stop);
-
-
-
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by score, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		/// <summary>
+		/// Return a range of members in a sorted set, by index, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="start">Start offset</param>
+		/// <param name="stop">Stop offset</param>
+		/// <returns>List of elements in the specified range (with optional scores)</returns>
+		Task<Tuple<string, double>[]> ZRevRangeWithScoresAsync(string key, long start, long stop);
+		Task<Tuple<byte[], double>[]> ZRevRangeBytesWithScoresAsync(string key, long start, long stop);
 
 
 
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by score, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="withScores">Include scores in result</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<string[]> ZRevRangeByScoreAsync(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null);
-
-
-
-
-        /// <summary>
-        /// Return a range of members in a sorted set, by score, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="exclusiveMax">Maximum score is exclusive</param>
-        /// <param name="exclusiveMin">Minimum score is exclusive</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		/// <summary>
+		/// Return a range of members in a sorted set, by score, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores)</returns>
+		Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		Task<byte[][]> ZRevRangeBytesByScoreAsync(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
+		/// <summary>
+		/// Return a range of members in a sorted set, by score, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="withScores">Include scores in result</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores)</returns>
+		Task<string[]> ZRevRangeByScoreAsync(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null);
+		Task<byte[][]> ZRevRangeBytesByScoreAsync(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null);
 
-        /// <summary>
-        /// Return a range of members in a sorted set, by score, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="max">Maximum score</param>
-        /// <param name="min">Minimum score</param>
-        /// <param name="offset">Start offset</param>
-        /// <param name="count">Number of elements to return</param>
-        /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
+
+
+		/// <summary>
+		/// Return a range of members in a sorted set, by score, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="exclusiveMax">Maximum score is exclusive</param>
+		/// <param name="exclusiveMin">Minimum score is exclusive</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores)</returns>
+		Task<Tuple<string, double>[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+		Task<Tuple<byte[], double>[]> ZRevRangeBytesByScoreWithScoresAsync(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
+		/// <summary>
+		/// Return a range of members in a sorted set, by score, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="max">Maximum score</param>
+		/// <param name="min">Minimum score</param>
+		/// <param name="offset">Start offset</param>
+		/// <param name="count">Number of elements to return</param>
+		/// <returns>List of elements in the specified score range (with optional scores)</returns>
+		Task<Tuple<string, double>[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
+		Task<Tuple<byte[], double>[]> ZRevRangeBytesByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
 
-        /// <summary>
-        /// Determine the index of a member in a sorted set, with scores ordered from high to low
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="member">Member to lookup</param>
-        /// <returns>Rank of member, or null if member does not exist</returns>
-        Task<long?> ZRevRankAsync(string key, string member);
+
+
+		/// <summary>
+		/// Determine the index of a member in a sorted set, with scores ordered from high to low
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="member">Member to lookup</param>
+		/// <returns>Rank of member, or null if member does not exist</returns>
+		Task<long?> ZRevRankAsync(string key, object member);
 
 
 
@@ -1224,7 +1257,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Score of member, or null if member does not exist</returns>
-        Task<double?> ZScoreAsync(string key, string member);
+        Task<double?> ZScoreAsync(string key, object member);
 
 
 
@@ -1251,32 +1284,32 @@ namespace CSRedis
         /// <param name="count">Maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
         Task<RedisScan<Tuple<string, double>>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null);
+		Task<RedisScan<Tuple<byte[], double>>> ZScanBytesAsync(string key, long cursor, string pattern = null, long? count = null);
 
 
 
-
-        /// <summary>
-        /// Retrieve all the elements in a sorted set with a value between min and max
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <param name="offset">Limit result set by offset</param>
-        /// <param name="count">Limimt result set by size</param>
-        /// <returns>List of elements in the specified range</returns>
-        Task<string[]> ZRangeByLexAsync(string key, string min, string max, long? offset = null, long? count = null);
-
-
+		/// <summary>
+		/// Retrieve all the elements in a sorted set with a value between min and max
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <param name="offset">Limit result set by offset</param>
+		/// <param name="count">Limimt result set by size</param>
+		/// <returns>List of elements in the specified range</returns>
+		Task<string[]> ZRangeByLexAsync(string key, string min, string max, long? offset = null, long? count = null);
+		Task<byte[][]> ZRangeBytesByLexAsync(string key, string min, string max, long? offset = null, long? count = null);
 
 
-        /// <summary>
-        /// Remove all elements in the sorted set with a value between min and max
-        /// </summary>
-        /// <param name="key">Sorted set key</param>
-        /// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
-        /// <returns>Number of elements removed</returns>
-        Task<long> ZRemRangeByLexAsync(string key, string min, string max);
+
+		/// <summary>
+		/// Remove all elements in the sorted set with a value between min and max
+		/// </summary>
+		/// <param name="key">Sorted set key</param>
+		/// <param name="min">Lexagraphic start value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <param name="max">Lexagraphic stop value. Prefix value with '(' to indicate exclusive; '[' to indicate inclusive. Use '-' or '+' to specify infinity.</param>
+		/// <returns>Number of elements removed</returns>
+		Task<long> ZRemRangeByLexAsync(string key, string min, string max);
 
 
 
@@ -1476,17 +1509,17 @@ namespace CSRedis
         /// <param name="key">Key to lookup</param>
         /// <returns>Value of key</returns>
         Task<string> GetAsync(string key);
+		Task<byte[]> GetBytesAsync(string key);
 
 
 
-
-        /// <summary>
-        /// Returns the bit value at offset in the string value stored at key
-        /// </summary>
-        /// <param name="key">Key to lookup</param>
-        /// <param name="offset">Offset of key to check</param>
-        /// <returns>Bit value stored at offset</returns>
-        Task<bool> GetBitAsync(string key, uint offset);
+		/// <summary>
+		/// Returns the bit value at offset in the string value stored at key
+		/// </summary>
+		/// <param name="key">Key to lookup</param>
+		/// <param name="offset">Offset of key to check</param>
+		/// <returns>Bit value stored at offset</returns>
+		Task<bool> GetBitAsync(string key, uint offset);
 
 
 
@@ -1499,27 +1532,27 @@ namespace CSRedis
         /// <param name="end">End offset</param>
         /// <returns>Substring in the specified range</returns>
         Task<string> GetRangeAsync(string key, long start, long end);
+		Task<byte[]> GetRangeBytesAsync(string key, long start, long end);
 
 
 
-
-        /// <summary>
-        /// Set the string value of a key and return its old value
-        /// </summary>
-        /// <param name="key">Key to modify</param>
-        /// <param name="value">Value to set</param>
-        /// <returns>Old value stored at key, or null if key did not exist</returns>
-        Task<string> GetSetAsync(string key, object value);
-
-
+		/// <summary>
+		/// Set the string value of a key and return its old value
+		/// </summary>
+		/// <param name="key">Key to modify</param>
+		/// <param name="value">Value to set</param>
+		/// <returns>Old value stored at key, or null if key did not exist</returns>
+		Task<string> GetSetAsync(string key, object value);
+		Task<byte[]> GetSetBytesAsync(string key, object value);
 
 
-        /// <summary>
-        /// Increment the integer value of a key by one
-        /// </summary>
-        /// <param name="key">Key to modify</param>
-        /// <returns>Value of key after increment</returns>
-        Task<long> IncrAsync(string key);
+
+		/// <summary>
+		/// Increment the integer value of a key by one
+		/// </summary>
+		/// <param name="key">Key to modify</param>
+		/// <returns>Value of key after increment</returns>
+		Task<long> IncrAsync(string key);
 
 
 
@@ -1552,16 +1585,16 @@ namespace CSRedis
         /// <param name="keys">Keys to lookup</param>
         /// <returns>Array of values at the specified keys</returns>
         Task<string[]> MGetAsync(params string[] keys);
+		Task<byte[][]> MGetBytesAsync(params string[] keys);
 
 
 
-
-        /// <summary>
-        /// Set multiple keys to multiple values
-        /// </summary>
-        /// <param name="keyValues">Key values to set</param>
-        /// <returns>Status code</returns>
-        Task<string> MSetAsync(params Tuple<string, string>[] keyValues);
+		/// <summary>
+		/// Set multiple keys to multiple values
+		/// </summary>
+		/// <param name="keyValues">Key values to set</param>
+		/// <returns>Status code</returns>
+		Task<string> MSetAsync(params Tuple<string, object>[] keyValues);
 
 
 
@@ -1571,7 +1604,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set [k1, v1, k2, v2, ..]</param>
         /// <returns>Status code</returns>
-        Task<string> MSetAsync(params string[] keyValues);
+        Task<string> MSetAsync(params object[] keyValues);
 
 
 
@@ -1581,7 +1614,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set</param>
         /// <returns>True if all keys were set</returns>
-        Task<bool> MSetNxAsync(params Tuple<string, string>[] keyValues);
+        Task<bool> MSetNxAsync(params Tuple<string, object>[] keyValues);
 
 
 
@@ -1591,7 +1624,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set [k1, v1, k2, v2, ..]</param>
         /// <returns>True if all keys were set</returns>
-        Task<bool> MSetNxAsync(params string[] keyValues);
+        Task<bool> MSetNxAsync(params object[] keyValues);
 
 
 

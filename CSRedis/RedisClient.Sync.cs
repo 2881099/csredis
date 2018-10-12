@@ -334,16 +334,16 @@ namespace CSRedis
             return Write(RedisCommands.RenameNx(key, newKey));
         }
 
-        /// <summary>
-        /// Create a key using the provided serialized value, previously obtained using dump
-        /// </summary>
-        /// <param name="key">Key to restore</param>
-        /// <param name="ttl">Time-to-live in milliseconds</param>
-        /// <param name="serializedValue">Serialized value from DUMP</param>
-        /// <returns>Status code</returns>
-        public string Restore(string key, long ttl, string serializedValue)
+		/// <summary>
+		/// Create a key using the provided serialized value, previously obtained using dump
+		/// </summary>
+		/// <param name="key">Key to restore</param>
+		/// <param name="ttlMilliseconds">Time-to-live in milliseconds</param>
+		/// <param name="serializedValue">Serialized value from DUMP</param>
+		/// <returns>Status code</returns>
+		public string Restore(string key, long ttlMilliseconds, byte[] serializedValue)
         {
-            return Write(RedisCommands.Restore(key, ttl, serializedValue));
+            return Write(RedisCommands.Restore(key, ttlMilliseconds, serializedValue));
         }
 
         /// <summary>
@@ -410,6 +410,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.Scan(cursor, pattern, count));
         }
+		public RedisScan<byte[]> ScanBytes(long cursor, string pattern = null, long? count = null)
+        {
+            return Write(RedisCommands.ScanBytes(cursor, pattern, count));
+        }
         #endregion
 
         #region Hashes
@@ -470,6 +474,10 @@ namespace CSRedis
         public Dictionary<string, string> HGetAll(string key)
         {
             return Write(RedisCommands.HGetAll(key));
+        }
+		public Dictionary<string, byte[]> HGetAllBytes(string key)
+        {
+            return Write(RedisCommands.HGetAllBytes(key));
         }
 
         /// <summary>
@@ -599,6 +607,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.HVals(key));
         }
+		public byte[][] HValsBytes(string key)
+        {
+            return Write(RedisCommands.HValsBytes(key));
+        }
 
         /// <summary>
         /// Iterate the keys and values of a hash field
@@ -611,6 +623,10 @@ namespace CSRedis
         public RedisScan<Tuple<string, string>> HScan(string key, long cursor, string pattern = null, long? count = null)
         {
             return Write(RedisCommands.HScan(key, cursor, pattern, count));
+        }
+		public RedisScan<Tuple<string, byte[]>> HScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        {
+            return Write(RedisCommands.HScanBytes(key, cursor, pattern, count));
         }
         #endregion
 
@@ -625,6 +641,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.BLPopWithKey(timeout, keys));
         }
+		public Tuple<string, byte[]> BLPopBytesWithKey(int timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BLPopBytesWithKey(timeout, keys));
+        }
 
         /// <summary>
         /// Remove and get the first element and key in a list, or block until one is available
@@ -635,6 +655,10 @@ namespace CSRedis
         public Tuple<string, string> BLPopWithKey(TimeSpan timeout, params string[] keys)
         {
             return Write(RedisCommands.BLPopWithKey(timeout, keys));
+        }
+		public Tuple<string, byte[]> BLPopBytesWithKey(TimeSpan timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BLPopBytesWithKey(timeout, keys));
         }
 
         /// <summary>
@@ -647,6 +671,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.BLPop(timeout, keys));
         }
+		public byte[] BLPopBytes(int timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BLPopBytes(timeout, keys));
+        }
 
         /// <summary>
         /// Remove and get the first element value in a list, or block until one is available
@@ -657,6 +685,10 @@ namespace CSRedis
         public string BLPop(TimeSpan timeout, params string[] keys)
         {
             return Write(RedisCommands.BLPop(timeout, keys));
+        }
+		public byte[] BLPopBytes(TimeSpan timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BLPopBytes(timeout, keys));
         }
 
         /// <summary>
@@ -669,6 +701,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.BRPopWithKey(timeout, keys));
         }
+		public Tuple<string, byte[]> BRPopBytesWithKey(int timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BRPopBytesWithKey(timeout, keys));
+        }
 
         /// <summary>
         /// Remove and get the last element and key in a list, or block until one is available
@@ -679,6 +715,10 @@ namespace CSRedis
         public Tuple<string, string> BRPopWithKey(TimeSpan timeout, params string[] keys)
         {
             return Write(RedisCommands.BRPopWithKey(timeout, keys));
+        }
+		public Tuple<string, byte[]> BRPopBytesWithKey(TimeSpan timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BRPopBytesWithKey(timeout, keys));
         }
 
         /// <summary>
@@ -691,6 +731,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.BRPop(timeout, keys));
         }
+		public byte[] BRPopBytes(int timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BRPopBytes(timeout, keys));
+        }
 
         /// <summary>
         /// Remove and get the last element value in a list, or block until one is available
@@ -701,6 +745,10 @@ namespace CSRedis
         public string BRPop(TimeSpan timeout, params string[] keys)
         {
             return Write(RedisCommands.BRPop(timeout, keys));
+        }
+		public byte[] BRPopBytes(TimeSpan timeout, params string[] keys)
+        {
+            return Write(RedisCommands.BRPopBytes(timeout, keys));
         }
 
         /// <summary>
@@ -714,6 +762,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.BRPopLPush(source, destination, timeout));
         }
+		public byte[] BRPopBytesLPush(string source, string destination, int timeout)
+        {
+            return Write(RedisCommands.BRPopBytesLPush(source, destination, timeout));
+        }
 
         /// <summary>
         /// Pop a value from a list, push it to another list and return it; or block until one is available
@@ -726,6 +778,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.BRPopLPush(source, destination, timeout));
         }
+		public byte[] BRPopBytesLPush(string source, string destination, TimeSpan timeout)
+        {
+            return Write(RedisCommands.BRPopBytesLPush(source, destination, timeout));
+        }
 
         /// <summary>
         /// Get an element from a list by its index
@@ -736,6 +792,10 @@ namespace CSRedis
         public string LIndex(string key, long index)
         {
             return Write(RedisCommands.LIndex(key, index));
+        }
+		public byte[] LIndexBytes(string key, long index)
+        {
+            return Write(RedisCommands.LIndexBytes(key, index));
         }
 
         /// <summary>
@@ -770,6 +830,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.LPop(key));
         }
+		public byte[] LPopBytes(string key)
+        {
+            return Write(RedisCommands.LPopBytes(key));
+        }
 
         /// <summary>
         /// Prepend one or multiple values to a list
@@ -803,6 +867,10 @@ namespace CSRedis
         public string[] LRange(string key, long start, long stop)
         {
             return Write(RedisCommands.LRange(key, start, stop));
+        }
+		public byte[][] LRangeBytes(string key, long start, long stop)
+        {
+            return Write(RedisCommands.LRangeBytes(key, start, stop));
         }
 
         /// <summary>
@@ -850,6 +918,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.RPop(key));
         }
+		public byte[] RPopBytes(string key)
+        {
+            return Write(RedisCommands.RPopBytes(key));
+        }
 
         /// <summary>
         /// Remove the last elment in a list, append it to another list and return it
@@ -860,6 +932,10 @@ namespace CSRedis
         public string RPopLPush(string source, string destination)
         {
             return Write(RedisCommands.RPopLPush(source, destination));
+        }
+		public byte[] RPopBytesLPush(string source, string destination)
+        {
+            return Write(RedisCommands.RPopBytesLPush(source, destination));
         }
 
         /// <summary>
@@ -877,11 +953,11 @@ namespace CSRedis
         /// Append a value to a list, only if the list exists
         /// </summary>
         /// <param name="key">List key</param>
-        /// <param name="values">Values to push</param>
+        /// <param name="value">Value to push</param>
         /// <returns>Length of list after push</returns>
-        public long RPushX(string key, params object[] values)
+        public long RPushX(string key, object value)
         {
-            return Write(RedisCommands.RPushX(key, values));
+            return Write(RedisCommands.RPushX(key, value));
         }
         #endregion
 
@@ -916,6 +992,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.SDiff(keys));
         }
+		public byte[][] SDiffBytes(params string[] keys)
+        {
+            return Write(RedisCommands.SDiffBytes(keys));
+        }
 
         /// <summary>
         /// Subtract multiple sets and store the resulting set in a key
@@ -936,6 +1016,10 @@ namespace CSRedis
         public string[] SInter(params string[] keys)
         {
             return Write(RedisCommands.SInter(keys));
+        }
+		public byte[][] SInterBytes(params string[] keys)
+        {
+            return Write(RedisCommands.SInterBytes(keys));
         }
 
         /// <summary>
@@ -969,6 +1053,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.SMembers(key));
         }
+		public byte[][] SMembersBytes(string key)
+        {
+            return Write(RedisCommands.SMembersBytes(key));
+        }
 
         /// <summary>
         /// Move a member from one set to another
@@ -991,6 +1079,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.SPop(key));
         }
+		public byte[] SPopBytes(string key)
+        {
+            return Write(RedisCommands.SPopBytes(key));
+        }
 
         /// <summary>
         /// Get a random member from a set
@@ -1001,6 +1093,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.SRandMember(key));
         }
+		public byte[] SRandMemberBytes(string key)
+        {
+            return Write(RedisCommands.SRandMemberBytes(key));
+        }
 
         /// <summary>
         /// Get one or more random members from a set
@@ -1008,9 +1104,13 @@ namespace CSRedis
         /// <param name="key">Set key</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>One or more random elements from set</returns>
-        public string[] SRandMember(string key, long count)
+        public string[] SRandMembers(string key, long count)
         {
-            return Write(RedisCommands.SRandMember(key, count));
+            return Write(RedisCommands.SRandMembers(key, count));
+        }
+		public byte[][] SRandMembersBytes(string key, long count)
+        {
+            return Write(RedisCommands.SRandMembersBytes(key, count));
         }
 
         /// <summary>
@@ -1032,6 +1132,10 @@ namespace CSRedis
         public string[] SUnion(params string[] keys)
         {
             return Write(RedisCommands.SUnion(keys));
+        }
+		public byte[][] SUnionBytes(params string[] keys)
+        {
+            return Write(RedisCommands.SUnionBytes(keys));
         }
 
         /// <summary>
@@ -1057,6 +1161,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.SScan(key, cursor, pattern, count));
         }
+		public RedisScan<byte[]> SScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        {
+            return Write(RedisCommands.SScanBytes(key, cursor, pattern, count));
+        }
         #endregion
 
         #region Sorted Sets
@@ -1077,7 +1185,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="memberScores">Array of member scores [s1, m1, s2, m2, ..]</param>
         /// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-        public long ZAdd(string key, params string[] memberScores)
+        public long ZAdd(string key, params object[] memberScores)
         {
             return Write(RedisCommands.ZAdd(key, memberScores));
         }
@@ -1166,6 +1274,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRange(key, start, stop, withScores));
         }
+		public byte[][] ZRangeBytes(string key, long start, long stop, bool withScores = false)
+        {
+            return Write(RedisCommands.ZRangeBytes(key, start, stop, withScores));
+        }
 
         /// <summary>
         /// Return a range of members in a sorted set, by index, with scores
@@ -1177,6 +1289,10 @@ namespace CSRedis
         public Tuple<string, double>[] ZRangeWithScores(string key, long start, long stop)
         {
             return Write(RedisCommands.ZRangeWithScores(key, start, stop));
+        }
+		public Tuple<byte[], double>[] ZRangeBytesWithScores(string key, long start, long stop)
+        {
+            return Write(RedisCommands.ZRangeBytesWithScores(key, start, stop));
         }
 
         /// <summary>
@@ -1195,6 +1311,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRangeByScore(key, min, max, withScores, exclusiveMin, exclusiveMax, offset, count));
         }
+		public byte[][] ZRangeBytesByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRangeBytesByScore(key, min, max, withScores, exclusiveMin, exclusiveMax, offset, count));
+        }
 
         /// <summary>
         /// Return a range of members in a sorted set, by score
@@ -1209,6 +1329,10 @@ namespace CSRedis
         public string[] ZRangeByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null)
         {
             return Write(RedisCommands.ZRangeByScore(key, min, max, withScores, offset, count));
+        }
+		public byte[][] ZRangeBytesByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRangeBytesByScore(key, min, max, withScores, offset, count));
         }
 
         /// <summary>
@@ -1226,6 +1350,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRangeByScoreWithScores(key, min, max, exclusiveMin, exclusiveMax, offset, count));
         }
+		public Tuple<byte[], double>[] ZRangeBytesByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRangeBytesByScoreWithScores(key, min, max, exclusiveMin, exclusiveMax, offset, count));
+        }
 
         /// <summary>
         /// Return a range of members in a sorted set, by score, with scores
@@ -1240,6 +1368,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRangeByScoreWithScores(key, min, max, offset, count));
         }
+		public Tuple<byte[], double>[] ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRangeBytesByScoreWithScores(key, min, max, offset, count));
+        }
 
         /// <summary>
         /// Determine the index of a member in a sorted set
@@ -1247,7 +1379,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Rank of member or null if key does not exist</returns>
-        public long? ZRank(string key, string member)
+        public long? ZRank(string key, object member)
         {
             return Write(RedisCommands.ZRank(key, member));
         }
@@ -1301,6 +1433,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRevRange(key, start, stop, withScores));
         }
+		public byte[][] ZRevRangeBytes(string key, long start, long stop, bool withScores = false)
+        {
+            return Write(RedisCommands.ZRevRangeBytes(key, start, stop, withScores));
+        }
 
         /// <summary>
         /// Return a range of members in a sorted set, by index, with scores ordered from high to low
@@ -1312,6 +1448,10 @@ namespace CSRedis
         public Tuple<string, double>[] ZRevRangeWithScores(string key, long start, long stop)
         {
             return Write(RedisCommands.ZRevRangeWithScores(key, start, stop));
+        }
+		public Tuple<byte[], double>[] ZRevRangeBytesWithScores(string key, long start, long stop)
+        {
+            return Write(RedisCommands.ZRevRangeBytesWithScores(key, start, stop));
         }
 
         /// <summary>
@@ -1330,6 +1470,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRevRangeByScore(key, max, min, withScores, exclusiveMax, exclusiveMin, offset, count));
         }
+		public byte[][] ZRevRangeBytesByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRevRangeBytesByScore(key, max, min, withScores, exclusiveMax, exclusiveMin, offset, count));
+        }
 
         /// <summary>
         /// Return a range of members in a sorted set, by score, with scores ordered from high to low
@@ -1344,6 +1488,10 @@ namespace CSRedis
         public string[] ZRevRangeByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null)
         {
             return Write(RedisCommands.ZRevRangeByScore(key, max, min, withScores, offset, count));
+        }
+		public byte[][] ZRevRangeBytesByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRevRangeBytesByScore(key, max, min, withScores, offset, count));
         }
 
         /// <summary>
@@ -1361,6 +1509,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRevRangeByScoreWithScores(key, max, min, exclusiveMax, exclusiveMin, offset, count));
         }
+		public Tuple<byte[], double>[] ZRevRangeBytesByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRevRangeBytesByScoreWithScores(key, max, min, exclusiveMax, exclusiveMin, offset, count));
+        }
 
         /// <summary>
         /// Return a range of members in a sorted set, by score, with scores ordered from high to low
@@ -1375,6 +1527,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZRevRangeByScoreWithScores(key, max, min, offset, count));
         }
+		public Tuple<byte[], double>[] ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRevRangeBytesByScoreWithScores(key, max, min, offset, count));
+        }
 
         /// <summary>
         /// Determine the index of a member in a sorted set, with scores ordered from high to low
@@ -1382,7 +1538,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Rank of member, or null if member does not exist</returns>
-        public long? ZRevRank(string key, string member)
+        public long? ZRevRank(string key, object member)
         {
             return Write(RedisCommands.ZRevRank(key, member));
         }
@@ -1393,7 +1549,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Score of member, or null if member does not exist</returns>
-        public double? ZScore(string key, string member)
+        public double? ZScore(string key, object member)
         {
             return Write(RedisCommands.ZScore(key, member));
         }
@@ -1434,6 +1590,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.ZScan(key, cursor, pattern, count));
         }
+		public RedisScan<Tuple<byte[], double>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        {
+            return Write(RedisCommands.ZScanBytes(key, cursor, pattern, count));
+        }
 
         /// <summary>
         /// Retrieve all the elements in a sorted set with a value between min and max
@@ -1447,6 +1607,10 @@ namespace CSRedis
         public string[] ZRangeByLex(string key, string min, string max, long? offset = null, long? count = null)
         {
             return Write(RedisCommands.ZRangeByLex(key, min, max, offset, count));
+        }
+		public byte[][] ZRangeBytesByLex(string key, string min, string max, long? offset = null, long? count = null)
+        {
+            return Write(RedisCommands.ZRangeBytesByLex(key, min, max, offset, count));
         }
 
         /// <summary>
@@ -1723,6 +1887,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.GetRange(key, start, end));
         }
+		public byte[] GetRangeBytes(string key, long start, long end)
+        {
+            return Write(RedisCommands.GetRangeBytes(key, start, end));
+        }
 
         /// <summary>
         /// Set the string value of a key and return its old value
@@ -1733,6 +1901,10 @@ namespace CSRedis
         public string GetSet(string key, object value)
         {
             return Write(RedisCommands.GetSet(key, value));
+        }
+		public byte[] GetSetBytes(string key, object value)
+        {
+            return Write(RedisCommands.GetSetBytes(key, value));
         }
 
         /// <summary>
@@ -1776,13 +1948,16 @@ namespace CSRedis
         {
             return Write(RedisCommands.MGet(keys));
         }
-
+		public byte[][] MGetBytes(params string[] keys)
+        {
+            return Write(RedisCommands.MGetBytes(keys));
+        }
         /// <summary>
         /// Set multiple keys to multiple values
         /// </summary>
         /// <param name="keyValues">Key values to set</param>
         /// <returns>Status code</returns>
-        public string MSet(params Tuple<string, string>[] keyValues)
+        public string MSet(params Tuple<string, object>[] keyValues)
         {
             return Write(RedisCommands.MSet(keyValues));
         }
@@ -1792,7 +1967,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set [k1, v1, k2, v2, ..]</param>
         /// <returns>Status code</returns>
-        public string MSet(params string[] keyValues)
+        public string MSet(params object[] keyValues)
         {
             return Write(RedisCommands.MSet(keyValues));
         }
@@ -1802,7 +1977,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set</param>
         /// <returns>True if all keys were set</returns>
-        public bool MSetNx(params Tuple<string, string>[] keyValues)
+        public bool MSetNx(params Tuple<string, object>[] keyValues)
         {
             return Write(RedisCommands.MSetNx(keyValues));
         }
@@ -1812,7 +1987,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="keyValues">Key values to set [k1, v1, k2, v2, ..]</param>
         /// <returns>True if all keys were set</returns>
-        public bool MSetNx(params string[] keyValues)
+        public bool MSetNx(params object[] keyValues)
         {
             return Write(RedisCommands.MSetNx(keyValues));
         }

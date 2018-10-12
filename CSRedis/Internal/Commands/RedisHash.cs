@@ -48,4 +48,31 @@ namespace CSRedis.Internal.Commands
             }
         }
     }
+	class RedisHashBytes : RedisCommand<Dictionary<string, byte[]>>
+    {
+        public RedisHashBytes(string command, params object[] args)
+            : base(command, args)
+        { }
+
+        public override Dictionary<string, byte[]> Parse(RedisReader reader)
+        {
+            return ToDict(reader);
+        }
+
+        static Dictionary<string, byte[]> ToDict(RedisReader reader)
+        {
+            reader.ExpectType(RedisMessage.MultiBulk);
+            long count = reader.ReadInt(false);
+            var dict = new Dictionary<string, byte[]>();
+            string key = String.Empty;
+            for (int i = 0; i < count; i++)
+            {
+                if (i % 2 == 0)
+                    key = reader.ReadBulkString();
+                else
+                    dict[key] = reader.ReadBulkBytes();
+            }
+            return dict;
+        }
+    }
 }

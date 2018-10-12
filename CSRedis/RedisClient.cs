@@ -69,7 +69,7 @@ namespace CSRedis
         /// <summary>
         /// Get or set the string encoding used to communicate with the server
         /// </summary>
-        public Encoding Encoding 
+        public Encoding Encoding
         { 
             get { return _connector.Encoding; }
             set { _connector.Encoding = value; }

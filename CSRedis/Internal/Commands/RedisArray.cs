@@ -119,5 +119,5 @@ namespace CSRedis.Internal.Commands
                 : base(new RedisString.Converter<T1>(null), new RedisString.Converter<T2>(null), command, args)
             { }
         }
-    }
+	}
 }
