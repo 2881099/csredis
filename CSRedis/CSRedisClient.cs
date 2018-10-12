@@ -66,7 +66,7 @@ namespace CSRedis {
 				}
 			}
 
-			return JsonConvert.SerializeObject(value);
+			return JsonConvert.SerializeObject(value, this.SerializerSettings);
 		}
 		internal T DeserializeInternal<T>(byte[] value) {
 			if (value == null) return default(T);
@@ -240,14 +240,14 @@ namespace CSRedis {
 			var cacheValue = Get(key);
 			if (cacheValue != null) {
 				try {
-					return JsonConvert.DeserializeObject<T>(cacheValue);
+					return JsonConvert.DeserializeObject<T>(cacheValue, this.SerializerSettings);
 				} catch {
 					Del(key);
 					throw;
 				}
 			}
 			var ret = getData();
-			Set(key, JsonConvert.SerializeObject(ret), timeoutSeconds);
+			Set(key, JsonConvert.SerializeObject(ret, this.SerializerSettings), timeoutSeconds);
 			return ret;
 		}
 		/// <summary>
@@ -264,7 +264,7 @@ namespace CSRedis {
 			var cacheValue = HGet(key, field);
 			if (cacheValue != null) {
 				try {
-					var value = JsonConvert.DeserializeObject<(T, long)>(cacheValue);
+					var value = JsonConvert.DeserializeObject<(T, long)>(cacheValue, this.SerializerSettings);
 					if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) return value.Item1;
 				} catch {
 					HDel(key, field);
@@ -272,7 +272,7 @@ namespace CSRedis {
 				}
 			}
 			var ret = getData();
-			HSet(key, field, JsonConvert.SerializeObject((ret, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+			HSet(key, field, JsonConvert.SerializeObject((ret, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds), this.SerializerSettings));
 			return ret;
 		}
 		/// <summary>
@@ -296,7 +296,7 @@ namespace CSRedis {
 			for (var a = 0; a < ret.Length; a++) {
 				if (cacheValue[a] != null) {
 					try {
-						var value = JsonConvert.DeserializeObject<(T, long)>(cacheValue[a]);
+						var value = JsonConvert.DeserializeObject<(T, long)>(cacheValue[a], this.SerializerSettings);
 						if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) {
 							ret[a] = value.Item1;
 							continue;
@@ -317,12 +317,12 @@ namespace CSRedis {
 				foreach (var d in data) {
 					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
 					ret[fieldsMGet[d.Item1]] = d.Item2;
-					mset[msetIndex++] = (d.Item1, JsonConvert.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					mset[msetIndex++] = (d.Item1, JsonConvert.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds), this.SerializerSettings));
 					fieldsMGet.Remove(d.Item1);
 				}
 				foreach (var fieldNull in fieldsMGet.Keys) {
 					ret[fieldsMGet[fieldNull]] = default(T);
-					mset[msetIndex++] = (fieldNull, JsonConvert.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					mset[msetIndex++] = (fieldNull, JsonConvert.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds), this.SerializerSettings));
 				}
 				if (mset.Any()) HMSet(key, mset);
 			}
