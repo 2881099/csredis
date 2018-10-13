@@ -318,7 +318,7 @@ namespace CSRedis
         /// <param name="pattern">Glob-style pattern to filter returned elements</param>
         /// <param name="count">Set the maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
-        RedisScan<T> Scan<T>(long cursor, string pattern = null, long? count = null);
+        RedisScan<string> Scan(long cursor, string pattern = null, long? count = null);
 		RedisScan<byte[]> ScanBytes(long cursor, string pattern = null, long? count = null);
 
 		#endregion
@@ -876,9 +876,9 @@ namespace CSRedis
 		/// Add one or more members to a sorted set, or update its score if it already exists
 		/// </summary>
 		/// <param name="key">Sorted set key</param>
-		/// <param name="memberScores">Array of member scores to add to sorted set</param>
+		/// <param name="scoreMembers">Array of member scores to add to sorted set</param>
 		/// <returns>Number of elements added to the sorted set (not including member updates);</returns>
-		long ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores);
+		long ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] scoreMembers);
 
 
 
@@ -887,9 +887,9 @@ namespace CSRedis
         /// Add one or more members to a sorted set, or update its score if it already exists
         /// </summary>
         /// <param name="key">Sorted set key</param>
-        /// <param name="memberScores">Array of member scores [s1, m1, s2, m2, ..]</param>
+        /// <param name="scoreMembers">Array of member scores [s1, m1, s2, m2, ..]</param>
         /// <returns>Number of elements added to the sorted set (not including member updates);</returns>
-        long ZAdd(string key, params object[] memberScores);
+        long ZAdd(string key, params object[] scoreMembers);
 
 
 
@@ -1098,6 +1098,7 @@ namespace CSRedis
         /// <param name="exclusiveMax">Maximum score is exclusive</param>
         /// <returns>Number of elements removed</returns>
         long ZRemRangeByScore(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false);
+        long ZRemRangeByScore(string key, string min, string max);
 
 
 
@@ -1383,17 +1384,17 @@ namespace CSRedis
         /// <param name="keys">Keys used by script</param>
         /// <param name="arguments">Arguments to pass to script</param>
         /// <returns>Redis object</returns>
-        object EvalSHA(string sha1, string[] keys, params string[] arguments);
+        object EvalSHA(string sha1, string[] keys, params object[] arguments);
 
 
 
 
-        /// <summary>
-        /// Check existence of script SHA hashes in the script cache
-        /// </summary>
-        /// <param name="scripts">SHA1 script hashes</param>
-        /// <returns>Array of boolean values indicating script existence on server</returns>
-        bool[] ScriptExists(params string[] scripts);
+		/// <summary>
+		/// Check existence of script SHA hashes in the script cache
+		/// </summary>
+		/// <param name="sha1s">SHA1 script hashes</param>
+		/// <returns>Array of boolean values indicating script existence on server</returns>
+		bool[] ScriptExists(params string[] sha1s);
 
 
 

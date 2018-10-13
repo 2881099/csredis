@@ -1013,22 +1013,22 @@ namespace CSRedis
         /// Add one or more members to a sorted set, or update its score if it already exists
         /// </summary>
         /// <param name="key">Sorted set key</param>
-        /// <param name="memberScores">Array of member scores to add to sorted set</param>
+        /// <param name="scoreMembers">Array of member scores to add to sorted set</param>
         /// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-        public Task<long> ZAddAsync<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores)
+        public Task<long> ZAddAsync<TScore, TMember>(string key, params Tuple<TScore, TMember>[] scoreMembers)
         {
-            return WriteAsync(RedisCommands.ZAdd(key, memberScores));
+            return WriteAsync(RedisCommands.ZAdd(key, scoreMembers));
         }
 
         /// <summary>
         /// Add one or more members to a sorted set, or update its score if it already exists
         /// </summary>
         /// <param name="key">Sorted set key</param>
-        /// <param name="memberScores">Array of member scores [s1, m1, s2, m2, ..]</param>
+        /// <param name="scoreMembers">Array of member scores [s1, m1, s2, m2, ..]</param>
         /// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-        public Task<long> ZAddAsync(string key, params object[] memberScores)
+        public Task<long> ZAddAsync(string key, params object[] scoreMembers)
         {
-            return WriteAsync(RedisCommands.ZAdd(key, memberScores));
+            return WriteAsync(RedisCommands.ZAdd(key, scoreMembers));
         }
 
         /// <summary>
@@ -1260,6 +1260,10 @@ namespace CSRedis
         public Task<long> ZRemRangeByScoreAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false)
         {
             return WriteAsync(RedisCommands.ZRemRangeByScore(key, min, max, exclusiveMin, exclusiveMax));
+        }
+		public Task<long> ZRemRangeByScoreAsync(string key, string min, string max)
+        {
+            return WriteAsync(RedisCommands.ZRemRangeByScore(key, min, max));
         }
 
         /// <summary>
@@ -1529,19 +1533,19 @@ namespace CSRedis
         /// <param name="keys">Keys used by script</param>
         /// <param name="arguments">Arguments to pass to script</param>
         /// <returns>Redis object</returns>
-        public Task<object> EvalSHAAsync(string sha1, string[] keys, params string[] arguments)
+        public Task<object> EvalSHAAsync(string sha1, string[] keys, params object[] arguments)
         {
             return WriteAsync(RedisCommands.EvalSHA(sha1, keys, arguments));
         }
 
-        /// <summary>
-        /// Check existence of script SHA hashes in the script cache
-        /// </summary>
-        /// <param name="scripts">SHA1 script hashes</param>
-        /// <returns>Array of boolean values indicating script existence on server</returns>
-        public Task<bool[]> ScriptExistsAsync(params string[] scripts)
+		/// <summary>
+		/// Check existence of script SHA hashes in the script cache
+		/// </summary>
+		/// <param name="sha1s">SHA1 script hashes</param>
+		/// <returns>Array of boolean values indicating script existence on server</returns>
+		public Task<bool[]> ScriptExistsAsync(params string[] sha1s)
         {
-            return WriteAsync(RedisCommands.ScriptExists(scripts));
+            return WriteAsync(RedisCommands.ScriptExists(sha1s));
         }
 
         /// <summary>

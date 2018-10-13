@@ -927,9 +927,9 @@ namespace CSRedis
 		/// Add one or more members to a sorted set, or update its score if it already exists
 		/// </summary>
 		/// <param name="key">Sorted set key</param>
-		/// <param name="memberScores">Array of member scores to add to sorted set</param>
+		/// <param name="scoreMembers">Array of member scores to add to sorted set</param>
 		/// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-		Task<long> ZAddAsync<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores);
+		Task<long> ZAddAsync<TScore, TMember>(string key, params Tuple<TScore, TMember>[] scoreMembers);
 
 
 
@@ -938,9 +938,9 @@ namespace CSRedis
         /// Add one or more members to a sorted set, or update its score if it already exists
         /// </summary>
         /// <param name="key">Sorted set key</param>
-        /// <param name="memberScores">Array of member scores [s1, m1, s2, m2, ..]</param>
+        /// <param name="scoreMembers">Array of member scores [s1, m1, s2, m2, ..]</param>
         /// <returns>Number of elements added to the sorted set (not including member updates)</returns>
-        Task<long> ZAddAsync(string key, params object[] memberScores);
+        Task<long> ZAddAsync(string key, params object[] scoreMembers);
 
 
 
@@ -1149,6 +1149,7 @@ namespace CSRedis
         /// <param name="exclusiveMax">Maximum score is exclusive</param>
         /// <returns>Number of elements removed</returns>
         Task<long> ZRemRangeByScoreAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false);
+        Task<long> ZRemRangeByScoreAsync(string key, string min, string max);
 
 
 
@@ -1389,17 +1390,17 @@ namespace CSRedis
         /// <param name="keys">Keys used by script</param>
         /// <param name="arguments">Arguments to pass to script</param>
         /// <returns>Redis object</returns>
-        Task<object> EvalSHAAsync(string sha1, string[] keys, params string[] arguments);
+        Task<object> EvalSHAAsync(string sha1, string[] keys, params object[] arguments);
 
 
 
 
-        /// <summary>
-        /// Check existence of script SHA hashes in the script cache
-        /// </summary>
-        /// <param name="scripts">SHA1 script hashes</param>
-        /// <returns>Array of boolean values indicating script existence on server</returns>
-        Task<bool[]> ScriptExistsAsync(params string[] scripts);
+		/// <summary>
+		/// Check existence of script SHA hashes in the script cache
+		/// </summary>
+		/// <param name="sha1s">SHA1 script hashes</param>
+		/// <returns>Array of boolean values indicating script existence on server</returns>
+		Task<bool[]> ScriptExistsAsync(params string[] sha1s);
 
 
 

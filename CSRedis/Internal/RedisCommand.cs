@@ -624,14 +624,14 @@ namespace CSRedis
         #endregion
 
         #region Sorted Sets
-        public static RedisInt ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] memberScores)
+        public static RedisInt ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] scoreMembers)
         {
-            object[] args = RedisArgs.Concat(key, RedisArgs.GetTupleArgs(memberScores));
+            object[] args = RedisArgs.Concat(key, RedisArgs.GetTupleArgs(scoreMembers));
             return new RedisInt("ZADD", args);
         }
-        public static RedisInt ZAdd(string key, params object[] memberScores)
+        public static RedisInt ZAdd(string key, params object[] scoreMembers)
         {
-            object[] args = RedisArgs.Concat(key, memberScores);
+            object[] args = RedisArgs.Concat(key, scoreMembers);
             return new RedisInt("ZADD", args);
         }
         public static RedisInt ZCard(string key)
@@ -769,7 +769,11 @@ namespace CSRedis
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
 
-            return new RedisInt("ZREMRANGEBYSCORE", key, min_score, max_score);
+            return ZRemRangeByScore(key, min_score, max_score);
+        }
+		public static RedisInt ZRemRangeByScore(string key, string min, string max)  
+        {
+            return new RedisInt("ZREMRANGEBYSCORE", key, min, max);
         }
         public static RedisArray.Strings ZRevRange(string key, long start, long stop, bool withScores = false)
         {
@@ -985,14 +989,14 @@ namespace CSRedis
 			object[] args = RedisArgs.Concat(new object[] { script, keys.Length }, keys, arguments);
             return new RedisObject.Strings("EVAL", args);
         }
-        public static RedisObject.Strings EvalSHA(string sha1, string[] keys, params string[] arguments)
+        public static RedisObject.Strings EvalSHA(string sha1, string[] keys, params object[] arguments)
         {
 			object[] args = RedisArgs.Concat(new object[] { sha1, keys.Length }, keys, arguments);
             return new RedisObject.Strings("EVALSHA", args);
         }
-        public static RedisArray.Generic<bool> ScriptExists(params string[] scripts)
+        public static RedisArray.Generic<bool> ScriptExists(params string[] sha1s)
         {
-            return new RedisArray.Generic<bool>(new RedisBool("SCRIPT EXISTS", scripts));
+            return new RedisArray.Generic<bool>(new RedisBool("SCRIPT EXISTS", sha1s));
         }
         public static RedisStatus ScriptFlush()
         {

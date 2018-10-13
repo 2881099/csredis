@@ -400,10 +400,10 @@
 //	/// <summary>
 //	/// 返回给定所有集合的差集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> SDiffStoreAsync(string destinationKey, params string[] keys) => Instance.SDiffStoreAsync(destinationKey, keys);
+//	public static Task<long> SDiffStoreAsync(string destination, params string[] keys) => Instance.SDiffStoreAsync(destination, keys);
 //	/// <summary>
 //	/// 返回给定所有集合的交集，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
@@ -413,10 +413,10 @@
 //	/// <summary>
 //	/// 返回给定所有集合的交集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> SInterStoreAsync(string destinationKey, params string[] keys) => Instance.SInterStoreAsync(destinationKey, keys);
+//	public static Task<long> SInterStoreAsync(string destination, params string[] keys) => Instance.SInterStoreAsync(destination, keys);
 //	/// <summary>
 //	/// 返回集合中的所有成员
 //	/// </summary>
@@ -426,11 +426,11 @@
 //	/// <summary>
 //	/// 将 member 元素从 source 集合移动到 destination 集合
 //	/// </summary>
-//	/// <param name="sourceKey">无序集合key，不含prefix前辍</param>
-//	/// <param name="destinationKey">目标无序集合key，不含prefix前辍</param>
+//	/// <param name="source">无序集合key，不含prefix前辍</param>
+//	/// <param name="destination">目标无序集合key，不含prefix前辍</param>
 //	/// <param name="member">成员</param>
 //	/// <returns></returns>
-//	public static Task<bool> SMoveAsync(string sourceKey, string destinationKey, string member) => Instance.SMoveAsync(sourceKey, destinationKey, member);
+//	public static Task<bool> SMoveAsync(string source, string destination, string member) => Instance.SMoveAsync(source, destination, member);
 //	/// <summary>
 //	/// 移除并返回集合中的一个随机元素
 //	/// </summary>
@@ -460,10 +460,10 @@
 //	/// <summary>
 //	/// 所有给定集合的并集存储在 destination 集合中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> SUnionStoreAsync(string destinationKey, params string[] keys) => Instance.SUnionStoreAsync(destinationKey, keys);
+//	public static Task<long> SUnionStoreAsync(string destination, params string[] keys) => Instance.SUnionStoreAsync(destination, keys);
 //	#endregion
 
 //	#region Sorted Set 操作
@@ -471,9 +471,9 @@
 //	/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="memberScores">一个或多个成员分数</param>
+//	/// <param name="scoreMembers">一个或多个成员分数</param>
 //	/// <returns></returns>
-//	public static Task<long> ZAddAsync(string key, params (double, string)[] memberScores) => Instance.ZAddAsync(key, memberScores);
+//	public static Task<long> ZAddAsync(string key, params (double, string)[] scoreMembers) => Instance.ZAddAsync(key, scoreMembers);
 //	/// <summary>
 //	/// 获取有序集合的成员数量
 //	/// </summary>
@@ -499,50 +499,50 @@
 
 //	#region 多个有序集合 交集
 //	/// <summary>
-//	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> ZInterStoreMaxAsync(string destinationKey, params string[] keys) => Instance.ZInterStoreMaxAsync(destinationKey, keys);
+//	public static Task<long> ZInterStoreMaxAsync(string destination, params string[] keys) => Instance.ZInterStoreMaxAsync(destination, keys);
 //	/// <summary>
-//	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> ZInterStoreMinAsync(string destinationKey, params string[] keys) => Instance.ZInterStoreMinAsync(destinationKey, keys);
+//	public static Task<long> ZInterStoreMinAsync(string destination, params string[] keys) => Instance.ZInterStoreMinAsync(destination, keys);
 //	/// <summary>
-//	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> ZInterStoreSumAsync(string destinationKey, params string[] keys) => Instance.ZInterStoreSumAsync(destinationKey, keys);
+//	public static Task<long> ZInterStoreSumAsync(string destination, params string[] keys) => Instance.ZInterStoreSumAsync(destination, keys);
 //	#endregion
 
 //	#region 多个有序集合 并集
 //	/// <summary>
 //	/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> ZUnionStoreMaxAsync(string destinationKey, params string[] keys) => Instance.ZUnionStoreMaxAsync(destinationKey, keys);
+//	public static Task<long> ZUnionStoreMaxAsync(string destination, params string[] keys) => Instance.ZUnionStoreMaxAsync(destination, keys);
 //	/// <summary>
 //	/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> ZUnionStoreMinAsync(string destinationKey, params string[] keys) => Instance.ZUnionStoreMinAsync(destinationKey, keys);
+//	public static Task<long> ZUnionStoreMinAsync(string destination, params string[] keys) => Instance.ZUnionStoreMinAsync(destination, keys);
 //	/// <summary>
 //	/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static Task<long> ZUnionStoreSumAsync(string destinationKey, params string[] keys) => Instance.ZUnionStoreSumAsync(destinationKey, keys);
+//	public static Task<long> ZUnionStoreSumAsync(string destination, params string[] keys) => Instance.ZUnionStoreSumAsync(destination, keys);
 //	#endregion
 
 //	/// <summary>
@@ -557,22 +557,22 @@
 //	/// 通过分数返回有序集合指定区间内的成员
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static Task<string[]> ZRangeByScoreAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync(key, minScore, maxScore, limit, offset);
+//	public static Task<string[]> ZRangeByScoreAsync(string key, double min, double max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync(key, min, max, limit, offset);
 //	/// <summary>
 //	/// 通过分数返回有序集合指定区间内的成员和分数
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => Instance.ZRangeByScoreWithScoresAsync(key, minScore, maxScore, limit, offset);
+//	public static Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreWithScoresAsync(key, min, max, limit, offset);
 //	/// <summary>
 //	/// 返回有序集合中指定成员的索引
 //	/// </summary>
@@ -599,10 +599,10 @@
 //	/// 移除有序集合中给定的分数区间的所有成员
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <returns></returns>
-//	public static Task<long> ZRemRangeByScoreAsync(string key, double minScore, double maxScore) => Instance.ZRemRangeByScoreAsync(key, minScore, maxScore);
+//	public static Task<long> ZRemRangeByScoreAsync(string key, double min, double max) => Instance.ZRemRangeByScoreAsync(key, min, max);
 //	/// <summary>
 //	/// 返回有序集中指定区间内的成员，通过索引，分数从高到底
 //	/// </summary>
@@ -615,22 +615,22 @@
 //	/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreAsync(key, maxScore, minScore, limit, offset);
+//	public static Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreAsync(key, max, min, limit, offset);
 //	/// <summary>
 //	/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double maxScore, double minScore, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreWithScoresAsync(key, maxScore, minScore, limit, offset);
+//	public static Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreWithScoresAsync(key, max, min, limit, offset);
 //	/// <summary>
 //	/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
 //	/// </summary>

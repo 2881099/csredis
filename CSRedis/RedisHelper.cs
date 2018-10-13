@@ -456,10 +456,10 @@
 //	/// <summary>
 //	/// 返回给定所有集合的差集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long SDiffStore(string destinationKey, params string[] keys) => Instance.SDiffStore(destinationKey, keys);
+//	public static long SDiffStore(string destination, params string[] keys) => Instance.SDiffStore(destination, keys);
 //	/// <summary>
 //	/// 返回给定所有集合的交集，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
@@ -469,10 +469,10 @@
 //	/// <summary>
 //	/// 返回给定所有集合的交集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long SInterStore(string destinationKey, params string[] keys) => Instance.SInterStore(destinationKey, keys);
+//	public static long SInterStore(string destination, params string[] keys) => Instance.SInterStore(destination, keys);
 //	/// <summary>
 //	/// 返回集合中的所有成员
 //	/// </summary>
@@ -482,11 +482,11 @@
 //	/// <summary>
 //	/// 将 member 元素从 source 集合移动到 destination 集合
 //	/// </summary>
-//	/// <param name="sourceKey">无序集合key，不含prefix前辍</param>
-//	/// <param name="destinationKey">目标无序集合key，不含prefix前辍</param>
+//	/// <param name="source">无序集合key，不含prefix前辍</param>
+//	/// <param name="destination">目标无序集合key，不含prefix前辍</param>
 //	/// <param name="member">成员</param>
 //	/// <returns></returns>
-//	public static bool SMove(string sourceKey, string destinationKey, string member) => Instance.SMove(sourceKey, destinationKey, member);
+//	public static bool SMove(string source, string destination, string member) => Instance.SMove(source, destination, member);
 //	/// <summary>
 //	/// 移除并返回集合中的一个随机元素
 //	/// </summary>
@@ -516,10 +516,10 @@
 //	/// <summary>
 //	/// 所有给定集合的并集存储在 destination 集合中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long SUnionStore(string destinationKey, params string[] keys) => Instance.SUnionStore(destinationKey, keys);
+//	public static long SUnionStore(string destination, params string[] keys) => Instance.SUnionStore(destination, keys);
 //	/// <summary>
 //	/// 迭代集合中的元素
 //	/// </summary>
@@ -536,9 +536,9 @@
 //	/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="memberScores">一个或多个成员分数</param>
+//	/// <param name="scoreMembers">一个或多个成员分数</param>
 //	/// <returns></returns>
-//	public static long ZAdd(string key, params (double, string)[] memberScores) => Instance.ZAdd(key, memberScores);
+//	public static long ZAdd(string key, params (double, string)[] scoreMembers) => Instance.ZAdd(key, scoreMembers);
 //	/// <summary>
 //	/// 获取有序集合的成员数量
 //	/// </summary>
@@ -564,50 +564,50 @@
 
 //	#region 多个有序集合 交集
 //	/// <summary>
-//	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long ZInterStoreMax(string destinationKey, params string[] keys) => Instance.ZInterStoreMax(destinationKey, keys);
+//	public static long ZInterStoreMax(string destination, params string[] keys) => Instance.ZInterStoreMax(destination, keys);
 //	/// <summary>
-//	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long ZInterStoreMin(string destinationKey, params string[] keys) => Instance.ZInterStoreMin(destinationKey, keys);
+//	public static long ZInterStoreMin(string destination, params string[] keys) => Instance.ZInterStoreMin(destination, keys);
 //	/// <summary>
-//	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long ZInterStoreSum(string destinationKey, params string[] keys) => Instance.ZInterStoreSum(destinationKey, keys);
+//	public static long ZInterStoreSum(string destination, params string[] keys) => Instance.ZInterStoreSum(destination, keys);
 //	#endregion
 
 //	#region 多个有序集合 并集
 //	/// <summary>
 //	/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long ZUnionStoreMax(string destinationKey, params string[] keys) => Instance.ZUnionStoreMax(destinationKey, keys);
+//	public static long ZUnionStoreMax(string destination, params string[] keys) => Instance.ZUnionStoreMax(destination, keys);
 //	/// <summary>
 //	/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long ZUnionStoreMin(string destinationKey, params string[] keys) => Instance.ZUnionStoreMin(destinationKey, keys);
+//	public static long ZUnionStoreMin(string destination, params string[] keys) => Instance.ZUnionStoreMin(destination, keys);
 //	/// <summary>
 //	/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //	/// </summary>
-//	/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //	/// <returns></returns>
-//	public static long ZUnionStoreSum(string destinationKey, params string[] keys) => Instance.ZUnionStoreSum(destinationKey, keys);
+//	public static long ZUnionStoreSum(string destination, params string[] keys) => Instance.ZUnionStoreSum(destination, keys);
 //	#endregion
 
 //	/// <summary>
@@ -622,22 +622,22 @@
 //	/// 通过分数返回有序集合指定区间内的成员
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static string[] ZRangeByScore(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => Instance.ZRangeByScore(key, minScore, maxScore, limit, offset);
+//	public static string[] ZRangeByScore(string key, double min, double max, long? limit = null, long offset = 0) => Instance.ZRangeByScore(key, min, max, limit, offset);
 //	/// <summary>
 //	/// 通过分数返回有序集合指定区间内的成员和分数
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static (string member, double score)[] ZRangeByScoreWithScores(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => Instance.ZRangeByScoreWithScores(key, minScore, maxScore, limit, offset);
+//	public static (string member, double score)[] ZRangeByScoreWithScores(string key, double min, double max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreWithScores(key, min, max, limit, offset);
 //	/// <summary>
 //	/// 返回有序集合中指定成员的索引
 //	/// </summary>
@@ -664,10 +664,10 @@
 //	/// 移除有序集合中给定的分数区间的所有成员
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <returns></returns>
-//	public static long ZRemRangeByScore(string key, double minScore, double maxScore) => Instance.ZRemRangeByScore(key, minScore, maxScore);
+//	public static long ZRemRangeByScore(string key, double min, double max) => Instance.ZRemRangeByScore(key, min, max);
 //	/// <summary>
 //	/// 返回有序集中指定区间内的成员，通过索引，分数从高到底
 //	/// </summary>
@@ -680,22 +680,22 @@
 //	/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static string[] ZRevRangeByScore(string key, double maxScore, double minScore, long? limit = null, long offset = 0) => Instance.ZRevRangeByScore(key, maxScore, minScore, limit, offset);
+//	public static string[] ZRevRangeByScore(string key, double max, double min, long? limit = null, long offset = 0) => Instance.ZRevRangeByScore(key, max, min, limit, offset);
 //	/// <summary>
 //	/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 //	/// </summary>
 //	/// <param name="key">不含prefix前辍</param>
-//	/// <param name="minScore">最小分数</param>
-//	/// <param name="maxScore">最大分数</param>
+//	/// <param name="min">最小分数</param>
+//	/// <param name="max">最大分数</param>
 //	/// <param name="limit">返回多少成员</param>
 //	/// <param name="offset">返回条件偏移位置</param>
 //	/// <returns></returns>
-//	public static (string member, double score)[] ZRevRangeByScoreWithScores(string key, double maxScore, double minScore, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreWithScores(key, maxScore, minScore, limit, offset);
+//	public static (string member, double score)[] ZRevRangeByScoreWithScores(string key, double max, double min, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreWithScores(key, max, min, limit, offset);
 //	/// <summary>
 //	/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
 //	/// </summary>

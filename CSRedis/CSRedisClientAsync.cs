@@ -619,10 +619,10 @@
 //		/// <summary>
 //		/// 返回给定所有集合的差集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> SDiffStoreAsync(string destinationKey, params string[] keys) => NodesNotSupportAsync(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.Value.SDiffStoreAsync(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
+//		public Task<long> SDiffStoreAsync(string destination, params string[] keys) => NodesNotSupportAsync(new[] { destination }.Concat(keys).ToArray(), 0, (c, k) => c.Value.SDiffStoreAsync(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
 //		/// <summary>
 //		/// 返回给定所有集合的交集，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
@@ -632,10 +632,10 @@
 //		/// <summary>
 //		/// 返回给定所有集合的交集并存储在 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> SInterStoreAsync(string destinationKey, params string[] keys) => NodesNotSupportAsync(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.Value.SInterStoreAsync(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
+//		public Task<long> SInterStoreAsync(string destination, params string[] keys) => NodesNotSupportAsync(new[] { destination }.Concat(keys).ToArray(), 0, (c, k) => c.Value.SInterStoreAsync(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
 //		/// <summary>
 //		/// 返回集合中的所有成员
 //		/// </summary>
@@ -645,24 +645,24 @@
 //		/// <summary>
 //		/// 将 member 元素从 source 集合移动到 destination 集合
 //		/// </summary>
-//		/// <param name="sourceKey">无序集合key，不含prefix前辍</param>
-//		/// <param name="destinationKey">目标无序集合key，不含prefix前辍</param>
+//		/// <param name="source">无序集合key，不含prefix前辍</param>
+//		/// <param name="destination">目标无序集合key，不含prefix前辍</param>
 //		/// <param name="member">成员</param>
 //		/// <returns></returns>
-//		async public Task<bool> SMoveAsync(string sourceKey, string destinationKey, string member) {
+//		async public Task<bool> SMoveAsync(string source, string destination, string member) {
 //			string rule = string.Empty;
 //			if (Nodes.Count > 1) {
-//				var rule1 = NodeRule(sourceKey);
-//				var rule2 = NodeRule(destinationKey);
+//				var rule1 = NodeRule(source);
+//				var rule2 = NodeRule(destination);
 //				if (rule1 != rule2) {
-//					if (await SRemAsync(sourceKey, member) <= 0) return false;
-//					return await SAddAsync(destinationKey, member) > 0;
+//					if (await SRemAsync(source, member) <= 0) return false;
+//					return await SAddAsync(destination, member) > 0;
 //				}
 //				rule = rule1;
 //			}
 //			var pool = Nodes.TryGetValue(rule, out var b) ? b : Nodes.First().Value;
-//			var key1 = string.Concat(pool.Prefix, sourceKey);
-//			var key2 = string.Concat(pool.Prefix, destinationKey);
+//			var key1 = string.Concat(pool.Prefix, source);
+//			var key2 = string.Concat(pool.Prefix, destination);
 //			return await GetConnectionAndExecuteAsync(pool, conn => conn.Value.SMoveAsync(key1, key2, member));
 //		}
 //		/// <summary>
@@ -697,10 +697,10 @@
 //		/// <summary>
 //		/// 所有给定集合的并集存储在 destination 集合中，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的无序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的无序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个无序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> SUnionStoreAsync(string destinationKey, params string[] keys) => NodesNotSupportAsync(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.Value.SUnionStoreAsync(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
+//		public Task<long> SUnionStoreAsync(string destination, params string[] keys) => NodesNotSupportAsync(new[] { destination }.Concat(keys).ToArray(), 0, (c, k) => c.Value.SUnionStoreAsync(k.First(), k.Where((ki, kj) => kj > 0).ToArray()));
 //		#endregion
 
 //		async private Task<T> NodesNotSupportAsync<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], Task<T>> callbackAsync) {
@@ -719,11 +719,11 @@
 //		/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
 //		/// </summary>
 //		/// <param name="key">不含prefix前辍</param>
-//		/// <param name="memberScores">一个或多个成员分数</param>
+//		/// <param name="scoreMembers">一个或多个成员分数</param>
 //		/// <returns></returns>
-//		async public Task<long> ZAddAsync(string key, params (double, string)[] memberScores) {
-//			if (memberScores == null || memberScores.Any() == false) return 0;
-//			var ms = memberScores.Select(a => new Tuple<double, string>(a.Item1, a.Item2)).ToArray();
+//		async public Task<long> ZAddAsync(string key, params (double, string)[] scoreMembers) {
+//			if (scoreMembers == null || scoreMembers.Any() == false) return 0;
+//			var ms = scoreMembers.Select(a => new Tuple<double, string>(a.Item1, a.Item2)).ToArray();
 //			return await ExecuteScalarAsync(key, (c, k) => c.Value.ZAddAsync<double, string>(k, ms));
 //		}
 //		/// <summary>
@@ -751,52 +751,52 @@
 
 //		#region 多个有序集合 交集
 //		/// <summary>
-//		/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//		/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> ZInterStoreMaxAsync(string destinationKey, params string[] keys) => ZInterStoreAsync(destinationKey, RedisAggregate.Max, keys);
+//		public Task<long> ZInterStoreMaxAsync(string destination, params string[] keys) => ZInterStoreAsync(destination, RedisAggregate.Max, keys);
 //		/// <summary>
-//		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> ZInterStoreMinAsync(string destinationKey, params string[] keys) => ZInterStoreAsync(destinationKey, RedisAggregate.Min, keys);
+//		public Task<long> ZInterStoreMinAsync(string destination, params string[] keys) => ZInterStoreAsync(destination, RedisAggregate.Min, keys);
 //		/// <summary>
-//		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destinationKey 中，警告：群集模式下，若keys分散在多个节点时，将报错
+//		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> ZInterStoreSumAsync(string destinationKey, params string[] keys) => ZInterStoreAsync(destinationKey, RedisAggregate.Sum, keys);
-//		private Task<long> ZInterStoreAsync(string destinationKey, RedisAggregate aggregate, params string[] keys) => NodesNotSupportAsync(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.Value.ZInterStoreAsync(k.First(), null, aggregate, k.Where((ki, kj) => kj > 0).ToArray()));
+//		public Task<long> ZInterStoreSumAsync(string destination, params string[] keys) => ZInterStoreAsync(destination, RedisAggregate.Sum, keys);
+//		private Task<long> ZInterStoreAsync(string destination, RedisAggregate aggregate, params string[] keys) => NodesNotSupportAsync(new[] { destination }.Concat(keys).ToArray(), 0, (c, k) => c.Value.ZInterStoreAsync(k.First(), null, aggregate, k.Where((ki, kj) => kj > 0).ToArray()));
 //		#endregion
 
 //		#region 多个有序集合 并集
 //		/// <summary>
 //		/// 计算给定的一个或多个有序集的最大值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> ZUnionStoreMaxAsync(string destinationKey, params string[] keys) => ZUnionStoreAsync(destinationKey, RedisAggregate.Max, keys);
+//		public Task<long> ZUnionStoreMaxAsync(string destination, params string[] keys) => ZUnionStoreAsync(destination, RedisAggregate.Max, keys);
 //		/// <summary>
 //		/// 计算给定的一个或多个有序集的最小值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> ZUnionStoreMinAsync(string destinationKey, params string[] keys) => ZUnionStoreAsync(destinationKey, RedisAggregate.Min, keys);
+//		public Task<long> ZUnionStoreMinAsync(string destination, params string[] keys) => ZUnionStoreAsync(destination, RedisAggregate.Min, keys);
 //		/// <summary>
 //		/// 计算给定的一个或多个有序集的合值并集，将该并集(结果集)储存到 destination，警告：群集模式下，若keys分散在多个节点时，将报错
 //		/// </summary>
-//		/// <param name="destinationKey">新的有序集合，不含prefix前辍</param>
+//		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 //		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 //		/// <returns></returns>
-//		public Task<long> ZUnionStoreSumAsync(string destinationKey, params string[] keys) => ZUnionStoreAsync(destinationKey, RedisAggregate.Sum, keys);
-//		private Task<long> ZUnionStoreAsync(string destinationKey, RedisAggregate aggregate, params string[] keys) => NodesNotSupportAsync(new[] { destinationKey }.Concat(keys).ToArray(), 0, (c, k) => c.Value.ZUnionStoreAsync(k.First(), null, aggregate, k.Where((ki, kj) => kj > 0).ToArray()));
+//		public Task<long> ZUnionStoreSumAsync(string destination, params string[] keys) => ZUnionStoreAsync(destination, RedisAggregate.Sum, keys);
+//		private Task<long> ZUnionStoreAsync(string destination, RedisAggregate aggregate, params string[] keys) => NodesNotSupportAsync(new[] { destination }.Concat(keys).ToArray(), 0, (c, k) => c.Value.ZUnionStoreAsync(k.First(), null, aggregate, k.Where((ki, kj) => kj > 0).ToArray()));
 //		#endregion
 
 //		/// <summary>
@@ -811,23 +811,23 @@
 //		/// 通过分数返回有序集合指定区间内的成员
 //		/// </summary>
 //		/// <param name="key">不含prefix前辍</param>
-//		/// <param name="minScore">最小分数</param>
-//		/// <param name="maxScore">最大分数</param>
+//		/// <param name="min">最小分数</param>
+//		/// <param name="max">最大分数</param>
 //		/// <param name="limit">返回多少成员</param>
 //		/// <param name="offset">返回条件偏移位置</param>
 //		/// <returns></returns>
-//		public Task<string[]> ZRangeByScoreAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreAsync(k, minScore, maxScore, false, false, false, offset, limit));
+//		public Task<string[]> ZRangeByScoreAsync(string key, double min, double max, long? limit = null, long offset = 0) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreAsync(k, min, max, false, false, false, offset, limit));
 //		/// <summary>
 //		/// 通过分数返回有序集合指定区间内的成员和分数
 //		/// </summary>
 //		/// <param name="key">不含prefix前辍</param>
-//		/// <param name="minScore">最小分数</param>
-//		/// <param name="maxScore">最大分数</param>
+//		/// <param name="min">最小分数</param>
+//		/// <param name="max">最大分数</param>
 //		/// <param name="limit">返回多少成员</param>
 //		/// <param name="offset">返回条件偏移位置</param>
 //		/// <returns></returns>
-//		async public Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double minScore, double maxScore, long? limit = null, long offset = 0) {
-//			var res = await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreAsync(k, minScore, maxScore, true, false, false, offset, limit));
+//		async public Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, long? limit = null, long offset = 0) {
+//			var res = await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreAsync(k, min, max, true, false, false, offset, limit));
 //			var ret = new List<(string member, double score)>();
 //			if (res != null && res.Length % 2 == 0)
 //				for (var a = 0; a < res.Length; a += 2)
@@ -860,10 +860,10 @@
 //		/// 移除有序集合中给定的分数区间的所有成员
 //		/// </summary>
 //		/// <param name="key">不含prefix前辍</param>
-//		/// <param name="minScore">最小分数</param>
-//		/// <param name="maxScore">最大分数</param>
+//		/// <param name="min">最小分数</param>
+//		/// <param name="max">最大分数</param>
 //		/// <returns></returns>
-//		public Task<long> ZRemRangeByScoreAsync(string key, double minScore, double maxScore) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRemRangeByScoreAsync(k, minScore, maxScore));
+//		public Task<long> ZRemRangeByScoreAsync(string key, double min, double max) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRemRangeByScoreAsync(k, min, max));
 //		/// <summary>
 //		/// 返回有序集中指定区间内的成员，通过索引，分数从高到底
 //		/// </summary>
@@ -876,23 +876,23 @@
 //		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 //		/// </summary>
 //		/// <param name="key">不含prefix前辍</param>
-//		/// <param name="minScore">最小分数</param>
-//		/// <param name="maxScore">最大分数</param>
+//		/// <param name="min">最小分数</param>
+//		/// <param name="max">最大分数</param>
 //		/// <param name="limit">返回多少成员</param>
 //		/// <param name="offset">返回条件偏移位置</param>
 //		/// <returns></returns>
-//		public Task<string[]> ZRevRangeByScoreAsync(string key, double maxScore, double minScore, long? limit = null, long? offset = 0) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreAsync(k, maxScore, minScore, false, false, false, offset, limit));
+//		public Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, long? limit = null, long? offset = 0) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreAsync(k, max, min, false, false, false, offset, limit));
 //		/// <summary>
 //		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 //		/// </summary>
 //		/// <param name="key">不含prefix前辍</param>
-//		/// <param name="minScore">最小分数</param>
-//		/// <param name="maxScore">最大分数</param>
+//		/// <param name="min">最小分数</param>
+//		/// <param name="max">最大分数</param>
 //		/// <param name="limit">返回多少成员</param>
 //		/// <param name="offset">返回条件偏移位置</param>
 //		/// <returns></returns>
-//		async public Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double maxScore, double minScore, long? limit = null, long offset = 0) {
-//			var res = await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreAsync(k, maxScore, minScore, true, false, false, offset, limit));
+//		async public Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, long? limit = null, long offset = 0) {
+//			var res = await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreAsync(k, max, min, true, false, false, offset, limit));
 //			var ret = new List<(string member, double score)>();
 //			if (res != null && res.Length % 2 == 0)
 //				for (var a = 0; a < res.Length; a += 2)
