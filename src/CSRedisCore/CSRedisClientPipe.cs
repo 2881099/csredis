@@ -1202,12 +1202,22 @@ namespace CSRedis {
 		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
-		/// <param name="keyValues">字段-值 元组数组</param>
+		/// <param name="keyValues">key1 value1 [key2 value2]</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<bool> HMSet(string key, params (string field, object value)[] keyValues) {
+		public CSRedisClientPipe<bool> HMSet(string key, params object[] keyValues) {
 			if (keyValues == null || keyValues.Any() == false) throw new Exception("keyValues 参数不可为空");
-			return PipeCommand(key, (c, k) => { c.Value.HMSet(k, rds.GetKeyValues(keyValues)); return false; }, obj => obj?.ToString() == "OK");
+			if (keyValues.Length % 2 != 0) throw new Exception("keyValues 参数是键值对，不应该出现奇数(数量)，请检查使用姿势。");
+			var parms = new List<object>();
+			for (var a = 0; a < keyValues.Length; a += 2) {
+				var k = string.Concat(keyValues[a]);
+				var v = keyValues[a + 1];
+				if (string.IsNullOrEmpty(k)) throw new Exception("keyValues 参数是键值对，并且 key 不可为空");
+				parms.Add(k);
+				parms.Add(rds.SerializeInternal(v));
+			}
+			return PipeCommand(key, (c, k) => { c.Value.HMSet(k, parms.ToArray()); return false; }, obj => obj?.ToString() == "OK");
 		}
+
 		/// <summary>
 		/// 将哈希表 key 中的字段 field 的值设为 value
 		/// </summary>
@@ -1364,7 +1374,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T> GetRange<T>(string key, long start, long end) => PipeCommand(key, (c, k) => { c.Value.GetRangeBytes(k, start, end); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
 		/// <summary>
-		/// 将给定 key 的值设为 value
+		/// 将给定 key 的值设为 value ，并返回 key 的旧值(old value)
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字符串</param>
@@ -1652,7 +1662,7 @@ namespace CSRedis {
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<KeyType> Type(string key) => PipeCommand(key, (c, k) => { c.Value.Type(k); return KeyType.Unkown; }, obj => Enum.TryParse(obj?.ToString(), out KeyType tryenum) ? tryenum : KeyType.Unkown);
+		public CSRedisClientPipe<KeyType> Type(string key) => PipeCommand(key, (c, k) => { c.Value.Type(k); return KeyType.None; }, obj => Enum.TryParse(obj?.ToString(), true, out KeyType tryenum) ? tryenum : KeyType.None);
 		/// <summary>
 		/// 迭代当前数据库中的数据库键
 		/// </summary>

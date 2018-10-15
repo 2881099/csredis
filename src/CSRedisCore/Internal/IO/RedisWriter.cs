@@ -56,7 +56,7 @@ namespace CSRedis.Internal.IO
 
 			foreach (var arg in command.Arguments)
             {
-				if (arg.GetType() == typeof(byte[])) {
+				if (arg != null && arg.GetType() == typeof(byte[])) {
 					data = arg as byte[];
 					var data2 = _io.Encoding.GetBytes($"{Bulk}{data.Length}{EOL}");
 					ms.Write(data2, 0, data2.Length);

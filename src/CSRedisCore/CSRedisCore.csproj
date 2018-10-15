@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>CSRedisCore</AssemblyName>
     <PackageId>CSRedisCore</PackageId>
     <RootNamespace>CSRedisCore</RootNamespace>
-    <Version>2.6.13</Version>
+    <Version>3.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/csredis</PackageProjectUrl>
     <Description>CSRedis 是国外大神写的，增加 CSRedisClient 现实集群与连接池管理、RedisHelper 静态类，现已支持 .NETCore</Description>
@@ -17,8 +17,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SafeObjectPool\SafeObjectPool.csproj" />
+    <PackageReference Include="SafeObjectPool" Version="1.0.5" />
   </ItemGroup>
 </Project>

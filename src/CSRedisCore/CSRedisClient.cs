@@ -27,20 +27,11 @@ namespace CSRedis {
 		DateTime _dt1970 = new DateTime(1970, 1, 1);
 		Random _rnd = new Random();
 
-		internal object[] GetKeyValues(params (string, object)[] keyValues) {
-			if (keyValues == null || keyValues.Any() == false) return new object[0];
-			var kv = new object[keyValues.Length * 2];
-			for (var a = 0; a < keyValues.Length; a++) {
-				kv[a * 2] = keyValues[a].Item1;
-				kv[a * 2 + 1] = this.SerializeInternal(keyValues[a].Item2);
-			}
-			return kv;
-		}
 		internal object SerializeInternal(object value) {
 			if (value == null) return null;
 			var type = value.GetType();
 			var typename = type.ToString().TrimEnd(']');
-			if (typename == "System.Byte[]" ||
+			if (typename == "System.Byte[" ||
 				typename == "System.String") return value;
 
 			if (type.IsValueType) {
@@ -74,9 +65,9 @@ namespace CSRedis {
 			if (value == null) return default(T);
 			var type = typeof(T);
 			var typename = type.ToString().TrimEnd(']');
-			if (typename == "System.Byte[]") return (T)Convert.ChangeType(value, type);
+			if (typename == "System.Byte[") return (T)Convert.ChangeType(value, type);
 			if (typename == "System.String") return (T)Convert.ChangeType(Nodes.First().Value.Encoding.GetString(value), type);
-			if (typename == "System.Boolean[]") return (T)Convert.ChangeType(value.Select(a => a == 49).ToArray(), type);
+			if (typename == "System.Boolean[") return (T)Convert.ChangeType(value.Select(a => a == 49).ToArray(), type);
 
 			var valueStr = Nodes.First().Value.Encoding.GetString(value);
 			if (string.IsNullOrEmpty(valueStr)) return default(T);
@@ -153,19 +144,19 @@ namespace CSRedis {
 			return JsonConvert.DeserializeObject<T>(valueStr, this.SerializerSettings());
 		}
 		internal T[] DeserializeArrayInternal<T>(byte[][] value) {
-			if (value == null) return new T[0];
+			if (value == null) return null;
 			var list = new T[value.Length];
 			for (var a = 0; a < value.Length; a++) list[a] = this.DeserializeInternal<T>(value[a]);
 			return list;
 		}
 		internal (T1, T2)[] DeserializeTuple1Internal<T1, T2>(Tuple<byte[], T2>[] value) {
-			if (value == null) return new(T1, T2)[0];
+			if (value == null) return null;
 			var list = new(T1, T2)[value.Length];
 			for (var a = 0; a < value.Length; a++) list[a] = (this.DeserializeInternal<T1>(value[a].Item1), value[a].Item2);
 			return list;
 		}
 		internal (T2, T1)[] DeserializeTuple2Internal<T2, T1>(Tuple<T2, byte[]>[] value) {
-			if (value == null) return new(T2, T1)[0];
+			if (value == null) return null;
 			var list = new(T2, T1)[value.Length];
 			for (var a = 0; a < value.Length; a++) list[a] = (value[a].Item1, this.DeserializeInternal<T1>(value[a].Item2));
 			return list;
@@ -2299,9 +2290,21 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
-		/// <param name="keyValues">字段-值 元组数组</param>
+		/// <param name="keyValues">key1 value1 [key2 value2]</param>
 		/// <returns></returns>
-		public bool HMSet(string key, params (string field, object value)[] keyValues) => keyValues == null || keyValues.Any() == false ? false : ExecuteScalar(key, (c, k) => c.Value.HMSet(k, this.GetKeyValues(keyValues))) == "OK";
+		public bool HMSet(string key, params object[] keyValues) {
+			if (keyValues == null || keyValues.Any() == false) return false;
+			if (keyValues.Length % 2 != 0) throw new Exception("keyValues 参数是键值对，不应该出现奇数(数量)，请检查使用姿势。");
+			var parms = new List<object>();
+			for (var a = 0; a < keyValues.Length; a += 2) {
+				var k = string.Concat(keyValues[a]);
+				var v = keyValues[a + 1];
+				if (string.IsNullOrEmpty(k)) throw new Exception("keyValues 参数是键值对，并且 key 不可为空");
+				parms.Add(k);
+				parms.Add(this.SerializeInternal(v));
+			}
+			return ExecuteScalar(key, (c, k) => c.Value.HMSet(k, parms.ToArray())) == "OK";
+		}
 		/// <summary>
 		/// 将哈希表 key 中的字段 field 的值设为 value
 		/// </summary>
@@ -2454,7 +2457,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <returns></returns>
 		public T GetRange<T>(string key, long start, long end) => this.DeserializeInternal<T>(ExecuteScalar(key, (c, k) => c.Value.GetRangeBytes(k, start, end)));
 		/// <summary>
-		/// 将给定 key 的值设为 value
+		/// 将给定 key 的值设为 value ，并返回 key 的旧值(old value)
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
@@ -2498,21 +2501,25 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <summary>
 		/// 同时设置一个或多个 key-value 对
 		/// </summary>
-		/// <param name="keyValues">字段-值 元组数组</param>
+		/// <param name="keyValues">key1 value1 [key2 value2]</param>
 		/// <returns></returns>
-		public bool MSet(params (string key, object value)[] keyValues) => MSetInternal(RedisExistence.Xx, keyValues);
+		public bool MSet(params object[] keyValues) => MSetInternal(RedisExistence.Xx, keyValues);
 		/// <summary>
 		/// 同时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在
 		/// </summary>
-		/// <param name="keyValues">字段-值 元组数组</param>
+		/// <param name="keyValues">key1 value1 [key2 value2]</param>
 		/// <returns></returns>
-		public bool MSetNx(params (string key, object value)[] keyValues) => MSetInternal(RedisExistence.Nx, keyValues);
-		internal bool MSetInternal(RedisExistence exists, params (string key, object value)[] keyValues) {
+		public bool MSetNx(params object[] keyValues) => MSetInternal(RedisExistence.Nx, keyValues);
+		internal bool MSetInternal(RedisExistence exists, params object[] keyValues) {
 			if (keyValues == null || keyValues.Any() == false) return false;
+			if (keyValues.Length % 2 != 0) throw new Exception("keyValues 参数是键值对，不应该出现奇数(数量)，请检查使用姿势。");
 			var dic = new Dictionary<string, object>();
-			foreach (var kv in keyValues) {
-				if (dic.ContainsKey(kv.key)) dic[kv.key] = kv.value;
-				else dic.Add(kv.key, kv.value);
+			for (var a = 0; a < keyValues.Length; a += 2) {
+				var k = string.Concat(keyValues[a]);
+				var v = keyValues[a + 1];
+				if (string.IsNullOrEmpty(k)) throw new Exception("keyValues 参数是键值对，并且 key 不可为空");
+				if (dic.ContainsKey(k)) dic[k] = v;
+				else dic.Add(k, v);
 			}
 			Func<Object<RedisClient>, string[], long> handle = (c, k) => {
 				var prefix = (c.Pool as RedisClientPool)?.Prefix;
@@ -2777,7 +2784,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public KeyType Type(string key) => Enum.TryParse(ExecuteScalar(key, (c, k) => c.Value.Type(k)), out KeyType tryenum) ? tryenum : KeyType.Unkown;
+		public KeyType Type(string key) => Enum.TryParse(ExecuteScalar(key, (c, k) => c.Value.Type(k)), true, out KeyType tryenum) ? tryenum : KeyType.None;
 		/// <summary>
 		/// 迭代当前数据库中的数据库键
 		/// </summary>
@@ -2835,5 +2842,5 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			this.Unlock();
 		}
 	}
-	public enum KeyType { Unkown, None, String, List, Set, ZSet, Hash }
+	public enum KeyType { None, String, List, Set, ZSet, Hash }
 }
