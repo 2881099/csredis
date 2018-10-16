@@ -151,8 +151,8 @@ namespace CSRedis
             args.Add(key);
             if (by != null)
                 args.AddRange(new[] { "BY", by });
-            if (offset.HasValue && count.HasValue)
-                args.AddRange(new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
+            if (count.HasValue)
+                args.AddRange(new[] { "LIMIT", offset?.ToString() ?? "0", count.Value.ToString() });
             foreach (var pattern in get)
                 args.AddRange(new[] { "GET", pattern });
             if (dir.HasValue)
@@ -167,8 +167,8 @@ namespace CSRedis
             args.Add(key);
             if (by != null)
                 args.AddRange(new[] { "BY", by });
-            if (offset.HasValue && count.HasValue)
-                args.AddRange(new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
+            if (count.HasValue)
+                args.AddRange(new[] { "LIMIT", offset?.ToString() ?? "0", count.Value.ToString() });
             foreach (var pattern in get)
                 args.AddRange(new[] { "GET", pattern });
             if (dir.HasValue)
@@ -432,7 +432,7 @@ namespace CSRedis
         {
             return new RedisBytes("LINDEX", key, index);
         }
-        public static RedisInt LInsert(string key, RedisInsert insertType, string pivot, object value)
+        public static RedisInt LInsert(string key, RedisInsert insertType, object pivot, object value)
         {
             return new RedisInt("LINSERT", key, insertType.ToString().ToUpperInvariant(), pivot, value);
         }

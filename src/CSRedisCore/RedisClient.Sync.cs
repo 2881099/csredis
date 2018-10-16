@@ -357,7 +357,7 @@ namespace CSRedis
         /// <param name="isAlpha">Sort lexicographically</param>
         /// <param name="get">Retrieve external keys</param>
         /// <returns>The sorted list</returns>
-        public string[] Sort(string key, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get)
+        public string[] Sort(string key, long? offset = null, long? count = 0, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get)
         {
             return Write(RedisCommands.Sort(key, offset, count, by, dir, isAlpha, get));
         }
@@ -374,7 +374,7 @@ namespace CSRedis
         /// <param name="isAlpha">Sort lexicographically</param>
         /// <param name="get">Retrieve external keys</param>
         /// <returns>Number of elements stored</returns>
-        public long SortAndStore(string key, string destination, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = false, params string[] get)
+        public long SortAndStore(string key, string destination, long? offset = null, long? count = 0, string by = null, RedisSortDir? dir = null, bool? isAlpha = false, params string[] get)
         {
             return Write(RedisCommands.SortAndStore(key, destination, offset, count, by, dir, isAlpha, get));
         }
@@ -806,7 +806,7 @@ namespace CSRedis
         /// <param name="pivot">Relative element</param>
         /// <param name="value">Element to insert</param>
         /// <returns>Length of list after insert or -1 if pivot not found</returns>
-        public long LInsert(string key, RedisInsert insertType, string pivot, object value)
+        public long LInsert(string key, RedisInsert insertType, object pivot, object value)
         {
             return Write(RedisCommands.LInsert(key, insertType, pivot, value));
         }

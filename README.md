@@ -6,7 +6,7 @@ StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经�
 
 CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙人作了以下扩展：
 
-1、增加了 CSRedisClient 现实分区与连接池管理，和 RedisHelper 静态类快速上手
+1、增加了 CSRedisClient 现实分区与连接池管理，和 RedisHelper 静态类快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。java,python,go,nodejs,php RedisClient 方法名基本都与 redis-cli 一致，二次命名的库见鬼去吧！
 
 > nuget Install-Package CSRedisCore
 

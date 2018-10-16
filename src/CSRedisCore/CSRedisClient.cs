@@ -51,8 +51,8 @@ namespace CSRedis {
 					case "System.Int16":
 					case "System.UInt32":
 					case "System.UInt64":
-					case "System.UInt16":
-					case "System.DateTime":
+					case "System.UInt16": return value.ToString();
+					case "System.DateTime": return ((DateTime)value).ToString("yyyy-MM-ddTHH:mm:sszzzz", System.Globalization.DateTimeFormatInfo.InvariantInfo);
 					case "System.DateTimeOffset": return value.ToString();
 					case "System.TimeSpan": return ((TimeSpan)value).Ticks;
 					case "System.Guid": return value.ToString();
@@ -135,7 +135,7 @@ namespace CSRedis {
 						break;
 				}
 
-				if (isElse) {
+				if (isElse == false) {
 					if (obj == null) return default(T);
 					return (T)Convert.ChangeType(obj, typeof(T));
 				}
@@ -451,7 +451,6 @@ namespace CSRedis {
 			/// <param name="skipMe">跳过自己</param>
 			/// <returns></returns>
 			public (string node, long value)[] ClientKill(string addr = null, string id = null, ClientKillType? type = null, bool? skipMe = null) => _csredis.Nodes.Values.Select(a => _csredis.GetAndExecute(a, c => (a.Key, c.Value.ClientKill(addr, id, type?.ToString(), skipMe)))).ToArray();
-			public enum ClientKillType { normal, slave, pubsub }
 			/// <summary>
 			/// 获取连接到服务器的客户端连接列表
 			/// </summary>
@@ -528,7 +527,6 @@ namespace CSRedis {
 			/// <param name="section">部分(all|default|server|clients|memory|persistence|stats|replication|cpu|commandstats|cluster|keyspace)</param>
 			/// <returns></returns>
 			public (string node, string value)[] Info(InfoSection? section = null) => _csredis.Nodes.Values.Select(a => _csredis.GetAndExecute(a, c => (a.Key, c.Value.Info(section?.ToString())))).ToArray();
-			public enum InfoSection { All, Default, Server, Clients, Memory, Persistence, Stats, Replication, Cpu, Commandstats, Cluster, Keyspace }
 			/// <summary>
 			/// 返回最近一次 Redis 成功将数据保存到磁盘上的时间
 			/// </summary>
@@ -712,7 +710,6 @@ namespace CSRedis {
 			/// <param name="section">部分(Server | Clients | Memory | Persistence | Stats | Replication | CPU | Keyspace)</param>
 			/// <returns></returns>
 			public string Info(InfoSection? section = null) => _csredis.GetAndExecute(_pool, c => c.Value.Info(section?.ToString()));
-			public enum InfoSection { Server, Clients, Memory, Persistence, Stats, Replication, CPU, Keyspace }
 			/// <summary>
 			/// 返回最近一次 Redis 成功将数据保存到磁盘上的时间
 			/// </summary>
@@ -1235,7 +1232,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="sourceKeys">源 HyperLogLog，不含prefix前辍</param>
 		/// <returns></returns>
 		[Obsolete("分区模式下，若keys分散在多个分区节点时，将报错")]
-		public bool PfMerge(string destKey, params string[] sourceKeys) => NodesNotSupport(new[] { destKey }.Concat(sourceKeys).ToArray(), null, (c, k) => c.Value.PfMerge(k.First(), k.Skip(1).ToArray())) == "OK";
+		public bool PfMerge(string destKey, params string[] sourceKeys) => NodesNotSupport(new[] { destKey }.Concat(sourceKeys).ToArray(), false, (c, k) => c.Value.PfMerge(k.First(), k.Skip(1).ToArray()) == "OK");
 		#endregion
 
 		#region Sorted Set
@@ -1370,11 +1367,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public string[] ZRangeByScore(string key, double min, double max, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, limit));
+		public string[] ZRangeByScore(string key, double min, double max, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
 		/// </summary>
@@ -1382,22 +1379,22 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public T[] ZRangeByScore<T>(string key, double min, double max, long? limit = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, limit)));
+		public T[] ZRangeByScore<T>(string key, double min, double max, long? count = null, long offset = 0) =>
+			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public string[] ZRangeByScore(string key, string min, string max, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScore(k, min, max, false, offset, limit));
+		public string[] ZRangeByScore(string key, string min, string max, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScore(k, min, max, false, offset, count));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
 		/// </summary>
@@ -1405,11 +1402,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public T[] ZRangeByScore<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScore(k, min, max, false, offset, limit)));
+		public T[] ZRangeByScore<T>(string key, string min, string max, long? count = null, long offset = 0) =>
+			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScore(k, min, max, false, offset, count)));
 
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
@@ -1417,11 +1414,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (string member, double score)[] ZRangeByScoreWithScores(string key, double min, double max, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, limit).Select(z => (z.Item1, z.Item2)).ToArray());
+		public (string member, double score)[] ZRangeByScoreWithScores(string key, double min, double max, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count).Select(z => (z.Item1, z.Item2)).ToArray());
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
 		/// </summary>
@@ -1429,22 +1426,22 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (T member, double score)[] ZRangeByScoreWithScores<T>(string key, double min, double max, long? limit = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, limit)));
+		public (T member, double score)[] ZRangeByScoreWithScores<T>(string key, double min, double max, long? count = null, long offset = 0) =>
+			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count)));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (string member, double score)[] ZRangeByScoreWithScores(string key, string min, string max, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min, max, offset, limit).Select(z => (z.Item1, z.Item2)).ToArray());
+		public (string member, double score)[] ZRangeByScoreWithScores(string key, string min, string max, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min, max, offset, count).Select(z => (z.Item1, z.Item2)).ToArray());
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
 		/// </summary>
@@ -1452,11 +1449,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (T member, double score)[] ZRangeByScoreWithScores<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, limit)));
+		public (T member, double score)[] ZRangeByScoreWithScores<T>(string key, string min, string max, long? count = null, long offset = 0) =>
+			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, count)));
 
 		/// <summary>
 		/// 返回有序集合中指定成员的索引
@@ -1538,10 +1535,10 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public string[] ZRevRangeByScore(string key, double max, double min, long? limit = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, limit));
+		public string[] ZRevRangeByScore(string key, double max, double min, long? count = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 		/// </summary>
@@ -1549,21 +1546,21 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public T[] ZRevRangeByScore<T>(string key, double max, double min, long? limit = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, limit)));
+		public T[] ZRevRangeByScore<T>(string key, double max, double min, long? count = null, long offset = 0) =>
+			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count)));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public string[] ZRevRangeByScore(string key, string max, string min, long? limit = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScore(k, max, min, false, offset, limit));
+		public string[] ZRevRangeByScore(string key, string max, string min, long? count = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScore(k, max, min, false, offset, count));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 		/// </summary>
@@ -1571,11 +1568,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public T[] ZRevRangeByScore<T>(string key, string max, string min, long? limit = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScore(k, max, min, false, offset, limit)));
+		public T[] ZRevRangeByScore<T>(string key, string max, string min, long? count = null, long offset = 0) =>
+			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScore(k, max, min, false, offset, count)));
 
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -1583,11 +1580,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (string member, double score)[] ZRevRangeByScoreWithScores(string key, double max, double min, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, limit).Select(z => (z.Item1, z.Item2)).ToArray());
+		public (string member, double score)[] ZRevRangeByScoreWithScores(string key, double max, double min, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count).Select(z => (z.Item1, z.Item2)).ToArray());
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 		/// </summary>
@@ -1595,22 +1592,22 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 double.MaxValue 10</param>
 		/// <param name="min">分数最小值 double.MinValue 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, double max, double min, long? limit = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, limit)));
+		public (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, double max, double min, long? count = null, long offset = 0) =>
+			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count)));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (string member, double score)[] ZRevRangeByScoreWithScores(string key, string max, string min, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max, min, offset, limit).Select(z => (z.Item1, z.Item2)).ToArray());
+		public (string member, double score)[] ZRevRangeByScoreWithScores(string key, string max, string min, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max, min, offset, count).Select(z => (z.Item1, z.Item2)).ToArray());
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 		/// </summary>
@@ -1618,11 +1615,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="max">分数最大值 +inf (10 10</param>
 		/// <param name="min">分数最小值 -inf (1 1</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? limit = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, limit)));
+		public (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? count = null, long offset = 0) =>
+			this.DeserializeTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, count)));
 
 		/// <summary>
 		/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
@@ -1722,11 +1719,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">'(' 表示包含在范围，'[' 表示不包含在范围，'+' 正无穷大，'-' 负无限。 ZRANGEBYLEX zset - + ，命令将返回有序集合中的所有元素</param>
 		/// <param name="max">'(' 表示包含在范围，'[' 表示不包含在范围，'+' 正无穷大，'-' 负无限。 ZRANGEBYLEX zset - + ，命令将返回有序集合中的所有元素</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public string[] ZRangeByLex(string key, string min, string max, long? limit = null, long offset = 0) =>
-			ExecuteScalar(key, (c, k) => c.Value.ZRangeByLex(k, min, max, offset, limit));
+		public string[] ZRangeByLex(string key, string min, string max, long? count = null, long offset = 0) =>
+			ExecuteScalar(key, (c, k) => c.Value.ZRangeByLex(k, min, max, offset, count));
 		/// <summary>
 		/// 当有序集合的所有成员都具有相同的分值时，有序集合的元素会根据成员的字典序来进行排序，这个命令可以返回给定的有序集合键 key 中，值介于 min 和 max 之间的成员。
 		/// </summary>
@@ -1734,11 +1731,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="min">'(' 表示包含在范围，'[' 表示不包含在范围，'+' 正无穷大，'-' 负无限。 ZRANGEBYLEX zset - + ，命令将返回有序集合中的所有元素</param>
 		/// <param name="max">'(' 表示包含在范围，'[' 表示不包含在范围，'+' 正无穷大，'-' 负无限。 ZRANGEBYLEX zset - + ，命令将返回有序集合中的所有元素</param>
-		/// <param name="limit">返回多少成员</param>
+		/// <param name="count">返回多少成员</param>
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
-		public T[] ZRangeByLex<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByLex(k, min, max, offset, limit)));
+		public T[] ZRangeByLex<T>(string key, string min, string max, long? count = null, long offset = 0) =>
+			this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByLex(k, min, max, offset, count)));
 
 		/// <summary>
 		/// 当有序集合的所有成员都具有相同的分值时，有序集合的元素会根据成员的字典序来进行排序，这个命令可以返回给定的有序集合键 key 中，值介于 min 和 max 之间的成员。
@@ -1767,7 +1764,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		public long SAdd(string key, params object[] members) => members == null || members.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.SAdd(k, members?.Select(z => this.SerializeInternal(z)).ToArray()));
+		public long SAdd(string key, params object[] members) => members == null || members.Any() == false ? 0 : 
+			ExecuteScalar(key, (c, k) => c.Value.SAdd(k, members?.Select(z => this.SerializeInternal(z)).ToArray()));
 		/// <summary>
 		/// 获取集合的成员数
 		/// </summary>
@@ -2071,7 +2069,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public long LInsertBefore(string key, string pivot, object value) => ExecuteScalar(key, (c, k) => c.Value.LInsert(k, RedisInsert.Before, pivot, this.SerializeInternal(value)));
+		public long LInsertBefore(string key, object pivot, object value) => ExecuteScalar(key, (c, k) => c.Value.LInsert(k, RedisInsert.Before, pivot, this.SerializeInternal(value)));
 		/// <summary>
 		/// 在列表中的元素后面插入元素
 		/// </summary>
@@ -2079,7 +2077,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public long LInsertAfter(string key, string pivot, object value) => ExecuteScalar(key, (c, k) => c.Value.LInsert(k, RedisInsert.After, pivot, this.SerializeInternal(value)));
+		public long LInsertAfter(string key, object pivot, object value) => ExecuteScalar(key, (c, k) => c.Value.LInsert(k, RedisInsert.After, pivot, this.SerializeInternal(value)));
 		/// <summary>
 		/// 获取列表长度
 		/// </summary>
@@ -2120,7 +2118,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public string[] LRang(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.Value.LRange(k, start, stop));
+		public string[] LRange(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.Value.LRange(k, start, stop));
 		/// <summary>
 		/// 获取列表指定范围内的元素
 		/// </summary>
@@ -2129,7 +2127,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public T[] LRang<T>(string key, long start, long stop) => this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.LRangeBytes(k, start, stop)));
+		public T[] LRange<T>(string key, long start, long stop) => this.DeserializeArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.LRangeBytes(k, start, stop)));
 		/// <summary>
 		/// 根据参数 count 的值，移除列表中与参数 value 相等的元素
 		/// </summary>
@@ -2484,7 +2482,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public double IncrBy(string key, double value = 1) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
+		public double IncrByFloat(string key, double value = 1) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
 		/// <summary>
 		/// 获取多个指定 key 的值(数组)
 		/// </summary>
@@ -2750,28 +2748,28 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// 返回给定列表、集合、有序集合 key 中经过排序的元素，参数资料：http://doc.redisfans.com/key/sort.html
 		/// </summary>
 		/// <param name="key">列表、集合、有序集合，不含prefix前辍</param>
-		/// <param name="offset">偏移量</param>
 		/// <param name="count">数量</param>
+		/// <param name="offset">偏移量</param>
 		/// <param name="by">排序字段</param>
 		/// <param name="dir">排序方式</param>
 		/// <param name="isAlpha">对字符串或数字进行排序</param>
 		/// <param name="get">根据排序的结果来取出相应的键值</param>
 		/// <returns></returns>
-		public string[] Sort(string key, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get) =>
+		public string[] Sort(string key, long? count = null, long offset = 0, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get) =>
 			NodesNotSupport(key, (c, k) => c.Value.Sort(k, offset, count, by, dir, isAlpha, get));
 		/// <summary>
 		/// 保存给定列表、集合、有序集合 key 中经过排序的元素，参数资料：http://doc.redisfans.com/key/sort.html
 		/// </summary>
 		/// <param name="key">列表、集合、有序集合，不含prefix前辍</param>
 		/// <param name="destination">目标key，不含prefix前辍</param>
-		/// <param name="offset">偏移量</param>
 		/// <param name="count">数量</param>
+		/// <param name="offset">偏移量</param>
 		/// <param name="by">排序字段</param>
 		/// <param name="dir">排序方式</param>
 		/// <param name="isAlpha">对字符串或数字进行排序</param>
 		/// <param name="get">根据排序的结果来取出相应的键值</param>
 		/// <returns></returns>
-		public long SortAndStore(string key, string destination, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get) =>
+		public long SortAndStore(string key, string destination, long? count = null, long offset = 0, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get) =>
 			NodesNotSupport(key, (c, k) => c.Value.SortAndStore(k, (c.Pool as RedisClientPool)?.Prefix + destination, offset, count, by, dir, isAlpha, get));
 		/// <summary>
 		/// 以秒为单位，返回给定 key 的剩余生存时间
@@ -2797,12 +2795,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// 迭代当前数据库中的数据库键
 		/// </summary>
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
-		/// <param name="key">不含prefix前辍</param>
 		/// <param name="cursor">位置</param>
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<T> Scan<T>(string key, int cursor, string pattern = null, int? count = null) => NodesNotSupport(key, (c, k) => {
+		public RedisScan<T> Scan<T>(int cursor, string pattern = null, int? count = null) => NodesNotSupport("Scan<T>", (c, k) => {
 			var scan = c.Value.ScanBytes(cursor, pattern, count);
 			return new RedisScan<T>(scan.Cursor, this.DeserializeArrayInternal<T>(scan.Items));
 		});
@@ -2842,5 +2839,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			this.Unlock();
 		}
 	}
+
 	public enum KeyType { None, String, List, Set, ZSet, Hash }
+	public enum InfoSection { Server, Clients, Memory, Persistence, Stats, Replication, CPU, Keyspace }
+	public enum ClientKillType { normal, slave, pubsub }
 }

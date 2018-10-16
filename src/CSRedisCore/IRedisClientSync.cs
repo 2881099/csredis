@@ -599,7 +599,7 @@ namespace CSRedis
 		/// <param name="pivot">Relative element</param>
 		/// <param name="value">Element to insert</param>
 		/// <returns>Length of list after insert or -1 if pivot not found</returns>
-		long LInsert(string key, RedisInsert insertType, string pivot, object value);
+		long LInsert(string key, RedisInsert insertType, object pivot, object value);
 
 
         /// <summary>

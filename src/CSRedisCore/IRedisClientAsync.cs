@@ -609,7 +609,7 @@ namespace CSRedis
 		/// <param name="pivot">Relative element</param>
 		/// <param name="value">Element to insert</param>
 		/// <returns>Length of list after insert or -1 if pivot not found</returns>
-		Task<long> LInsertAsync(string key, RedisInsert insertType, string pivot, object value);
+		Task<long> LInsertAsync(string key, RedisInsert insertType, object pivot, object value);
 
 
 
