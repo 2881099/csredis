@@ -2,9 +2,9 @@ ServiceStack.Redis 是商业版，免费版有限制；
 
 StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经常 Timeout，暂无法解决；
 
-CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、高性能，和分区高级玩法的.NETCore redis SDK；
+CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、高性能，和分区高级玩法的.NETCore redis-cli SDK；
 
-1、增加 CSRedisClient 现实分区与连接池管理，和 RedisHelper 静态类快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。java,python,go,nodejs,php RedisClient 方法名基本都与 redis-cli 一致，二次命名的库见鬼去吧！
+1、现实分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。java,python,go,nodejs,php RedisClient 方法名基本都与 redis-cli 一致，二次命名的库见鬼去吧！
 
 > nuget Install-Package CSRedisCore
 
@@ -75,7 +75,7 @@ RedisHelper.PSubscribe(new[] { "test*", "*test001", "test*002" }, msg => {
 //1、分区的节点匹配规则，导致通配符最大可能匹配全部节点，所以全部节点都要订阅
 //2、本组 "test*", "*test001", "test*002" 订阅全部节点时，需要解决同一条消息不可执行多次
 
-//发布，
+//发布
 RedisHelper.Publish("chan1", "123123123");
 //无论是分区或普通模式，RedisHelper.Publish 都可以正常通信
 ```
