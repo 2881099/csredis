@@ -86,7 +86,12 @@ public abstract partial class RedisHelper {
 	/// 在所有分区节点上，执行服务器命令
 	/// </summary>
 	public static CSRedisClient.NodesServerManagerProvider NodesServerManager => Instance.NodesServerManager;
-	public static CSRedisClient.NodeServerManagerProvider GetServerManager(string node) => Instance.NodeServerManager(node);
+	/// <summary>
+	/// 在指定分区节点上，执行服务器命令
+	/// </summary>
+	/// <param name="node">节点</param>
+	/// <returns></returns>
+	public static CSRedisClient.NodeServerManagerProvider NodeServerManager(string node) => Instance.NodeServerManager(node);
 	#endregion
 
 	#region 连接命令
