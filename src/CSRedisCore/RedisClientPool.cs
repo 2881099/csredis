@@ -92,7 +92,7 @@ namespace CSRedis {
 					if (kv[0].ToLower().Trim() == "password") _password = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0].ToLower().Trim() == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0].ToLower().Trim() == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _database) ? _database : 0;
-					else if (kv[0].ToLower().Trim() == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1] : "0", out var poolsize) || poolsize <= 0 ? 50 : poolsize;
+					else if (kv[0].ToLower().Trim() == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1] : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
 					else if (kv[0].ToLower().Trim() == "ssl") _ssl = kv.Length > 1 ? kv[1] == "true" : false;
 					else if (kv[0].ToLower().Trim() == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1] : "10240", out _writebuffer) ? _writebuffer : 10240;
 				}
