@@ -36,10 +36,7 @@ namespace CSRedisCore.Tests {
 			Assert.Equal(3, rds.BitCount(key, 0, 99));
 			Assert.Equal(3, rds.BitCount(key, 0, 60));
 		}
-		public void BitOpAnd() { }
-		public void BitOpNot() { }
-		public void BitOpOr() { }
-		public void BitOpXOr() { }
+		public void BitOp() { }
 		public void BitPos() { }
 
 		[Fact]

@@ -189,50 +189,14 @@ partial class RedisHelper {
 	public static Task<double> ZIncrByAsync(string key, string memeber, double increment = 1) => Instance.ZIncrByAsync(key, memeber, increment);
 
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZInterStoreMaxAsync(string destination, params string[] keys) => Instance.ZInterStoreMaxAsync(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中
+	/// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中
 	/// </summary>
 	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
+	/// <param name="aggregate">Sum | Min | Max</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
-	public static Task<long> ZInterStoreMaxAsync(string destination, double[] weights, params string[] keys) => Instance.ZInterStoreMaxAsync(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZInterStoreMinAsync(string destination, params string[] keys) => Instance.ZInterStoreMinAsync(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZInterStoreMinAsync(string destination, double[] weights, params string[] keys) => Instance.ZInterStoreMinAsync(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZInterStoreSumAsync(string destination, params string[] keys) => Instance.ZInterStoreSumAsync(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZInterStoreSumAsync(string destination, double[] weights, params string[] keys) => Instance.ZInterStoreSumAsync(destination, weights, keys);
+	public static Task<long> ZInterStoreAsync(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZInterStoreAsync(destination, weights, aggregate, keys);
 
 	/// <summary>
 	/// 通过索引区间返回有序集合成指定区间内的成员
@@ -539,50 +503,14 @@ partial class RedisHelper {
 	public static Task<double?> ZScoreAsync(string key, object member) => Instance.ZScoreAsync(key, member);
 
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZUnionStoreMaxAsync(string destination, params string[] keys) => Instance.ZUnionStoreMaxAsync(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值并集，将结果集存储在新的有序集合 destination 中
+	/// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
 	/// </summary>
 	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
+	/// <param name="aggregate">Sum | Min | Max</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
-	public static Task<long> ZUnionStoreMaxAsync(string destination, double[] weights, params string[] keys) => Instance.ZUnionStoreMaxAsync(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZUnionStoreMinAsync(string destination, params string[] keys) => Instance.ZUnionStoreMinAsync(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZUnionStoreMinAsync(string destination, double[] weights, params string[] keys) => Instance.ZUnionStoreMinAsync(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZUnionStoreSumAsync(string destination, params string[] keys) => Instance.ZUnionStoreSumAsync(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static Task<long> ZUnionStoreSumAsync(string destination, double[] weights, params string[] keys) => Instance.ZUnionStoreSumAsync(destination, weights, keys);
+	public static Task<long> ZUnionStoreAsync(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZUnionStoreAsync(destination, weights, aggregate, keys);
 
 	/// <summary>
 	/// 迭代有序集合中的元素
@@ -1135,33 +1063,13 @@ partial class RedisHelper {
 	/// <returns></returns>
 	public static Task<long> BitCountAsync(string key, long start, long end) => Instance.BitCountAsync(key, start, end);
 	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 And 操作，并将结果保存到 destkey 上
+	/// 对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上
 	/// </summary>
+	/// <param name="op">And | Or | XOr | Not</param>
 	/// <param name="destKey">不含prefix前辍</param>
 	/// <param name="keys">不含prefix前辍</param>
 	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static Task<long> BitOpAndAsync(string destKey, params string[] keys) => Instance.BitOpAndAsync(destKey, keys);
-	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 Not 操作，并将结果保存到 destkey 上
-	/// </summary>
-	/// <param name="destKey">不含prefix前辍</param>
-	/// <param name="keys">不含prefix前辍</param>
-	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static Task<long> BitOpNotAsync(string destKey, params string[] keys) => Instance.BitOpNotAsync(destKey, keys);
-	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 Or 操作，并将结果保存到 destkey 上
-	/// </summary>
-	/// <param name="destKey">不含prefix前辍</param>
-	/// <param name="keys">不含prefix前辍</param>
-	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static Task<long> BitOpOrAsync(string destKey, params string[] keys) => Instance.BitOpOrAsync(destKey, keys);
-	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 XOr 操作，并将结果保存到 destkey 上
-	/// </summary>
-	/// <param name="destKey">不含prefix前辍</param>
-	/// <param name="keys">不含prefix前辍</param>
-	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static Task<long> BitOpXOrAsync(string destKey, params string[] keys) => Instance.BitOpXOrAsync(destKey, keys);
+	public static Task<long> BitOpAsync(RedisBitOp op, string destKey, params string[] keys) => Instance.BitOpAsync(op, destKey, keys);
 	/// <summary>
 	/// 对 key 所储存的值，查找范围内第一个被设置为1或者0的bit位
 	/// </summary>

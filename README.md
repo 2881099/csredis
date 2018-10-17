@@ -1,12 +1,10 @@
-# csredis
-
 ServiceStack.Redis 是商业版，免费版有限制；
 
 StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经常 Timeout，暂无法解决；
 
-CSRedis 是国外大神写的，经过少量修改，现已支持 .NETCore；鄙人作了以下扩展：
+CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、高性能，和分区高级玩法的.NETCore redis SDK；
 
-1、增加了 CSRedisClient 现实分区与连接池管理，和 RedisHelper 静态类快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。java,python,go,nodejs,php RedisClient 方法名基本都与 redis-cli 一致，二次命名的库见鬼去吧！
+1、增加 CSRedisClient 现实分区与连接池管理，和 RedisHelper 静态类快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。java,python,go,nodejs,php RedisClient 方法名基本都与 redis-cli 一致，二次命名的库见鬼去吧！
 
 > nuget Install-Package CSRedisCore
 
@@ -18,10 +16,10 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 
 # 分区模式
 
-本功能现实多节点分担存储，与官方的分区、集群、高可用方案不同。
+本功能现实多个服务节点分担存储，与官方的分区、集群、高可用方案不同。
 
 > 例如：缓存数据达到500G，如果使用一台redis-server服务器光靠内存存储将非常吃力，使用硬盘又影响性能。
-> 可使用此功能自动管理N台redis-server服务器分担存储，每台服务器只需约 (500/N)G 内存，且每台服务器匀可以配置官方高可用架构。
+> 可以使用此功能自动管理N台redis-server服务器分担存储，每台服务器只需约 (500/N)G 内存，且每台服务器匀可以配置官方高可用架构。
 
 ```csharp
 var csredis = new CSRedis.CSRedisClient(null,
@@ -37,9 +35,7 @@ var csredis = new CSRedis.CSRedisClient(null,
 
 ```csharp
 //初始化 RedisHelper
-RedisHelper.Initialization(csredis,
-  value => Newtonsoft.Json.JsonConvert.SerializeObject(value),
-  deserialize: (data, type) => Newtonsoft.Json.JsonConvert.DeserializeObject(data, type));
+RedisHelper.Initialization(csredis);
 //注册mvc分布式缓存
 services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(RedisHelper.Instance));
 ```
@@ -49,14 +45,15 @@ services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.
 ```csharp
 RedisHelper.Set("test1", "123123", 60);
 RedisHelper.Get("test1");
-//...函数名基本与 redis-cli 的命令相同
+//...函数名与 redis-cli 的命令相同
 ```
 
 > 如果确定一定以及肯定非要有切换数据库的需求，请看以下代码：
 
 ```csharp
+var connectionString = "127.0.0.1:6379,password=123,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍";
 var redis = new CSRedisClient[14]; //定义成单例
-for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionString + “; defualtDatabase=“ + a);
+for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionString + "; defualtDatabase=" + a);
 
 //访问数据库1的数据
 redis[1].Get("test1");
@@ -80,7 +77,7 @@ RedisHelper.PSubscribe(new[] { "test*", "*test001", "test*002" }, msg => {
 
 //发布，
 RedisHelper.Publish("chan1", "123123123");
-//无论是分区或普通模式，RedisHelper.Publish 都能正常通信
+//无论是分区或普通模式，RedisHelper.Publish 都可以正常通信
 ```
 
 ## 3、缓存壳

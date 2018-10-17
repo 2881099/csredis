@@ -182,54 +182,17 @@ namespace CSRedis {
 		public CSRedisClientPipe<double> ZIncrBy(string key, string memeber, double increment = 1) => PipeCommand(key, (c, k) => c.Value.ZIncrBy(k, increment, memeber));
 
 		/// <summary>
-		/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZInterStoreMax(string destination, params string[] keys) => ZInterStore(destination, null, RedisAggregate.Max, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中
+		/// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中
 		/// </summary>
 		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 		/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
+		/// <param name="aggregate">Sum | Min | Max</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> ZInterStoreMax(string destination, double[] weights, params string[] keys) => ZInterStore(destination, weights, RedisAggregate.Max, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZInterStoreMin(string destination, params string[] keys) => ZInterStore(destination, null, RedisAggregate.Min, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZInterStoreMin(string destination, double[] weights, params string[] keys) => ZInterStore(destination, weights, RedisAggregate.Min, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZInterStoreSum(string destination, params string[] keys) => ZInterStore(destination, null, RedisAggregate.Sum, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZInterStoreSum(string destination, double[] weights, params string[] keys) => ZInterStore(destination, weights, RedisAggregate.Sum, keys);
-		private CSRedisClientPipe<long> ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) {
+		public CSRedisClientPipe<long> ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
 			if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
-			if (Nodes.Count > 1) throw new Exception("MGet 管道命令，在分区模式下不可用");
+			if (Nodes.Count > 1) throw new Exception("ZInterStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.ZInterStore(k, weights, aggregate, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -571,54 +534,17 @@ namespace CSRedis {
 		public CSRedisClientPipe<double?> ZScore(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZScore(k, rds.SerializeInternal(member)));
 
 		/// <summary>
-		/// 计算给定的一个或多个有序集的最大值并集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZUnionStoreMax(string destination, params string[] keys) => ZUnionStore(destination, null, RedisAggregate.Max, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的最大值并集，将结果集存储在新的有序集合 destination 中
+		/// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
 		/// </summary>
 		/// <param name="destination">新的有序集合，不含prefix前辍</param>
 		/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
+		/// <param name="aggregate">Sum | Min | Max</param>
 		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> ZUnionStoreMax(string destination, double[] weights, params string[] keys) => ZUnionStore(destination, weights, RedisAggregate.Max, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的最小值并集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZUnionStoreMin(string destination, params string[] keys) => ZUnionStore(destination, null, RedisAggregate.Min, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的最小值并集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZUnionStoreMin(string destination, double[] weights, params string[] keys) => ZUnionStore(destination, weights, RedisAggregate.Min, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的合值并集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZUnionStoreSum(string destination, params string[] keys) => ZUnionStore(destination, null, RedisAggregate.Sum, keys);
-		/// <summary>
-		/// 计算给定的一个或多个有序集的合值并集，将结果集存储在新的有序集合 destination 中
-		/// </summary>
-		/// <param name="destination">新的有序集合，不含prefix前辍</param>
-		/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-		/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-		/// <returns></returns>
-		public CSRedisClientPipe<long> ZUnionStoreSum(string destination, double[] weights, params string[] keys) => ZUnionStore(destination, weights, RedisAggregate.Sum, keys);
-		private CSRedisClientPipe<long> ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) {
+		public CSRedisClientPipe<long> ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
 			if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
-			if (Nodes.Count > 1) throw new Exception("MGet 管道命令，在分区模式下不可用");
+			if (Nodes.Count > 1) throw new Exception("ZUnionStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.ZUnionStore(k, weights, aggregate, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -1293,34 +1219,13 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<long> BitCount(string key, long start, long end) => PipeCommand(key, (c, k) => c.Value.BitCount(k, start, end));
 		/// <summary>
-		/// 对一个或多个保存二进制位的字符串 key 进行位元 And 操作，并将结果保存到 destkey 上
+		/// 对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上
 		/// </summary>
+		/// <param name="op">And | Or | XOr | Not</param>
 		/// <param name="destKey">不含prefix前辍</param>
 		/// <param name="keys">不含prefix前辍</param>
 		/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-		public CSRedisClientPipe<long> BitOpAnd(string destKey, params string[] keys) => BitOp(RedisBitOp.And, destKey, keys);
-		/// <summary>
-		/// 对一个或多个保存二进制位的字符串 key 进行位元 Not 操作，并将结果保存到 destkey 上
-		/// </summary>
-		/// <param name="destKey">不含prefix前辍</param>
-		/// <param name="keys">不含prefix前辍</param>
-		/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-		public CSRedisClientPipe<long> BitOpNot(string destKey, params string[] keys) => BitOp(RedisBitOp.Not, destKey, keys);
-		/// <summary>
-		/// 对一个或多个保存二进制位的字符串 key 进行位元 Or 操作，并将结果保存到 destkey 上
-		/// </summary>
-		/// <param name="destKey">不含prefix前辍</param>
-		/// <param name="keys">不含prefix前辍</param>
-		/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-		public CSRedisClientPipe<long> BitOpOr(string destKey, params string[] keys) => BitOp(RedisBitOp.Or, destKey, keys);
-		/// <summary>
-		/// 对一个或多个保存二进制位的字符串 key 进行位元 XOr 操作，并将结果保存到 destkey 上
-		/// </summary>
-		/// <param name="destKey">不含prefix前辍</param>
-		/// <param name="keys">不含prefix前辍</param>
-		/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-		public CSRedisClientPipe<long> BitOpXOr(string destKey, params string[] keys) => BitOp(RedisBitOp.XOr, destKey, keys);
-		private CSRedisClientPipe<long> BitOp(RedisBitOp op, string destKey, params string[] keys) {
+		public CSRedisClientPipe<long> BitOp(RedisBitOp op, string destKey, params string[] keys) {
 			if (string.IsNullOrEmpty(destKey)) throw new Exception("destKey 不能为空");
 			if (keys == null || keys.Length == 0) throw new Exception("keys 不能为空");
 			if (Nodes.Count > 1) throw new Exception("BitOp 管道命令，在分区模式下不可用");

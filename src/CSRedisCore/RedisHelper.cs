@@ -86,7 +86,7 @@ public abstract partial class RedisHelper {
 	/// 在所有分区节点上，执行服务器命令
 	/// </summary>
 	public static CSRedisClient.NodesServerManagerProvider NodesServerManager => Instance.NodesServerManager;
-	public static CSRedisClient.ServerManagerProvider GetServerManager(string node) => Instance.GetServerManager(node);
+	public static CSRedisClient.NodeServerManagerProvider GetServerManager(string node) => Instance.NodeServerManager(node);
 	#endregion
 
 	#region 连接命令
@@ -251,50 +251,14 @@ public abstract partial class RedisHelper {
 	public static double ZIncrBy(string key, string memeber, double increment = 1) => Instance.ZIncrBy(key, memeber, increment);
 
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZInterStoreMax(string destination, params string[] keys) => Instance.ZInterStoreMax(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值交集，将结果集存储在新的有序集合 destination 中
+	/// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中
 	/// </summary>
 	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
+	/// <param name="aggregate">Sum | Min | Max</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
-	public static long ZInterStoreMax(string destination, double[] weights, params string[] keys) => Instance.ZInterStoreMax(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZInterStoreMin(string destination, params string[] keys) => Instance.ZInterStoreMin(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZInterStoreMin(string destination, double[] weights, params string[] keys) => Instance.ZInterStoreMin(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZInterStoreSum(string destination, params string[] keys) => Instance.ZInterStoreSum(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值交集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZInterStoreSum(string destination, double[] weights, params string[] keys) => Instance.ZInterStoreSum(destination, weights, keys);
+	public static long ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZInterStore(destination, weights, aggregate, keys);
 
 	/// <summary>
 	/// 通过索引区间返回有序集合成指定区间内的成员
@@ -607,50 +571,14 @@ public abstract partial class RedisHelper {
 	public static double? ZScore(string key, object member) => Instance.ZScore(key, member);
 
 	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZUnionStoreMax(string destination, params string[] keys) => Instance.ZUnionStoreMax(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最大值并集，将结果集存储在新的有序集合 destination 中
+	/// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
 	/// </summary>
 	/// <param name="destination">新的有序集合，不含prefix前辍</param>
 	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
+	/// <param name="aggregate">Sum | Min | Max</param>
 	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
 	/// <returns></returns>
-	public static long ZUnionStoreMax(string destination, double[] weights, params string[] keys) => Instance.ZUnionStoreMax(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZUnionStoreMin(string destination, params string[] keys) => Instance.ZUnionStoreMin(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的最小值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZUnionStoreMin(string destination, double[] weights, params string[] keys) => Instance.ZUnionStoreMin(destination, weights, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZUnionStoreSum(string destination, params string[] keys) => Instance.ZUnionStoreSum(destination, keys);
-	/// <summary>
-	/// 计算给定的一个或多个有序集的合值并集，将结果集存储在新的有序集合 destination 中
-	/// </summary>
-	/// <param name="destination">新的有序集合，不含prefix前辍</param>
-	/// <param name="weights">使用 WEIGHTS 选项，你可以为 每个 给定有序集 分别 指定一个乘法因子。如果没有指定 WEIGHTS 选项，乘法因子默认设置为 1 。</param>
-	/// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
-	/// <returns></returns>
-	public static long ZUnionStoreSum(string destination, double[] weights, params string[] keys) => Instance.ZUnionStoreSum(destination, weights, keys);
+	public static long ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZUnionStore(destination, weights, aggregate, keys);
 
 	/// <summary>
 	/// 迭代有序集合中的元素
@@ -1284,33 +1212,13 @@ public abstract partial class RedisHelper {
 	/// <returns></returns>
 	public static long BitCount(string key, long start, long end) => Instance.BitCount(key, start, end);
 	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 And 操作，并将结果保存到 destkey 上
+	/// 对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上
 	/// </summary>
+	/// <param name="op">And | Or | XOr | Not</param>
 	/// <param name="destKey">不含prefix前辍</param>
 	/// <param name="keys">不含prefix前辍</param>
 	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static long BitOpAnd(string destKey, params string[] keys) => Instance.BitOpAnd(destKey, keys);
-	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 Not 操作，并将结果保存到 destkey 上
-	/// </summary>
-	/// <param name="destKey">不含prefix前辍</param>
-	/// <param name="keys">不含prefix前辍</param>
-	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static long BitOpNot(string destKey, params string[] keys) => Instance.BitOpNot(destKey, keys);
-	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 Or 操作，并将结果保存到 destkey 上
-	/// </summary>
-	/// <param name="destKey">不含prefix前辍</param>
-	/// <param name="keys">不含prefix前辍</param>
-	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static long BitOpOr(string destKey, params string[] keys) => Instance.BitOpOr(destKey, keys);
-	/// <summary>
-	/// 对一个或多个保存二进制位的字符串 key 进行位元 XOr 操作，并将结果保存到 destkey 上
-	/// </summary>
-	/// <param name="destKey">不含prefix前辍</param>
-	/// <param name="keys">不含prefix前辍</param>
-	/// <returns>保存到 destkey 的长度，和输入 key 中最长的长度相等</returns>
-	public static long BitOpXOr(string destKey, params string[] keys) => Instance.BitOpXOr(destKey, keys);
+	public static long BitOp(RedisBitOp op, string destKey, params string[] keys) => Instance.BitOp(op, destKey, keys);
 	/// <summary>
 	/// 对 key 所储存的值，查找范围内第一个被设置为1或者0的bit位
 	/// </summary>
