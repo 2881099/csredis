@@ -4,12 +4,12 @@
     <AssemblyName>CSRedisCore</AssemblyName>
     <PackageId>CSRedisCore</PackageId>
     <RootNamespace>CSRedisCore</RootNamespace>
-    <Version>3.0.2</Version>
+    <Version>3.0.3</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/csredis</PackageProjectUrl>
-    <Description>CSRedis 是国外大神写的，增加 CSRedisClient 现实集群与连接池管理、RedisHelper 静态类，现已支持 .NETCore</Description>
+    <Description>CSRedis 是 redis.io 官方推荐库，支持 redis-trib集群、私有分区与连接池管理技术，简易 RedisHelper 静态类。</Description>
     <RepositoryUrl>https://github.com/2881099/csredis</RepositoryUrl>
-    <PackageTags>csredis redis c# 缓存壳 集群 负载 cluster</PackageTags>
+    <PackageTags>csredis redis-trib cluster redis c# 缓存壳 集群 分区 负载</PackageTags>
     <WarningLevel>3</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -17,6 +17,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="SafeObjectPool" Version="1.0.5" />
+    <PackageReference Include="SafeObjectPool" Version="1.0.9" />
   </ItemGroup>
 </Project>

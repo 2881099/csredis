@@ -1,6 +1,7 @@
 ﻿using SafeObjectPool;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -10,9 +11,8 @@ namespace CSRedis {
 
 	public partial class CSRedisClientPipe<TObject> : IDisposable {
 		private CSRedisClient rds;
-		private Dictionary<string, RedisClientPool> Nodes => rds.Nodes;
-		private List<string> NodeKeys => rds.NodeKeys;
-		private Func<string, string> NodeRule => rds.NodeRule;
+		private ConcurrentDictionary<string, RedisClientPool> Nodes => rds.Nodes;
+		private Func<string, string> NodeRuleRaw => rds.NodeRuleRaw;
 		private Dictionary<string, (List<int> indexes, Object<RedisClient> conn)> Conns = new Dictionary<string, (List<int> indexes, Object<RedisClient> conn)>();
 		private Queue<Func<object, object>> Parsers = new Queue<Func<object, object>>();
 		/// <summary>
@@ -69,8 +69,8 @@ namespace CSRedis {
 		private CSRedisClientPipe<TReturn> PipeCommand<TReturn>(string key, Func<Object<RedisClient>, string, TReturn> handle) => PipeCommand<TReturn>(key, handle, null);
 		private CSRedisClientPipe<TReturn> PipeCommand<TReturn>(string key, Func<Object<RedisClient>, string, TReturn> handle, Func<object, object> parser) {
 			if (string.IsNullOrEmpty(key)) throw new Exception("key 不可为空或null");
-			var nodeKey = NodeRule == null || Nodes.Count == 1 ? NodeKeys[0] : NodeRule(key);
-			if (Nodes.TryGetValue(nodeKey, out var pool)) Nodes.TryGetValue(nodeKey = NodeKeys[0], out pool);
+			var nodeKey = NodeRuleRaw == null || Nodes.Count == 1 ? Nodes.Keys.First() : NodeRuleRaw(key);
+			if (Nodes.TryGetValue(nodeKey, out var pool)) Nodes.TryGetValue(nodeKey = Nodes.Keys.First(), out pool);
 
 			try {
 				if (Conns.TryGetValue(pool.Key, out var conn) == false) {

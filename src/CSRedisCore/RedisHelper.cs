@@ -1,6 +1,7 @@
 ﻿using CSRedis;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,7 @@ public abstract partial class RedisHelper {
 			return _instance;
 		}
 	}
-	public static Dictionary<string, RedisClientPool> Nodes => Instance.Nodes;
+	public static ConcurrentDictionary<string, RedisClientPool> Nodes => Instance.Nodes;
 
 	/// <summary>
 	/// 初始化csredis静态访问类

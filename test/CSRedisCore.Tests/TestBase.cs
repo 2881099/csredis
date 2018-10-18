@@ -7,7 +7,9 @@ namespace CSRedisCore.Tests
 {
     public class TestBase
     {
-		protected CSRedisClient rds = new CSRedisClient("127.0.0.1:6379,defaultDatabase=2,poolsize=3");
+		//测试 redis-cluster 不能设置 defaultDatabase
+
+		protected CSRedisClient rds = new CSRedisClient("127.0.0.1:6379,defaultDatabase=0,poolsize=3");
 
 		protected readonly object Null = null;
 		protected readonly string String = "我是中国人";

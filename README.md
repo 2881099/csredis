@@ -16,6 +16,8 @@ CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、�
 
 4、增加 geo 命令支持（需要 redis-server 3.2 以上支持）；
 
+5、增加官方集群 redis-trib.rb 支持；
+
 # 功能介绍
 
 1、现实分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。
@@ -27,6 +29,14 @@ CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、�
 ```csharp
 var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍");
 ```
+
+# 官方集群
+
+假设你已经配置好 redis-trib 集群，定义一个【普通模式】的 CSRedisClient 对象，它会根据 redis-server 返回的 MOVED 错误自动记录slot，并动态增加节点 Nodes 属性。
+
+> 注意：官方集群不支持多 keys 的命令、【管道】、Eval（脚本）等众多杀手级功能。
+
+警告：本模式与【分区模式】同时使用时，切记不可设置“prefix=key前辍”，原因会导致 keySlot 计算结果与服务端不匹配，无法记录 slotCache。
 
 # 分区模式
 

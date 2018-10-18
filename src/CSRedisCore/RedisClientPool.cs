@@ -11,7 +11,7 @@ using System.Threading;
 namespace CSRedis {
 	public class RedisClientPool : ObjectPool<RedisClient> {
 
-		public RedisClientPool(string name, string connectionString, Action<RedisClient> onConnected) : base(null) {
+		public RedisClientPool(string name, string connectionString, Action<RedisClient> onConnected, bool isPreheat = true) : base(null) {
 			_policy = new RedisClientPoolPolicy {
 				_pool = this
 			};
@@ -22,6 +22,7 @@ namespace CSRedis {
 				onConnected(s as RedisClient);
 			};
 			this.Policy = _policy;
+			_policy.isPreheat = isPreheat;
 			_policy.ConnectionString = connectionString;
 		}
 
@@ -44,14 +45,14 @@ namespace CSRedis {
 					Console.ForegroundColor = fcolor;
 					Console.WriteLine($"");
 
-				} catch {
-					base.SetUnavailable();
+				} catch(Exception ex) {
+					base.SetUnavailable(ex);
 				}
 			}
 			base.Return(obj, isRecreate);
 		}
 
-		private RedisClientPoolPolicy _policy;
+		internal RedisClientPoolPolicy _policy;
 		public string Key => _policy.Key;
 		public string Prefix => _policy.Prefix;
 		public Encoding Encoding { get; set; } = new UTF8Encoding(false);
@@ -65,6 +66,7 @@ namespace CSRedis {
 		internal bool _ssl = false;
 		internal string Key => $"{_ip}:{_port}/{_database}";
 		internal string Prefix { get; set; }
+		internal bool isPreheat { get; set; }
 		public event EventHandler Connected;
 
 		public string Name { get => Key; set { throw new Exception("RedisClientPoolPolicy 不提供设置 Name 属性值。"); } }
@@ -97,9 +99,11 @@ namespace CSRedis {
 					else if (kv[0].ToLower().Trim() == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1] : "10240", out _writebuffer) ? _writebuffer : 10240;
 				}
 
-				var initConns = new Object<RedisClient>[PoolSize];
-				for (var a = 0; a < PoolSize; a++) try { initConns[a] = _pool.Get(); } catch { }
-				foreach (var conn in initConns) _pool.Return(conn);
+				if (isPreheat) {
+					var initConns = new Object<RedisClient>[PoolSize];
+					for (var a = 0; a < PoolSize; a++) try { initConns[a] = _pool.Get(); } catch { }
+					foreach (var conn in initConns) _pool.Return(conn);
+				}
 			}
 		}
 
@@ -129,10 +133,10 @@ namespace CSRedis {
 				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 || obj.Value.IsConnected == false) {
 					try {
 						obj.Value.Ping();
-					} catch {
+					} catch(Exception ex) {
 						obj.ResetValue();
-						if (_pool.SetUnavailable() == true)
-							throw new Exception($"【{this.Name}】状态不可用，等待后台检查程序恢复方可使用。");
+						if (_pool.SetUnavailable(ex) == true)
+							throw new Exception($"【{this.Name}】状态不可用，等待后台检查程序恢复方可使用。{ex.Message}");
 					}
 				}
 			}
@@ -144,10 +148,10 @@ namespace CSRedis {
 				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 || obj.Value.IsConnected == false) {
 					try {
 						await obj.Value.PingAsync();
-					} catch {
+					} catch (Exception ex) {
 						obj.ResetValue();
-						if (_pool.SetUnavailable() == true)
-							throw new Exception($"【{this.Name}】状态不可用，等待后台检查程序恢复方可使用。");
+						if (_pool.SetUnavailable(ex) == true)
+							throw new Exception($"【{this.Name}】状态不可用，等待后台检查程序恢复方可使用。{ex.Message}");
 					}
 				}
 			}

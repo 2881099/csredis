@@ -2,8 +2,11 @@
 using SafeObjectPool;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,9 +15,13 @@ namespace CSRedis {
 		/// <summary>
 		/// 按 key 规则分区存储
 		/// </summary>
-		public Dictionary<string, RedisClientPool> Nodes { get; } = new Dictionary<string, RedisClientPool>();
-		internal List<string> NodeKeys;
-		internal Func<string, string> NodeRule;
+		public ConcurrentDictionary<string, RedisClientPool> Nodes { get; } = new ConcurrentDictionary<string, RedisClientPool>();
+		private ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
+		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
+		internal Func<string, string> NodeRuleRaw;
+		internal Func<string, string> NodeRuleExternal;
+		private ConcurrentDictionary<string, bool> NodesLock = new ConcurrentDictionary<string, bool>();
+		private ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
 
 		public Func<JsonSerializerSettings> SerializerSettings = () => {
 			var st = new JsonSerializerSettings();
@@ -27,8 +34,9 @@ namespace CSRedis {
 		DateTime _dt1970 = new DateTime(1970, 1, 1);
 		Random _rnd = new Random();
 
+		#region 序列化写入，反序列化
 		internal object SerializeInternal(object value) {
-			
+
 			if (value == null) return null;
 			var type = value.GetType();
 			var typename = type.ToString().TrimEnd(']');
@@ -168,6 +176,7 @@ namespace CSRedis {
 			foreach (var kv in value) dic.Add(kv.Key, this.DeserializeInternal<TValue>(kv.Value));
 			return dic;
 		}
+		#endregion
 
 		/// <summary>
 		/// 创建redis访问类
@@ -180,29 +189,46 @@ namespace CSRedis {
 		/// <param name="NodeRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
 		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
 		public CSRedisClient(Func<string, string> NodeRule, params string[] connectionStrings) {
-			this.NodeRule = NodeRule;
-			if (this.NodeRule == null) this.NodeRule = key => {
-				if (Nodes.Count <= 1) return NodeKeys.First();
-				var idx = Math.Abs(string.Concat(key).GetHashCode()) % Nodes.Count;
-				return idx < 0 || idx >= NodeKeys.Count ? NodeKeys.First() : NodeKeys[idx];
+			this.NodeRuleRaw = key => {
+				if (Nodes.Count <= 1) return NodesIndex[0];
+				var slot = GetClusterSlot(key); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
+				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
+				if (this.NodeRuleExternal == null) {
+					var idx = Math.Abs(string.Concat(key).GetHashCode()) % NodesIndex.Count;
+					return idx < 0 || idx >= NodesIndex.Count ? NodesIndex[0] : NodesIndex[idx];
+				}
+				return this.NodeRuleExternal(key);
 			};
+			this.NodeRuleExternal = NodeRule;
 			if (connectionStrings == null || connectionStrings.Any() == false) throw new Exception("Redis ConnectionString 未设置");
 			foreach (var connectionString in connectionStrings) {
 				var pool = new RedisClientPool("", connectionString, client => { });
 				if (Nodes.ContainsKey(pool.Key)) throw new Exception($"Node: {pool.Key} 重复，请检查");
-				Nodes.Add(pool.Key, pool);
+				var nodeIndex = Nodes.Count;
+				if (Nodes.TryAdd(pool.Key, pool) && NodesIndex.TryAdd(nodeIndex, pool.Key) && NodesKey.TryAdd(pool.Key, nodeIndex)) {
+
+				} else {
+					throw new Exception($"Node: {pool.Key} 无法添加");
+				}
 			}
-			NodeKeys = Nodes.Keys.ToList();
 			this.NodesServerManager = new NodesServerManagerProvider(this);
 		}
 
-		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handle) {
+		Regex _clusterMoved = new Regex(@"^MOVED (\d+) ([^:]+):(\d+)$", RegexOptions.Compiled);
+		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handle, int jump = 1) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
+			Match matchMoved = null;
 			try {
 				obj = pool.Get();
 				try {
 					return handle(obj);
+				} catch (RedisException ex3) {
+					matchMoved = _clusterMoved.Match(ex3.Message);
+					if (matchMoved.Success == false || jump <= 0) {
+						ex = ex3;
+						throw ex;
+					}
 				} catch (Exception ex2) {
 					ex = ex2;
 					throw ex;
@@ -210,11 +236,35 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
+			return GetAndExecute<T>(GetMovedPool(matchMoved, pool), handle, jump - 1);
+		}
+		RedisClientPool GetMovedPool(Match matchMoved, RedisClientPool pool) {
+			var nodeKey = $"{matchMoved.Groups[2].Value}:{matchMoved.Groups[3].Value}/{pool._policy._database}";
+			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
+				if (NodesLock.TryAdd(nodeKey, true)) {
+					var connectionString = $"{matchMoved.Groups[2].Value}:{matchMoved.Groups[3].Value},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
+					movedPool = new RedisClientPool("", connectionString, client => { }, false);
+					var nodeIndex = Nodes.Count;
+					if (Nodes.TryAdd(nodeKey, movedPool) && NodesIndex.TryAdd(nodeIndex, nodeKey) && NodesKey.TryAdd(nodeKey, nodeIndex)) {
+						
+					} else {
+						movedPool.Dispose();
+						movedPool = null;
+					}
+				}
+				if (movedPool == null)
+					throw new Exception($"MOVED {matchMoved.Groups[1].Value} {matchMoved.Groups[2].Value}:{matchMoved.Groups[3].Value}");
+			}
+			ushort.TryParse(matchMoved.Groups[1].Value, out var slot);
+			if (NodesKey.TryGetValue(nodeKey, out var nodeIndex2)) {
+				SlotCache.AddOrUpdate(slot, (ushort)nodeIndex2, (oldkey, oldvalue) => (ushort)nodeIndex2);
+			}
+			return movedPool;
 		}
 
 		T NodesNotSupport<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], T> callback) {
 			if (keys == null || keys.Any() == false) return defaultValue;
-			var rules = Nodes.Count > 1 ? keys.Select(a => NodeRule(a)).Distinct() : new[] { Nodes.FirstOrDefault().Key };
+			var rules = Nodes.Count > 1 ? keys.Select(a => NodeRuleRaw(a)).Distinct() : new[] { Nodes.FirstOrDefault().Key };
 			if (rules.Count() > 1) throw new Exception("由于开启了分区模式，keys 分散在多个节点，无法使用此功能");
 			var pool = Nodes.TryGetValue(rules.First(), out var b) ? b : Nodes.First().Value;
 			string[] rkeys = new string[keys.Length];
@@ -340,20 +390,20 @@ namespace CSRedis {
 		#region 分区方式 Execute
 		internal T ExecuteScalar<T>(string key, Func<Object<RedisClient>, string, T> hander) {
 			if (key == null) return default(T);
-			var pool = NodeRule == null || Nodes.Count == 1 ? Nodes.First().Value : (Nodes.TryGetValue(NodeRule(key), out var b) ? b : Nodes.First().Value);
+			var pool = NodeRuleRaw == null || Nodes.Count == 1 ? Nodes.First().Value : (Nodes.TryGetValue(NodeRuleRaw(key), out var b) ? b : Nodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
 			return GetAndExecute(pool, conn => hander(conn, key));
 		}
 		internal T[] ExecuteArray<T>(string[] key, Func<Object<RedisClient>, string[], T[]> hander) {
 			if (key == null || key.Any() == false) return new T[0];
-			if (NodeRule == null || Nodes.Count == 1) {
+			if (NodeRuleRaw == null || Nodes.Count == 1) {
 				var pool = Nodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				return GetAndExecute(pool, conn => hander(conn, keys));
 			}
 			var rules = new Dictionary<string, List<(string, int)>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = NodeRule(key[a]);
+				var rule = NodeRuleRaw(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add((key[a], a));
 				else rules.Add(rule, new List<(string, int)> { (key[a], a) });
 			}
@@ -373,14 +423,14 @@ namespace CSRedis {
 		}
 		internal long ExecuteNonQuery(string[] key, Func<Object<RedisClient>, string[], long> hander) {
 			if (key == null || key.Any() == false) return 0;
-			if (NodeRule == null || Nodes.Count == 1) {
+			if (NodeRuleRaw == null || Nodes.Count == 1) {
 				var pool = Nodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				return GetAndExecute(pool, conn => hander(conn, keys));
 			}
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = NodeRule(key[a]);
+				var rule = NodeRuleRaw(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add(key[a]);
 				else rules.Add(rule, new List<string> { key[a] });
 			}
@@ -392,6 +442,74 @@ namespace CSRedis {
 			}
 			return affrows;
 		}
+
+		#region crc16
+		private static readonly ushort[] crc16tab = {
+			0x0000,0x1021,0x2042,0x3063,0x4084,0x50a5,0x60c6,0x70e7,
+			0x8108,0x9129,0xa14a,0xb16b,0xc18c,0xd1ad,0xe1ce,0xf1ef,
+			0x1231,0x0210,0x3273,0x2252,0x52b5,0x4294,0x72f7,0x62d6,
+			0x9339,0x8318,0xb37b,0xa35a,0xd3bd,0xc39c,0xf3ff,0xe3de,
+			0x2462,0x3443,0x0420,0x1401,0x64e6,0x74c7,0x44a4,0x5485,
+			0xa56a,0xb54b,0x8528,0x9509,0xe5ee,0xf5cf,0xc5ac,0xd58d,
+			0x3653,0x2672,0x1611,0x0630,0x76d7,0x66f6,0x5695,0x46b4,
+			0xb75b,0xa77a,0x9719,0x8738,0xf7df,0xe7fe,0xd79d,0xc7bc,
+			0x48c4,0x58e5,0x6886,0x78a7,0x0840,0x1861,0x2802,0x3823,
+			0xc9cc,0xd9ed,0xe98e,0xf9af,0x8948,0x9969,0xa90a,0xb92b,
+			0x5af5,0x4ad4,0x7ab7,0x6a96,0x1a71,0x0a50,0x3a33,0x2a12,
+			0xdbfd,0xcbdc,0xfbbf,0xeb9e,0x9b79,0x8b58,0xbb3b,0xab1a,
+			0x6ca6,0x7c87,0x4ce4,0x5cc5,0x2c22,0x3c03,0x0c60,0x1c41,
+			0xedae,0xfd8f,0xcdec,0xddcd,0xad2a,0xbd0b,0x8d68,0x9d49,
+			0x7e97,0x6eb6,0x5ed5,0x4ef4,0x3e13,0x2e32,0x1e51,0x0e70,
+			0xff9f,0xefbe,0xdfdd,0xcffc,0xbf1b,0xaf3a,0x9f59,0x8f78,
+			0x9188,0x81a9,0xb1ca,0xa1eb,0xd10c,0xc12d,0xf14e,0xe16f,
+			0x1080,0x00a1,0x30c2,0x20e3,0x5004,0x4025,0x7046,0x6067,
+			0x83b9,0x9398,0xa3fb,0xb3da,0xc33d,0xd31c,0xe37f,0xf35e,
+			0x02b1,0x1290,0x22f3,0x32d2,0x4235,0x5214,0x6277,0x7256,
+			0xb5ea,0xa5cb,0x95a8,0x8589,0xf56e,0xe54f,0xd52c,0xc50d,
+			0x34e2,0x24c3,0x14a0,0x0481,0x7466,0x6447,0x5424,0x4405,
+			0xa7db,0xb7fa,0x8799,0x97b8,0xe75f,0xf77e,0xc71d,0xd73c,
+			0x26d3,0x36f2,0x0691,0x16b0,0x6657,0x7676,0x4615,0x5634,
+			0xd94c,0xc96d,0xf90e,0xe92f,0x99c8,0x89e9,0xb98a,0xa9ab,
+			0x5844,0x4865,0x7806,0x6827,0x18c0,0x08e1,0x3882,0x28a3,
+			0xcb7d,0xdb5c,0xeb3f,0xfb1e,0x8bf9,0x9bd8,0xabbb,0xbb9a,
+			0x4a75,0x5a54,0x6a37,0x7a16,0x0af1,0x1ad0,0x2ab3,0x3a92,
+			0xfd2e,0xed0f,0xdd6c,0xcd4d,0xbdaa,0xad8b,0x9de8,0x8dc9,
+			0x7c26,0x6c07,0x5c64,0x4c45,0x3ca2,0x2c83,0x1ce0,0x0cc1,
+			0xef1f,0xff3e,0xcf5d,0xdf7c,0xaf9b,0xbfba,0x8fd9,0x9ff8,
+			0x6e17,0x7e36,0x4e55,0x5e74,0x2e93,0x3eb2,0x0ed1,0x1ef0
+		};
+		public static ushort GetClusterSlot(string key) {
+			//HASH_SLOT = CRC16(key) mod 16384
+			var blob = Encoding.ASCII.GetBytes(key);
+			int offset = 0, count = blob.Length, start = -1, end = -1;
+			byte lt = (byte)'{', rt = (byte)'}';
+			for (int a = 0; a < count - 1; a++)
+				if (blob[a] == lt) {
+					start = a;
+					break;
+				}
+			if (start >= 0) {
+				for (int a = start + 1; a < count; a++)
+					if (blob[a] == rt) {
+						end = a;
+						break;
+					}
+			}
+
+			if (start >= 0
+				&& end >= 0
+				&& --end != start) {
+				offset = start + 1;
+				count = end - start;
+			}
+
+			uint crc = 0;
+			for (int i = 0; i < count; i++)
+				crc = ((crc << 8) ^ crc16tab[((crc >> 8) ^ blob[offset++]) & 0x00FF]) & 0x0000FFFF;
+			return (ushort)(crc % 16384);
+		}
+		#endregion
+
 		#endregion
 
 		/// <summary>
@@ -903,7 +1021,7 @@ namespace CSRedis {
 
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < chans.Length; a++) {
-				var rule = NodeRule(chans[a]);
+				var rule = NodeRuleRaw(chans[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add(chans[a]);
 				else rules.Add(rule, new List<string> { chans[a] });
 			}
@@ -1691,7 +1809,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		public long SAdd(string key, params object[] members) => members == null || members.Any() == false ? 0 : 
+		public long SAdd(string key, params object[] members) => members == null || members.Any() == false ? 0 :
 			ExecuteScalar(key, (c, k) => c.Value.SAdd(k, members?.Select(z => this.SerializeInternal(z)).ToArray()));
 		/// <summary>
 		/// 获取集合的成员数
@@ -1769,8 +1887,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		public bool SMove(string source, string destination, object member) {
 			string rule = string.Empty;
 			if (Nodes.Count > 1) {
-				var rule1 = NodeRule(source);
-				var rule2 = NodeRule(destination);
+				var rule1 = NodeRuleRaw(source);
+				var rule2 = NodeRuleRaw(destination);
 				if (rule1 != rule2) {
 					if (SRem(source, member) <= 0) return false;
 					return SAdd(destination, member) > 0;
@@ -2598,7 +2716,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// 从所有节点中随机返回一个 key
 		/// </summary>
 		/// <returns>返回的 key 如果包含 prefix前辍，则会去除后返回</returns>
-		public string RandomKey() => GetAndExecute(Nodes[NodeKeys[_rnd.Next(0, NodeKeys.Count)]], c => {
+		public string RandomKey() => GetAndExecute(Nodes[NodesIndex[_rnd.Next(0, NodesIndex.Count)]], c => {
 			var rk = c.Value.RandomKey();
 			var prefix = (c.Pool as RedisClientPool).Prefix;
 			if (string.IsNullOrEmpty(prefix) == false && rk.StartsWith(prefix)) return rk.Substring(prefix.Length);
@@ -2613,8 +2731,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		public bool Rename(string key, string newKey) {
 			string rule = string.Empty;
 			if (Nodes.Count > 1) {
-				var rule1 = NodeRule(key);
-				var rule2 = NodeRule(newKey);
+				var rule1 = NodeRuleRaw(key);
+				var rule2 = NodeRuleRaw(newKey);
 				if (rule1 != rule2) {
 					var ret = StartPipe(a => a.Dump(key).Del(key));
 					int.TryParse(ret[1]?.ToString(), out var tryint);

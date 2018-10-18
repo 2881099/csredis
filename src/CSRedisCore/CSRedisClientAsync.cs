@@ -4,19 +4,27 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSRedis {
 	public partial class CSRedisClient {
 
-		Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handle) {
+		Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handle, int jump = 1) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
+			Match matchMoved = null;
 			try {
 				obj = pool.Get();
 				try {
 					return handle(obj);
+				} catch (RedisException ex3) {
+					matchMoved = _clusterMoved.Match(ex3.Message);
+					if (matchMoved.Success == false || jump <= 0) {
+						ex = ex3;
+						throw ex;
+					}
 				} catch (Exception ex2) {
 					ex = ex2;
 					throw ex;
@@ -24,11 +32,12 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
+			return GetAndExecuteAsync<T>(GetMovedPool(matchMoved, pool), handle, jump - 1);
 		}
 
 		async Task<T> NodesNotSupportAsync<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], Task<T>> callbackAsync) {
 			if (keys == null || keys.Any() == false) return defaultValue;
-			var rules = Nodes.Count > 1 ? keys.Select(a => NodeRule(a)).Distinct() : new[] { Nodes.FirstOrDefault().Key };
+			var rules = Nodes.Count > 1 ? keys.Select(a => NodeRuleRaw(a)).Distinct() : new[] { Nodes.FirstOrDefault().Key };
 			if (rules.Count() > 1) throw new Exception("由于开启了分区模式，keys 分散在多个节点，无法使用此功能");
 			var pool = Nodes.TryGetValue(rules.First(), out var b) ? b : Nodes.First().Value;
 			string[] rkeys = new string[keys.Length];
@@ -149,20 +158,20 @@ namespace CSRedis {
 		#region 分区方式 ExecuteAsync
 		private Task<T> ExecuteScalarAsync<T>(string key, Func<Object<RedisClient>, string, Task<T>> handerAsync) {
 			if (key == null) return Task.FromResult(default(T));
-			var pool = NodeRule == null || Nodes.Count == 1 ? Nodes.First().Value : (Nodes.TryGetValue(NodeRule(key), out var b) ? b : Nodes.First().Value);
+			var pool = NodeRuleRaw == null || Nodes.Count == 1 ? Nodes.First().Value : (Nodes.TryGetValue(NodeRuleRaw(key), out var b) ? b : Nodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
 			return GetAndExecuteAsync(pool, conn => handerAsync(conn, key));
 		}
 		async private Task<T[]> ExecuteArrayAsync<T>(string[] key, Func<Object<RedisClient>, string[], Task<T[]>> handerAsync) {
 			if (key == null || key.Any() == false) return new T[0];
-			if (NodeRule == null || Nodes.Count == 1) {
+			if (NodeRuleRaw == null || Nodes.Count == 1) {
 				var pool = Nodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				return await GetAndExecuteAsync(pool, conn => handerAsync(conn, keys));
 			}
 			var rules = new Dictionary<string, List<(string, int)>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = NodeRule(key[a]);
+				var rule = NodeRuleRaw(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add((key[a], a));
 				else rules.Add(rule, new List<(string, int)> { (key[a], a) });
 			}
@@ -182,14 +191,14 @@ namespace CSRedis {
 		}
 		async private Task<long> ExecuteNonQueryAsync(string[] key, Func<Object<RedisClient>, string[], Task<long>> handerAsync) {
 			if (key == null || key.Any() == false) return 0;
-			if (NodeRule == null || Nodes.Count == 1) {
+			if (NodeRuleRaw == null || Nodes.Count == 1) {
 				var pool = Nodes.First().Value;
 				var keys = key.Select(a => string.Concat(pool.Prefix, a)).ToArray();
 				return await GetAndExecuteAsync(pool, conn => handerAsync(conn, keys));
 			}
 			var rules = new Dictionary<string, List<string>>();
 			for (var a = 0; a < key.Length; a++) {
-				var rule = NodeRule(key[a]);
+				var rule = NodeRuleRaw(key[a]);
 				if (rules.ContainsKey(rule)) rules[rule].Add(key[a]);
 				else rules.Add(rule, new List<string> { key[a] });
 			}
@@ -595,7 +604,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<bool[]> ScriptExistsAsync(params string[] sha1) {
 			var ret = new List<bool>();
-			foreach(var pool in Nodes.Values)
+			foreach (var pool in Nodes.Values)
 				ret.Add((await GetAndExecuteAsync(pool, c => c.Value.ScriptExistsAsync(sha1)))?.Where(z => z == false).Any() == false);
 			return ret.ToArray();
 		}
@@ -644,7 +653,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<string[]> PubSubChannelsAsync(string pattern) {
 			var ret = new List<string>();
-			foreach(var pool in Nodes.Values)
+			foreach (var pool in Nodes.Values)
 				ret.AddRange(await GetAndExecuteAsync(pool, c => c.Value.PubSubChannelsAsync(pattern)));
 			return ret.ToArray();
 		}
@@ -1224,8 +1233,8 @@ namespace CSRedis {
 		async public Task<bool> SMoveAsync(string source, string destination, object member) {
 			string rule = string.Empty;
 			if (Nodes.Count > 1) {
-				var rule1 = NodeRule(source);
-				var rule2 = NodeRule(destination);
+				var rule1 = NodeRuleRaw(source);
+				var rule2 = NodeRuleRaw(destination);
 				if (rule1 != rule2) {
 					if (await SRemAsync(source, member) <= 0) return false;
 					return await SAddAsync(destination, member) > 0;
@@ -1284,7 +1293,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		async public Task<long> SRemAsync(string key, params object[] members) => members == null || members.Any() == false ? 0 : 
+		async public Task<long> SRemAsync(string key, params object[] members) => members == null || members.Any() == false ? 0 :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.SRemAsync(k, members?.Select(z => this.SerializeInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回所有给定集合的并集
@@ -1473,7 +1482,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSH 命令后，列表的长度</returns>
-		async public Task<long> RPushAsync(string key, params object[] value) => value == null || value.Any() == false ? 0 : 
+		async public Task<long> RPushAsync(string key, params object[] value) => value == null || value.Any() == false ? 0 :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.RPushAsync(k, value?.Select(z => this.SerializeInternal(z)).ToArray()));
 		/// <summary>
 		/// 为已存在的列表添加值
@@ -1562,7 +1571,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="fields">字段</param>
 		/// <returns></returns>
-		async public Task<string[]> HMGetAsync(string key, params string[] fields) => fields == null || fields.Any() == false ? new string[0] : 
+		async public Task<string[]> HMGetAsync(string key, params string[] fields) => fields == null || fields.Any() == false ? new string[0] :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.HMGetAsync(k, fields));
 		/// <summary>
 		/// 获取存储在哈希表中多个字段的值
@@ -1571,7 +1580,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="fields">一个或多个字段</param>
 		/// <returns></returns>
-		async public Task<T[]> HMGetAsync<T>(string key, params string[] fields) => fields == null || fields.Any() == false ? new T[0] : 
+		async public Task<T[]> HMGetAsync<T>(string key, params string[] fields) => fields == null || fields.Any() == false ? new T[0] :
 			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HMGetBytesAsync(k, fields)));
 		/// <summary>
 		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
@@ -1960,7 +1969,7 @@ namespace CSRedis {
 		/// 从所有节点中随机返回一个 key
 		/// </summary>
 		/// <returns>返回的 key 如果包含 prefix前辍，则会去除后返回</returns>
-		public Task<string> RandomKeyAsync() => GetAndExecuteAsync(Nodes[NodeKeys[_rnd.Next(0, NodeKeys.Count)]], async c => {
+		public Task<string> RandomKeyAsync() => GetAndExecuteAsync(Nodes[NodesIndex[_rnd.Next(0, NodesIndex.Count)]], async c => {
 			var rk = await c.Value.RandomKeyAsync();
 			var prefix = (c.Pool as RedisClientPool).Prefix;
 			if (string.IsNullOrEmpty(prefix) == false && rk.StartsWith(prefix)) return rk.Substring(prefix.Length);
@@ -1975,8 +1984,8 @@ namespace CSRedis {
 		async public Task<bool> RenameAsync(string key, string newKey) {
 			string rule = string.Empty;
 			if (Nodes.Count > 1) {
-				var rule1 = NodeRule(key);
-				var rule2 = NodeRule(newKey);
+				var rule1 = NodeRuleRaw(key);
+				var rule2 = NodeRuleRaw(newKey);
 				if (rule1 != rule2) {
 					var ret = StartPipe(a => a.Dump(key).Del(key));
 					int.TryParse(ret[1]?.ToString(), out var tryint);
