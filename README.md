@@ -4,7 +4,7 @@ StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经�
 
 CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、高性能，和分区高级玩法的.NETCore redis-cli SDK；
 
-## v3.0.0 更新功能
+## v3.0 更新功能
 
 1、CSRedisClient、RedisHelper 方法名调整，所有方法名与redis-cli保持一持；
 
@@ -13,6 +13,8 @@ CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、�
 2、CSRedisClient 增加反序列对象获取，如：Get<byte[]>、HGet<byte[]>，所以获取方法都重载了<T>，默认获取仍然是string；
 
 3、SafeObjectPool 的引入使用；
+
+4、增加 geo 命令支持（需要 redis-server 3.2 以上支持）；
 
 # 功能介绍
 
