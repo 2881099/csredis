@@ -7,7 +7,7 @@ namespace CSRedisCore.Tests
 {
     public class TestBase
     {
-		protected CSRedisClient rds = new CSRedisClient("192.168.1.10:6379,password=,defaultDatabase=2,poolsize=3");
+		protected CSRedisClient rds = new CSRedisClient("127.0.0.1:6379,defaultDatabase=15,poolsize=3");
 
 		protected readonly object Null = null;
 		protected readonly string String = "我是中国人";

@@ -1596,7 +1596,7 @@ namespace CSRedis {
 				var scan = (RedisScan<byte[]>)obj;
 				return new RedisScan<T>(scan.Cursor, rds.DeserializeArrayInternal<T>(scan.Items));
 			});
-			#endregion
 		}
+		#endregion
 	}
 }

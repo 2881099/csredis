@@ -1,6 +1,7 @@
 ﻿using CSRedis.Internal.Commands;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CSRedis
 {
@@ -2488,6 +2489,99 @@ namespace CSRedis
         {
             return Write(RedisCommands.PfMerge(destKey, sourceKeys));
         }
-        #endregion
-    }
+		#endregion
+
+		#region Geo redis-server 3.2
+		public long GeoAdd(string key, params (double longitude, double latitude, object member)[] values) {
+			if (values == null || values.Length == 0) throw new Exception("values 参数不能为空");
+			var args = new List<object>();
+			args.Add(key);
+			foreach (var v in values) args.AddRange(new object[] { v.longitude, v.latitude, v.member });
+			return Write(new RedisInt("GEOADD", args.ToArray()));
+		}
+		public double? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m) {
+			if (unit ==  GeoUnit.m) return Write(new RedisFloat.Nullable("GEODIST", key, member1, member2));
+			return Write(new RedisFloat.Nullable("GEODIST", key, member1, member2, unit));
+		}
+		public string[] GeoHash(string key, object[] members) {
+			if (members == null || members.Length == 0) throw new Exception("values 参数不能为空");
+			var args = new List<object>();
+			args.Add(key);
+			args.AddRange(members);
+			return Write(new RedisArray.Strings("GEOHASH", args.ToArray()));
+		}
+		public (double longitude, double latitude)?[] GeoPos(string key, object[] members) {
+			if (members == null || members.Length == 0) throw new Exception("values 参数不能为空");
+			var args = new List<object>();
+			args.Add(key);
+			args.AddRange(members);
+			var ret = Write(new RedisArray.Generic<double[]>(new RedisArray.Generic<double>(new RedisFloat("GEOPOS", args.ToArray()))));
+			return ret.Select(a => a != null && a.Length == 2 ? new(double, double)?((a[0], a[1])) : null).ToArray();
+		}
+		public (string member, double dist, double longitude, double latitude, long hash)[] GeoRadius(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false) {
+			var args = new List<object>(new object[] { key, longitude, latitude, radius, unit });
+			if (withCoord) args.Add("WITHCOORD");
+			if (withDist) args.Add("WITHDIST");
+			if (withHash) args.Add("WITHHASH");
+			if (count.HasValue) args.Add(count);
+			if (sorting.HasValue) args.Add(sorting);
+
+			var cmd = new RedisTuple.Generic<string, double, long, double[]>.Single(
+				new RedisString(null), 
+				withDist == false ? null : new RedisFloat(null),
+				withHash == false ? null :  new RedisInt(null),
+				withCoord == false ? null : new RedisArray.Generic<double>(new RedisFloat(null)), "GEORADIUS", args.ToArray());
+			var ret = Write(new RedisArray.Generic<Tuple<string, double, long, double[]>>(cmd));
+			return ret.Select(a => (a.Item1, a.Item2, a.Item4 == null ? default(double) : a.Item4[0], a.Item4 == null ? default(double) : a.Item4[1], a.Item3)).ToArray();
+		}
+		public (byte[] member, double dist, double longitude, double latitude, long hash)[] GeoRadiusBytes(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false) {
+			var args = new List<object>(new object[] { key, longitude, latitude, radius, unit });
+			if (withCoord) args.Add("WITHCOORD");
+			if (withDist) args.Add("WITHDIST");
+			if (withHash) args.Add("WITHHASH");
+			if (count.HasValue) args.Add(count);
+			if (sorting.HasValue) args.Add(sorting);
+
+			var cmd = new RedisTuple.Generic<byte[], double, long, double[]>.Single(
+				new RedisBytes(null),
+				withDist == false ? null : new RedisFloat(null),
+				withHash == false ? null : new RedisInt(null),
+				withCoord == false ? null : new RedisArray.Generic<double>(new RedisFloat(null)), "GEORADIUS", args.ToArray());
+			var ret = Write(new RedisArray.Generic<Tuple<byte[], double, long, double[]>>(cmd));
+			return ret.Select(a => (a.Item1, a.Item2, a.Item4 == null ? default(double) : a.Item4[0], a.Item4 == null ? default(double) : a.Item4[1], a.Item3)).ToArray();
+		}
+		public (string member, double dist, double longitude, double latitude, long hash)[] GeoRadiusByMember(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false) {
+			var args = new List<object>(new object[] { key, member, radius, unit });
+			if (withCoord) args.Add("WITHCOORD");
+			if (withDist) args.Add("WITHDIST");
+			if (withHash) args.Add("WITHHASH");
+			if (count.HasValue) args.Add(count);
+			if (sorting.HasValue) args.Add(sorting);
+
+			var cmd = new RedisTuple.Generic<string, double, long, double[]>.Single(
+				new RedisString(null),
+				withDist == false ? null : new RedisFloat(null),
+				withHash == false ? null : new RedisInt(null),
+				withCoord == false ? null : new RedisArray.Generic<double>(new RedisFloat(null)), "GEORADIUSBYMEMBER", args.ToArray());
+			var ret = Write(new RedisArray.Generic<Tuple<string, double, long, double[]>>(cmd));
+			return ret.Select(a => (a.Item1, a.Item2, a.Item4 == null ? default(double) : a.Item4[0], a.Item4 == null ? default(double) : a.Item4[1], a.Item3)).ToArray();
+		}
+		public (byte[] member, double dist, double longitude, double latitude, long hash)[] GeoRadiusBytesByMember(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false) {
+			var args = new List<object>(new object[] { key, member, radius, unit });
+			if (withCoord) args.Add("WITHCOORD");
+			if (withDist) args.Add("WITHDIST");
+			if (withHash) args.Add("WITHHASH");
+			if (count.HasValue) args.Add(count);
+			if (sorting.HasValue) args.Add(sorting);
+
+			var cmd = new RedisTuple.Generic<byte[], double, long, double[]>.Single(
+				new RedisBytes(null),
+				withDist == false ? null : new RedisFloat(null),
+				withHash == false ? null : new RedisInt(null),
+				withCoord == false ? null : new RedisArray.Generic<double>(new RedisFloat(null)), "GEORADIUSBYMEMBER", args.ToArray());
+			var ret = Write(new RedisArray.Generic<Tuple<byte[], double, long, double[]>>(cmd));
+			return ret.Select(a => (a.Item1, a.Item2, a.Item4 == null ? default(double) : a.Item4[0], a.Item4 == null ? default(double) : a.Item4[1], a.Item3)).ToArray();
+		}
+		#endregion
+	}
 }

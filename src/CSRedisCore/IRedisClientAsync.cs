@@ -2108,7 +2108,17 @@ namespace CSRedis
 
 
 
-        #endregion
+		#endregion
 
-    }
+		#region Geo redis-server 3.2
+		Task<long> GeoAddAsync(string key, params (double longitude, double latitude, object member)[] values);
+		Task<double?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m);
+		Task<string[]> GeoHashAsync(string key, object[] members);
+		Task<(double longitude, double latitude)?[]> GeoPosAsync(string key, object[] members);
+		Task<(string member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+		Task<(byte[] member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusBytesAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+		Task<(string member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+		Task<(byte[] member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusBytesByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+		#endregion
+	}
 }

@@ -56,6 +56,7 @@ namespace CSRedis.Internal.Commands
 
             protected virtual T[] Read(long count, RedisReader reader)
             {
+				if (count < 0) return null;
                 T[] array = new T[count];
                 for (int i = 0; i < array.Length; i++)
                     array[i] = _memberCommand.Parse(reader);

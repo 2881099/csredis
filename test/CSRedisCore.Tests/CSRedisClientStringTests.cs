@@ -113,16 +113,16 @@ namespace CSRedisCore.Tests {
 		[Fact]
 		public void IncrBy() {
 			var key = "TestIncrBy_null";
-			rds.Set(key, base.Null);
+			//rds.Set(key, base.Null);
 			Assert.Equal(1, rds.IncrBy(key, 1));
 
-			key = "TestIncrBy_string";
-			rds.Set(key, base.String);
-			Assert.Throws<CSRedis.RedisException>(() => rds.IncrBy(key, 1));
+			//key = "TestIncrBy_string";
+			//rds.Set(key, base.String);
+			//Assert.Throws<CSRedis.RedisException>(() => rds.IncrBy(key, 1));
 
-			key = "TestIncrBy_bytes";
-			rds.Set(key, base.Bytes);
-			Assert.Throws<CSRedis.RedisException>(() => rds.IncrBy(key, 1));
+			//key = "TestIncrBy_bytes";
+			//rds.Set(key, base.Bytes);
+			//Assert.Throws<CSRedis.RedisException>(() => rds.IncrBy(key, 1));
 
 			key = "TestIncrBy";
 			Assert.Equal(1, rds.IncrBy(key, 1));

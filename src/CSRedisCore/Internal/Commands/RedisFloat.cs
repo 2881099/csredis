@@ -29,7 +29,7 @@ namespace CSRedis.Internal.Commands
             public override double? Parse(RedisReader reader)
             {
                 string result = reader.ReadBulkString();
-                if (result == null)
+                if (string.IsNullOrEmpty(result))
                     return null;
                 return RedisFloat.FromString(result);
             }

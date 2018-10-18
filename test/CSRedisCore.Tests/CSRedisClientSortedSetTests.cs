@@ -5,7 +5,7 @@ using System.Text;
 using Xunit;
 
 namespace CSRedisCore.Tests {
-	public class CSRedisClientSortedSet : TestBase {
+	public class CSRedisClientSortedSetTests : TestBase {
 
 		public void ZAdd() { }
 		public void ZCard() { }
