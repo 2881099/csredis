@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 namespace CSRedis {
 	public partial class CSRedisClient {
 
-		Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handle, int jump = 1) {
+		async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 1) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
 			Match matchMoved = null;
 			try {
 				obj = pool.Get();
 				try {
-					return handle(obj);
+					return await handerAsync(obj);
 				} catch (RedisException ex3) {
 					matchMoved = _clusterMoved.Match(ex3.Message);
 					if (matchMoved.Success == false || jump <= 0) {
@@ -32,7 +32,7 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
-			return GetAndExecuteAsync<T>(GetMovedPool(matchMoved, pool), handle, jump - 1);
+			return await GetAndExecuteAsync<T>(GetMovedPool(matchMoved, pool), handerAsync, jump - 1);
 		}
 
 		async Task<T> NodesNotSupportAsync<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], Task<T>> callbackAsync) {
@@ -156,11 +156,11 @@ namespace CSRedis {
 		#endregion
 
 		#region 分区方式 ExecuteAsync
-		private Task<T> ExecuteScalarAsync<T>(string key, Func<Object<RedisClient>, string, Task<T>> handerAsync) {
-			if (key == null) return Task.FromResult(default(T));
+		async private Task<T> ExecuteScalarAsync<T>(string key, Func<Object<RedisClient>, string, Task<T>> handerAsync) {
+			if (key == null) return default(T);
 			var pool = NodeRuleRaw == null || Nodes.Count == 1 ? Nodes.First().Value : (Nodes.TryGetValue(NodeRuleRaw(key), out var b) ? b : Nodes.First().Value);
 			key = string.Concat(pool.Prefix, key);
-			return GetAndExecuteAsync(pool, conn => handerAsync(conn, key));
+			return await GetAndExecuteAsync(pool, conn => handerAsync(conn, key));
 		}
 		async private Task<T[]> ExecuteArrayAsync<T>(string[] key, Func<Object<RedisClient>, string[], Task<T[]>> handerAsync) {
 			if (key == null || key.Any() == false) return new T[0];
