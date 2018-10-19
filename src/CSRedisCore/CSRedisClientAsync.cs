@@ -14,14 +14,14 @@ namespace CSRedis {
 		async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 1) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
-			Match matchMoved = null;
+			var redirect = ParseClusterRedirect(null);
 			try {
 				obj = pool.Get();
 				try {
 					return await handerAsync(obj);
 				} catch (RedisException ex3) {
-					matchMoved = _clusterMoved.Match(ex3.Message);
-					if (matchMoved.Success == false || jump <= 0) {
+					redirect = ParseClusterRedirect(ex3);
+					if (redirect == null || jump <= 0) {
 						ex = ex3;
 						throw ex;
 					}
@@ -32,7 +32,11 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
-			return await GetAndExecuteAsync<T>(GetMovedPool(matchMoved, pool), handerAsync, jump - 1);
+			var redirectHanderAsync = redirect.Value.isMoved ? handerAsync : async redirectObj => {
+				await redirectObj.Value.CallAsync("ASKING");
+				return await handerAsync(redirectObj);
+			};
+			return await GetAndExecuteAsync<T>(GetRedirectPool(redirect.Value, pool), handerAsync, jump - 1);
 		}
 
 		async Task<T> NodesNotSupportAsync<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], Task<T>> callbackAsync) {

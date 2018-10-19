@@ -32,11 +32,15 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 
 # 官方集群
 
-假设你已经配置好 redis-trib 集群，定义一个【普通模式】的 CSRedisClient 对象，它会根据 redis-server 返回的 MOVED 错误自动记录slot，并动态增加节点 Nodes 属性。
+假设你已经配置好 redis-trib 集群，定义一个【普通模式】的 CSRedisClient 对象，它会根据 redis-server 返回的 MOVED | ASK 错误记录slot，自动增加节点 Nodes 属性。
+
+> 127.0.0.1:6379,password=123,defaultDatabase=0,poolsize=50,ssl=false,writeBuffer=10240,prefix=
+
+> 其他节点在运行过程中自动增加，确保每个节点密码一致。
+
+警告：本模式与【分区模式】同时使用时，切记不可设置“prefix=key前辍”（或者全部设置成一样），否则会导致 keySlot 计算结果与服务端不匹配，无法记录 slotCache。
 
 > 注意：官方集群不支持多 keys 的命令、【管道】、Eval（脚本）等众多杀手级功能。
-
-警告：本模式与【分区模式】同时使用时，切记不可设置“prefix=key前辍”，原因会导致 keySlot 计算结果与服务端不匹配，无法记录 slotCache。
 
 # 分区模式
 

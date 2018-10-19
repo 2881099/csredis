@@ -21,7 +21,7 @@ namespace CSRedis {
 		internal Func<string, string> NodeRuleRaw;
 		internal Func<string, string> NodeRuleExternal;
 		private ConcurrentDictionary<string, bool> NodesLock = new ConcurrentDictionary<string, bool>();
-		private ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
+		public ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
 
 		public Func<JsonSerializerSettings> SerializerSettings = () => {
 			var st = new JsonSerializerSettings();
@@ -191,7 +191,7 @@ namespace CSRedis {
 		public CSRedisClient(Func<string, string> NodeRule, params string[] connectionStrings) {
 			this.NodeRuleRaw = key => {
 				if (Nodes.Count <= 1) return NodesIndex[0];
-				var slot = GetClusterSlot(key); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
+				var slot = GetClusterSlot(string.Concat(Nodes.First().Value.Prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
 				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
 				if (this.NodeRuleExternal == null) {
 					var idx = Math.Abs(string.Concat(key).GetHashCode()) % NodesIndex.Count;
@@ -214,18 +214,17 @@ namespace CSRedis {
 			this.NodesServerManager = new NodesServerManagerProvider(this);
 		}
 
-		Regex _clusterMoved = new Regex(@"^MOVED (\d+) ([^:]+):(\d+)$", RegexOptions.Compiled);
-		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handle, int jump = 1) {
+		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 1) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
-			Match matchMoved = null;
+			var redirect = ParseClusterRedirect(null);
 			try {
 				obj = pool.Get();
 				try {
-					return handle(obj);
+					return handler(obj);
 				} catch (RedisException ex3) {
-					matchMoved = _clusterMoved.Match(ex3.Message);
-					if (matchMoved.Success == false || jump <= 0) {
+					redirect = ParseClusterRedirect(ex3);
+					if (redirect == null  || jump <= 0) {
 						ex = ex3;
 						throw ex;
 					}
@@ -236,13 +235,17 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
-			return GetAndExecute<T>(GetMovedPool(matchMoved, pool), handle, jump - 1);
+			var redirectHander = redirect.Value.isMoved ? handler : redirectObj => {
+				redirectObj.Value.Call("ASKING");
+				return handler(redirectObj);
+			};
+			return GetAndExecute<T>(GetRedirectPool(redirect.Value, pool), redirectHander, jump - 1);
 		}
-		RedisClientPool GetMovedPool(Match matchMoved, RedisClientPool pool) {
-			var nodeKey = $"{matchMoved.Groups[2].Value}:{matchMoved.Groups[3].Value}/{pool._policy._database}";
+		RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool) {
+			var nodeKey = $"{redirect.endpoint}/{pool._policy._database}";
 			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
 				if (NodesLock.TryAdd(nodeKey, true)) {
-					var connectionString = $"{matchMoved.Groups[2].Value}:{matchMoved.Groups[3].Value},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
+					var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
 					movedPool = new RedisClientPool("", connectionString, client => { }, false);
 					var nodeIndex = Nodes.Count;
 					if (Nodes.TryAdd(nodeKey, movedPool) && NodesIndex.TryAdd(nodeIndex, nodeKey) && NodesKey.TryAdd(nodeKey, nodeIndex)) {
@@ -253,13 +256,23 @@ namespace CSRedis {
 					}
 				}
 				if (movedPool == null)
-					throw new Exception($"MOVED {matchMoved.Groups[1].Value} {matchMoved.Groups[2].Value}:{matchMoved.Groups[3].Value}");
+					throw new Exception($"{(redirect.isMoved ? "MOVED": "ASK")} {redirect.slot} {redirect.endpoint}");
 			}
-			ushort.TryParse(matchMoved.Groups[1].Value, out var slot);
-			if (NodesKey.TryGetValue(nodeKey, out var nodeIndex2)) {
-				SlotCache.AddOrUpdate(slot, (ushort)nodeIndex2, (oldkey, oldvalue) => (ushort)nodeIndex2);
+			// moved 永久定向，ask 临时性一次定向
+			if (redirect.isMoved && NodesKey.TryGetValue(nodeKey, out var nodeIndex2)) {
+				SlotCache.AddOrUpdate(redirect.slot, (ushort)nodeIndex2, (oldkey, oldvalue) => (ushort)nodeIndex2);
 			}
 			return movedPool;
+		}
+		(bool isMoved, bool isAsk, ushort slot, string endpoint)? ParseClusterRedirect(Exception ex) {
+			if (ex == null) return null;
+			bool isMoved = ex.Message.StartsWith("MOVED ");
+			bool isAsk = ex.Message.StartsWith("ASK ");
+			if (isMoved == false && isAsk == false) return null;
+			var parts = ex.Message.Split(new[] { ' ' }, 3);
+			if (parts.Length != 3 ||
+				ushort.TryParse(parts[1], out var slot) == false) return null;
+			return (isMoved, isAsk, slot, parts[2]);
 		}
 
 		T NodesNotSupport<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], T> callback) {
