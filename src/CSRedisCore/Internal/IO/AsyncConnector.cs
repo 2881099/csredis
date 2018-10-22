@@ -23,7 +23,7 @@ namespace CSRedis.Internal.IO
         readonly RedisIO _io;
 
         bool _asyncConnectionStarted;
-        TaskCompletionSource<bool> _connectionTaskSource;
+		readonly ConcurrentQueue<TaskCompletionSource<bool>> _connectionTaskSource;
 
         public event EventHandler Connected;
 
@@ -42,47 +42,48 @@ namespace CSRedis.Internal.IO
             _writeLock = new object();
             _asyncConnectArgs = new SocketAsyncEventArgs { RemoteEndPoint = endpoint };
             _asyncConnectArgs.Completed += OnSocketCompleted;
-            _connectionTaskSource = new TaskCompletionSource<bool>();
+			_connectionTaskSource = new ConcurrentQueue<TaskCompletionSource<bool>>();
         }
 
-        public Task<bool> ConnectAsync()
-        {
-			this.InitConnection();
-			if (_redisSocket.Connected)
-                _connectionTaskSource.SetResult(true);
+		void SetConnectionTaskSourceResult(bool value, Exception exception, bool isCancel) {
+			while(_connectionTaskSource.TryDequeue(out var tcs)) {
+				if (isCancel) tcs.TrySetCanceled();
+				else if (exception != null) tcs.TrySetException(exception);
+				else tcs.TrySetResult(value);
+			}
+		}
 
-            if (!_asyncConnectionStarted && !_redisSocket.Connected)
-            {
-                lock (_asyncConnectArgs)
-                {
-                    if (!_asyncConnectionStarted && !_redisSocket.Connected)
-                    {
-                        _asyncConnectionStarted = true;
-                        if (!_redisSocket.ConnectAsync(_asyncConnectArgs))
-                            OnSocketConnected(_asyncConnectArgs);
-                    }
-                }
-            } else if (_connectionTaskSource.Task.IsCompleted == false)
-				_connectionTaskSource.SetResult(false);
 
-			return _connectionTaskSource.Task;
-        }
+		public Task<bool> ConnectAsync() {
+			if (_redisSocket.Connected) {
+				this.SetConnectionTaskSourceResult(true, null, false);
+				return Task.FromResult(true);
+			}
+
+			var tcs = new TaskCompletionSource<bool>();
+			_connectionTaskSource.Enqueue(tcs);
+
+			if (!_asyncConnectionStarted && !_redisSocket.Connected) {
+				lock (_asyncConnectArgs) {
+					if (!_asyncConnectionStarted && !_redisSocket.Connected) {
+						_asyncConnectionStarted = true;
+						if (!_redisSocket.ConnectAsync(_asyncConnectArgs)) {
+							OnSocketConnected(_asyncConnectArgs);
+							this.SetConnectionTaskSourceResult(false, null, false);
+						}
+					}
+				}
+			}
+
+			return tcs.Task;
+		}
 
         public Task<T> CallAsync<T>(RedisCommand<T> command)
         {
-			this.InitConnection();
 			var token = new RedisAsyncCommandToken<T>(command);
             _asyncWriteQueue.Enqueue(token);
-            ConnectAsync().ContinueWith(CallAsyncDeferred);
+			ConnectAsync().ContinueWith(CallAsyncDeferred);
             return token.TaskSource.Task;
-        }
-
-        void InitConnection()
-        {
-            if (_connectionTaskSource != null)
-                _connectionTaskSource.TrySetResult(false);
-
-            _connectionTaskSource = new TaskCompletionSource<bool>();
         }
 
         void CallAsyncDeferred(Task t)
@@ -90,12 +91,12 @@ namespace CSRedis.Internal.IO
             lock (_writeLock)
             {
                 IRedisAsyncCommandToken token;
-                if (!_asyncWriteQueue.TryDequeue(out token))
-                    throw new Exception();
+				if (!_asyncWriteQueue.TryDequeue(out token))
+					throw new Exception();
 
-                _asyncReadQueue.Enqueue(token);
+				_asyncReadQueue.Enqueue(token);
 
-                var args = _asyncTransferPool.Acquire();
+				var args = _asyncTransferPool.Acquire();
 				int bytes;
 				try
 				{
@@ -113,8 +114,8 @@ namespace CSRedis.Internal.IO
 				}
                 args.SetBuffer(args.Offset, bytes);
 
-                if (!_redisSocket.SendAsync(args))
-                    OnSocketSent(args);
+				if (!_redisSocket.SendAsync(args))
+					OnSocketSent(args);
             }
         }
 
@@ -126,7 +127,7 @@ namespace CSRedis.Internal.IO
 					try {
 						OnSocketConnected(e);
 					} catch (Exception socketConnectedException) {
-						_connectionTaskSource.TrySetException(socketConnectedException);
+						this.SetConnectionTaskSourceResult(false, socketConnectedException, false);
 					}
                     break;
                 case SocketAsyncOperation.Send:
@@ -142,7 +143,8 @@ namespace CSRedis.Internal.IO
             if (Connected != null)
                 Connected(this, new EventArgs());
 
-			_connectionTaskSource.SetResult(_redisSocket.Connected);
+			this.SetConnectionTaskSourceResult(_redisSocket.Connected, null, false);
+			_asyncConnectionStarted = false;
 		}
 
         void OnSocketSent(SocketAsyncEventArgs args, Exception ex = null)
@@ -185,7 +187,7 @@ namespace CSRedis.Internal.IO
 			while (_asyncWriteQueue.TryDequeue(out var token))
 				try { token.SetException(new Exception("Error: Disposing...")); } catch { }
 
-			_connectionTaskSource.TrySetCanceled();
+			this.SetConnectionTaskSourceResult(false, null, true);
 
             _asyncTransferPool.Dispose();
             _asyncConnectArgs.Dispose();
