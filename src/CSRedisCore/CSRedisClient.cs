@@ -16,7 +16,7 @@ namespace CSRedis {
 		/// 按 key 规则分区存储
 		/// </summary>
 		public ConcurrentDictionary<string, RedisClientPool> Nodes { get; } = new ConcurrentDictionary<string, RedisClientPool>();
-		private int NodesIndexIncrement = 0;
+		private int NodesIndexIncrement = -1;
 		private ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
 		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
 		internal Func<string, string> NodeRuleRaw;
@@ -263,6 +263,7 @@ namespace CSRedis {
 			if (Nodes.TryAdd(nodeKey, pool)) {
 				var nodeIndex = Interlocked.Increment(ref NodesIndexIncrement);
 				if (NodesIndex.TryAdd(nodeIndex, nodeKey) && NodesKey.TryAdd(nodeKey, nodeIndex)) return true;
+				Nodes.TryRemove(nodeKey, out var rempool);
 				Interlocked.Decrement(ref NodesIndexIncrement);
 			}
 			return false;
