@@ -16,6 +16,7 @@ namespace CSRedis {
 		/// 按 key 规则分区存储
 		/// </summary>
 		public ConcurrentDictionary<string, RedisClientPool> Nodes { get; } = new ConcurrentDictionary<string, RedisClientPool>();
+		private int NodesIndexIncrement = 0;
 		private ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
 		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
 		internal Func<string, string> NodeRuleRaw;
@@ -222,10 +223,9 @@ namespace CSRedis {
 			foreach (var connectionString in connectionStrings) {
 				var pool = new RedisClientPool("", connectionString, client => { });
 				if (Nodes.ContainsKey(pool.Key)) throw new Exception($"Node: {pool.Key} 重复，请检查");
-				var nodeIndex = Nodes.Count;
-				if (Nodes.TryAdd(pool.Key, pool) && NodesIndex.TryAdd(nodeIndex, pool.Key) && NodesKey.TryAdd(pool.Key, nodeIndex)) {
-
-				} else {
+				if (this.TryAddNode(pool.Key, pool) == false) {
+					pool.Dispose();
+					pool = null;
 					throw new Exception($"Node: {pool.Key} 无法添加");
 				}
 			}
@@ -242,7 +242,7 @@ namespace CSRedis {
 					return handler(obj);
 				} catch (RedisException ex3) {
 					redirect = ParseClusterRedirect(ex3);
-					if (redirect == null  || jump <= 0) {
+					if (redirect == null || jump <= 0) {
 						ex = ex3;
 						throw ex;
 					}
@@ -259,16 +259,21 @@ namespace CSRedis {
 			};
 			return GetAndExecute<T>(GetRedirectPool(redirect.Value, pool), redirectHander, jump - 1);
 		}
+		bool TryAddNode(string nodeKey, RedisClientPool pool) {
+			if (Nodes.TryAdd(nodeKey, pool)) {
+				var nodeIndex = Interlocked.Increment(ref NodesIndexIncrement);
+				if (NodesIndex.TryAdd(nodeIndex, nodeKey) && NodesKey.TryAdd(nodeKey, nodeIndex)) return true;
+				Interlocked.Decrement(ref NodesIndexIncrement);
+			}
+			return false;
+		}
 		RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool) {
 			var nodeKey = $"{redirect.endpoint}/{pool._policy._database}";
 			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
 				if (NodesLock.TryAdd(nodeKey, true)) {
 					var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
 					movedPool = new RedisClientPool("", connectionString, client => { }, false);
-					var nodeIndex = Nodes.Count;
-					if (Nodes.TryAdd(nodeKey, movedPool) && NodesIndex.TryAdd(nodeIndex, nodeKey) && NodesKey.TryAdd(nodeKey, nodeIndex)) {
-						
-					} else {
+					if (this.TryAddNode(nodeKey, movedPool) == false) {
 						movedPool.Dispose();
 						movedPool = null;
 					}
