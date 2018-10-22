@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using SafeObjectPool;
+﻿using SafeObjectPool;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -69,14 +68,14 @@ namespace CSRedis {
 			var cacheValue = await GetAsync(key);
 			if (cacheValue != null) {
 				try {
-					return JsonConvert.DeserializeObject<T>(cacheValue, this.SerializerSettings());
+					return this.DeserializeObject<T>(cacheValue);
 				} catch {
 					await DelAsync(key);
 					throw;
 				}
 			}
 			var ret = await getDataAsync();
-			await SetAsync(key, JsonConvert.SerializeObject(ret, this.SerializerSettings()), timeoutSeconds);
+			await SetAsync(key, this.SerializeObject(ret), timeoutSeconds);
 			return ret;
 		}
 		/// <summary>
@@ -93,7 +92,7 @@ namespace CSRedis {
 			var cacheValue = await HGetAsync(key, field);
 			if (cacheValue != null) {
 				try {
-					var value = JsonConvert.DeserializeObject<(T, long)>(cacheValue, this.SerializerSettings());
+					var value = this.DeserializeObject<(T, long)>(cacheValue);
 					if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) return value.Item1;
 				} catch {
 					await HDelAsync(key, field);
@@ -101,7 +100,7 @@ namespace CSRedis {
 				}
 			}
 			var ret = await getDataAsync();
-			await HSetAsync(key, field, JsonConvert.SerializeObject((ret, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds), this.SerializerSettings()));
+			await HSetAsync(key, field, this.SerializeObject((ret, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
 			return ret;
 		}
 		/// <summary>
@@ -125,7 +124,7 @@ namespace CSRedis {
 			for (var a = 0; a < cacheValue.Length; a++) {
 				if (cacheValue[a] != null) {
 					try {
-						var value = JsonConvert.DeserializeObject<(T, long)>(cacheValue[a], this.SerializerSettings());
+						var value = this.DeserializeObject<(T, long)>(cacheValue[a]);
 						if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) {
 							ret[a] = value.Item1;
 							continue;
@@ -146,12 +145,12 @@ namespace CSRedis {
 				foreach (var d in data) {
 					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
 					ret[fieldsMGet[d.Item1]] = d.Item2;
-					mset[msetIndex++] = (d.Item1, JsonConvert.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds), this.SerializerSettings()));
+					mset[msetIndex++] = (d.Item1, this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
 					fieldsMGet.Remove(d.Item1);
 				}
 				foreach (var fieldNull in fieldsMGet.Keys) {
 					ret[fieldsMGet[fieldNull]] = default(T);
-					mset[msetIndex++] = (fieldNull, JsonConvert.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds), this.SerializerSettings()));
+					mset[msetIndex++] = (fieldNull, this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
 				}
 				if (mset.Any()) await HMSetAsync(key, mset);
 			}
@@ -592,7 +591,7 @@ namespace CSRedis {
 		/// <param name="key">用于定位分区节点，不含prefix前辍</param>
 		/// <param name="args">参数</param>
 		/// <returns></returns>
-		public Task<object> EvalAsync(string script, string key, params object[] args) => ExecuteScalarAsync(key, (c, k) => c.Value.EvalAsync(script, new[] { k }, args?.Select(z => this.SerializeInternal(z)).ToArray()));
+		public Task<object> EvalAsync(string script, string key, params object[] args) => ExecuteScalarAsync(key, (c, k) => c.Value.EvalAsync(script, new[] { k }, args?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 执行脚本
 		/// </summary>
@@ -600,7 +599,7 @@ namespace CSRedis {
 		/// <param name="key">用于定位分区节点，不含prefix前辍</param>
 		/// <param name="args">参数</param>
 		/// <returns></returns>
-		public Task<object> EvalSHAAsync(string sha1, string key, params object[] args) => ExecuteScalarAsync(key, (c, k) => c.Value.EvalSHAAsync(sha1, new[] { k }, args?.Select(z => this.SerializeInternal(z)).ToArray()));
+		public Task<object> EvalSHAAsync(string sha1, string key, params object[] args) => ExecuteScalarAsync(key, (c, k) => c.Value.EvalSHAAsync(sha1, new[] { k }, args?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 校验所有分区节点中，脚本是否已经缓存。任何分区节点未缓存sha1，都返回false。
 		/// </summary>
@@ -686,7 +685,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="elements">元素</param>
 		/// <returns></returns>
-		async public Task<bool> PfAddAsync(string key, params object[] elements) => elements == null || elements.Any() == false ? false : await ExecuteScalarAsync(key, (c, k) => c.Value.PfAddAsync(k, elements?.Select(z => this.SerializeInternal(z)).ToArray()));
+		async public Task<bool> PfAddAsync(string key, params object[] elements) => elements == null || elements.Any() == false ? false : await ExecuteScalarAsync(key, (c, k) => c.Value.PfAddAsync(k, elements?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回给定 HyperLogLog 的基数估算值
 		/// </summary>
@@ -712,7 +711,7 @@ namespace CSRedis {
 		/// <param name="scoreMembers">一个或多个成员分数</param>
 		/// <returns></returns>
 		async public Task<long> ZAddAsync(string key, params (double, object)[] scoreMembers) => scoreMembers == null || scoreMembers.Any() == false ? 0 :
-			await ExecuteScalarAsync(key, (c, k) => c.Value.ZAddAsync(k, scoreMembers.Select(a => new Tuple<double, object>(a.Item1, this.SerializeInternal(a.Item2))).ToArray()));
+			await ExecuteScalarAsync(key, (c, k) => c.Value.ZAddAsync(k, scoreMembers.Select(a => new Tuple<double, object>(a.Item1, this.SerializeRedisValueInternal(a.Item2))).ToArray()));
 		/// <summary>
 		/// 获取有序集合的成员数量
 		/// </summary>
@@ -774,7 +773,7 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		async public Task<T[]> ZRangeAsync<T>(string key, long start, long stop) => this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesAsync(k, start, stop, false)));
+		async public Task<T[]> ZRangeAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesAsync(k, start, stop, false)));
 		/// <summary>
 		/// 通过索引区间返回有序集合成指定区间内的成员和分数
 		/// </summary>
@@ -791,7 +790,7 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		async public Task<(T member, double score)[]> ZRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesWithScoresAsync(k, start, stop)));
+		async public Task<(T member, double score)[]> ZRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesWithScoresAsync(k, start, stop)));
 
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
@@ -815,7 +814,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<T[]> ZRangeByScoreAsync<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
+			this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
 		/// </summary>
@@ -838,7 +837,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<T[]> ZRangeByScoreAsync<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreAsync(k, min, max, false, offset, count)));
+			this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreAsync(k, min, max, false, offset, count)));
 
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
@@ -862,7 +861,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<(T member, double score)[]> ZRangeByScoreWithScoresAsync<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count)));
+			this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count)));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
 		/// </summary>
@@ -885,7 +884,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<(T member, double score)[]> ZRangeByScoreWithScoresAsync<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min, max, offset, count)));
+			this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min, max, offset, count)));
 
 		/// <summary>
 		/// 返回有序集合中指定成员的索引
@@ -893,14 +892,14 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public Task<long?> ZRankAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRankAsync(k, this.SerializeInternal(member)));
+		public Task<long?> ZRankAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRankAsync(k, this.SerializeRedisValueInternal(member)));
 		/// <summary>
 		/// 移除有序集合中的一个或多个成员
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">一个或多个成员</param>
 		/// <returns></returns>
-		async public Task<long> ZRemAsync(string key, params object[] member) => member == null || member.Any() == false ? 0 : await ExecuteScalarAsync(key, (c, k) => c.Value.ZRemAsync(k, member?.Select(z => this.SerializeInternal(z)).ToArray()));
+		async public Task<long> ZRemAsync(string key, params object[] member) => member == null || member.Any() == false ? 0 : await ExecuteScalarAsync(key, (c, k) => c.Value.ZRemAsync(k, member?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 移除有序集合中给定的排名区间的所有成员
 		/// </summary>
@@ -942,7 +941,7 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		async public Task<T[]> ZRevRangeAsync<T>(string key, long start, long stop) => this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesAsync(k, start, stop, false)));
+		async public Task<T[]> ZRevRangeAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesAsync(k, start, stop, false)));
 		/// <summary>
 		/// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
 		/// </summary>
@@ -959,7 +958,7 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		async public Task<(T member, double score)[]> ZRevRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesWithScoresAsync(k, start, stop)));
+		async public Task<(T member, double score)[]> ZRevRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesWithScoresAsync(k, start, stop)));
 
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
@@ -982,7 +981,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<T[]> ZRevRangeByScoreAsync<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count)));
+			this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count)));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 		/// </summary>
@@ -1004,7 +1003,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<T[]> ZRevRangeByScoreAsync<T>(string key, string max, string min, long? count = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreAsync(k, max, min, false, offset, count)));
+			this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreAsync(k, max, min, false, offset, count)));
 
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -1028,7 +1027,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<(T member, double score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count)));
+			this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count)));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 		/// </summary>
@@ -1051,7 +1050,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<(T member, double score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, string max, string min, long? count = null, long offset = 0) =>
-			this.DeserializeTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max, min, offset, count)));
+			this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max, min, offset, count)));
 
 		/// <summary>
 		/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
@@ -1059,14 +1058,14 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public Task<long?> ZRevRankAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRankAsync(k, this.SerializeInternal(member)));
+		public Task<long?> ZRevRankAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRankAsync(k, this.SerializeRedisValueInternal(member)));
 		/// <summary>
 		/// 返回有序集中，成员的分数值
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public Task<double?> ZScoreAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.ZScoreAsync(k, this.SerializeInternal(member)));
+		public Task<double?> ZScoreAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.ZScoreAsync(k, this.SerializeRedisValueInternal(member)));
 
 		/// <summary>
 		/// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
@@ -1105,7 +1104,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.ZScanBytesAsync(k, cursor, pattern, count);
-			return new RedisScan<(T, double)>(scan.Cursor, this.DeserializeTuple1Internal<T, double>(scan.Items));
+			return new RedisScan<(T, double)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
 		});
 
 		/// <summary>
@@ -1130,7 +1129,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		async public Task<T[]> ZRangeByLexAsync<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByLexAsync(k, min, max, offset, count)));
+			this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByLexAsync(k, min, max, offset, count)));
 
 		/// <summary>
 		/// 当有序集合的所有成员都具有相同的分值时，有序集合的元素会根据成员的字典序来进行排序，这个命令可以返回给定的有序集合键 key 中，值介于 min 和 max 之间的成员。
@@ -1160,7 +1159,7 @@ namespace CSRedis {
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
 		async public Task<long> SAddAsync(string key, params object[] members) => members == null || members.Any() == false ? 0 :
-			await ExecuteScalarAsync(key, (c, k) => c.Value.SAddAsync(k, members?.Select(z => this.SerializeInternal(z)).ToArray()));
+			await ExecuteScalarAsync(key, (c, k) => c.Value.SAddAsync(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 获取集合的成员数
 		/// </summary>
@@ -1179,7 +1178,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
-		public Task<T[]> SDiffAsync<T>(params string[] keys) => NodesNotSupportAsync(keys, new T[0], async (c, k) => this.DeserializeArrayInternal<T>(await c.Value.SDiffBytesAsync(k)));
+		public Task<T[]> SDiffAsync<T>(params string[] keys) => NodesNotSupportAsync(keys, new T[0], async (c, k) => this.DeserializeRedisValueArrayInternal<T>(await c.Value.SDiffBytesAsync(k)));
 		/// <summary>
 		/// 返回给定所有集合的差集并存储在 destination 中
 		/// </summary>
@@ -1199,7 +1198,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
-		public Task<T[]> SInterAsync<T>(params string[] keys) => NodesNotSupportAsync(keys, new T[0], async (c, k) => this.DeserializeArrayInternal<T>(await c.Value.SInterBytesAsync(k)));
+		public Task<T[]> SInterAsync<T>(params string[] keys) => NodesNotSupportAsync(keys, new T[0], async (c, k) => this.DeserializeRedisValueArrayInternal<T>(await c.Value.SInterBytesAsync(k)));
 		/// <summary>
 		/// 返回给定所有集合的交集并存储在 destination 中
 		/// </summary>
@@ -1213,7 +1212,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public Task<bool> SIsMemberAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.SIsMemberAsync(k, this.SerializeInternal(member)));
+		public Task<bool> SIsMemberAsync(string key, object member) => ExecuteScalarAsync(key, (c, k) => c.Value.SIsMemberAsync(k, this.SerializeRedisValueInternal(member)));
 		/// <summary>
 		/// 返回集合中的所有成员
 		/// </summary>
@@ -1226,7 +1225,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T[]> SMembersAsync<T>(string key) => this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SMembersBytesAsync(k)));
+		async public Task<T[]> SMembersAsync<T>(string key) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SMembersBytesAsync(k)));
 		/// <summary>
 		/// 将 member 元素从 source 集合移动到 destination 集合
 		/// </summary>
@@ -1248,7 +1247,7 @@ namespace CSRedis {
 			var pool = Nodes.TryGetValue(rule, out var b) ? b : Nodes.First().Value;
 			var key1 = string.Concat(pool.Prefix, source);
 			var key2 = string.Concat(pool.Prefix, destination);
-			return await GetAndExecuteAsync(pool, conn => conn.Value.SMoveAsync(key1, key2, this.SerializeInternal(member)));
+			return await GetAndExecuteAsync(pool, conn => conn.Value.SMoveAsync(key1, key2, this.SerializeRedisValueInternal(member)));
 		}
 		/// <summary>
 		/// 移除并返回集合中的一个随机元素
@@ -1262,7 +1261,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T> SPopAsync<T>(string key) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SPopBytesAsync(k)));
+		async public Task<T> SPopAsync<T>(string key) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SPopBytesAsync(k)));
 		/// <summary>
 		/// 返回集合中的一个随机元素
 		/// </summary>
@@ -1275,7 +1274,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T> SRandMemberAsync<T>(string key) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SRandMemberBytesAsync(k)));
+		async public Task<T> SRandMemberAsync<T>(string key) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SRandMemberBytesAsync(k)));
 		/// <summary>
 		/// 返回集合中一个或多个随机数的元素
 		/// </summary>
@@ -1290,7 +1289,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="count">返回个数</param>
 		/// <returns></returns>
-		async public Task<T[]> SRandMembersAsync<T>(string key, int count = 1) => this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SRandMembersBytesAsync(k, count)));
+		async public Task<T[]> SRandMembersAsync<T>(string key, int count = 1) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SRandMembersBytesAsync(k, count)));
 		/// <summary>
 		/// 移除集合中一个或多个成员
 		/// </summary>
@@ -1298,7 +1297,7 @@ namespace CSRedis {
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
 		async public Task<long> SRemAsync(string key, params object[] members) => members == null || members.Any() == false ? 0 :
-			await ExecuteScalarAsync(key, (c, k) => c.Value.SRemAsync(k, members?.Select(z => this.SerializeInternal(z)).ToArray()));
+			await ExecuteScalarAsync(key, (c, k) => c.Value.SRemAsync(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回所有给定集合的并集
 		/// </summary>
@@ -1311,7 +1310,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
-		public Task<T[]> SUnionAsync<T>(params string[] keys) => NodesNotSupportAsync(keys, new T[0], async (c, k) => this.DeserializeArrayInternal<T>(await c.Value.SUnionBytesAsync(k)));
+		public Task<T[]> SUnionAsync<T>(params string[] keys) => NodesNotSupportAsync(keys, new T[0], async (c, k) => this.DeserializeRedisValueArrayInternal<T>(await c.Value.SUnionBytesAsync(k)));
 		/// <summary>
 		/// 所有给定集合的并集存储在 destination 集合中
 		/// </summary>
@@ -1339,7 +1338,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Task<RedisScan<T>> SScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.SScanBytesAsync(k, cursor, pattern, count);
-			return new RedisScan<T>(scan.Cursor, this.DeserializeArrayInternal<T>(scan.Items));
+			return new RedisScan<T>(scan.Cursor, this.DeserializeRedisValueArrayInternal<T>(scan.Items));
 		});
 		#endregion
 
@@ -1358,7 +1357,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="index">索引</param>
 		/// <returns></returns>
-		async public Task<T> LIndexAsync<T>(string key, long index) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.LIndexBytesAsync(k, index)));
+		async public Task<T> LIndexAsync<T>(string key, long index) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.LIndexBytesAsync(k, index)));
 		/// <summary>
 		/// 在列表中的元素前面插入元素
 		/// </summary>
@@ -1366,7 +1365,7 @@ namespace CSRedis {
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public Task<long> LInsertBeforeAsync(string key, object pivot, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LInsertAsync(k, RedisInsert.Before, pivot, this.SerializeInternal(value)));
+		public Task<long> LInsertBeforeAsync(string key, object pivot, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LInsertAsync(k, RedisInsert.Before, pivot, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 在列表中的元素后面插入元素
 		/// </summary>
@@ -1374,7 +1373,7 @@ namespace CSRedis {
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public Task<long> LInsertAfterAsync(string key, object pivot, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LInsertAsync(k, RedisInsert.After, pivot, this.SerializeInternal(value)));
+		public Task<long> LInsertAfterAsync(string key, object pivot, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LInsertAsync(k, RedisInsert.After, pivot, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 获取列表长度
 		/// </summary>
@@ -1393,7 +1392,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T> LPopAsync<T>(string key) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.LPopBytesAsync(k)));
+		async public Task<T> LPopAsync<T>(string key) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.LPopBytesAsync(k)));
 		/// <summary>
 		/// 将一个或多个值插入到列表头部
 		/// </summary>
@@ -1401,14 +1400,14 @@ namespace CSRedis {
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 LPUSH 命令后，列表的长度</returns>
 		async public Task<long> LPushAsync(string key, params object[] value) => value == null || value.Any() == false ? 0 :
-			await ExecuteScalarAsync(key, (c, k) => c.Value.LPushAsync(k, value?.Select(z => this.SerializeInternal(z)).ToArray()));
+			await ExecuteScalarAsync(key, (c, k) => c.Value.LPushAsync(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 将一个值插入到已存在的列表头部
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns>执行 LPUSHX 命令后，列表的长度。</returns>
-		public Task<long> LPushXAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LPushXAsync(k, this.SerializeInternal(value)));
+		public Task<long> LPushXAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LPushXAsync(k, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 获取列表指定范围内的元素
 		/// </summary>
@@ -1425,7 +1424,7 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		async public Task<T[]> LRangeAsync<T>(string key, long start, long stop) => this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.LRangeBytesAsync(k, start, stop)));
+		async public Task<T[]> LRangeAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.LRangeBytesAsync(k, start, stop)));
 		/// <summary>
 		/// 根据参数 count 的值，移除列表中与参数 value 相等的元素
 		/// </summary>
@@ -1433,7 +1432,7 @@ namespace CSRedis {
 		/// <param name="count">移除的数量，大于0时从表头删除数量count，小于0时从表尾删除数量-count，等于0移除所有</param>
 		/// <param name="value">元素</param>
 		/// <returns></returns>
-		public Task<long> LRemAsync(string key, long count, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LRemAsync(k, count, this.SerializeInternal(value)));
+		public Task<long> LRemAsync(string key, long count, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.LRemAsync(k, count, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 通过索引设置列表元素的值
 		/// </summary>
@@ -1441,7 +1440,7 @@ namespace CSRedis {
 		/// <param name="index">索引</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		public Task<bool> LSetAsync(string key, long index, object value) => ExecuteScalarAsync(key, async (c, k) => await c.Value.LSetAsync(k, index, this.SerializeInternal(value)) == "OK");
+		public Task<bool> LSetAsync(string key, long index, object value) => ExecuteScalarAsync(key, async (c, k) => await c.Value.LSetAsync(k, index, this.SerializeRedisValueInternal(value)) == "OK");
 		/// <summary>
 		/// 对一个列表进行修剪，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除
 		/// </summary>
@@ -1462,7 +1461,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T> RPopAsync<T>(string key) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.RPopBytesAsync(k)));
+		async public Task<T> RPopAsync<T>(string key) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.RPopBytesAsync(k)));
 		/// <summary>
 		/// 将列表 source 中的最后一个元素(尾元素)弹出，并返回给客户端。
 		/// 将 source 弹出的元素插入到列表 destination ，作为 destination 列表的的头元素。
@@ -1479,7 +1478,7 @@ namespace CSRedis {
 		/// <param name="source">源key，不含prefix前辍</param>
 		/// <param name="destination">目标key，不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T> RPopLPushAsync<T>(string source, string destination) => this.DeserializeInternal<T>(await NodesNotSupportAsync(new[] { source, destination }, null, (c, k) => c.Value.RPopBytesLPushAsync(k.First(), k.Last())));
+		async public Task<T> RPopLPushAsync<T>(string source, string destination) => this.DeserializeRedisValueInternal<T>(await NodesNotSupportAsync(new[] { source, destination }, null, (c, k) => c.Value.RPopBytesLPushAsync(k.First(), k.Last())));
 		/// <summary>
 		/// 在列表中添加一个或多个值
 		/// </summary>
@@ -1487,14 +1486,14 @@ namespace CSRedis {
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSH 命令后，列表的长度</returns>
 		async public Task<long> RPushAsync(string key, params object[] value) => value == null || value.Any() == false ? 0 :
-			await ExecuteScalarAsync(key, (c, k) => c.Value.RPushAsync(k, value?.Select(z => this.SerializeInternal(z)).ToArray()));
+			await ExecuteScalarAsync(key, (c, k) => c.Value.RPushAsync(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 为已存在的列表添加值
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSHX 命令后，列表的长度</returns>
-		public Task<long> RPushXAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.RPushXAsync(k, this.SerializeInternal(value)));
+		public Task<long> RPushXAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.RPushXAsync(k, this.SerializeRedisValueInternal(value)));
 		#endregion
 
 		#region Hash
@@ -1527,7 +1526,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="field">字段</param>
 		/// <returns></returns>
-		async public Task<T> HGetAsync<T>(string key, string field) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HGetBytesAsync(k, field)));
+		async public Task<T> HGetAsync<T>(string key, string field) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HGetBytesAsync(k, field)));
 		/// <summary>
 		/// 获取在哈希表中指定 key 的所有字段和值
 		/// </summary>
@@ -1540,7 +1539,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<Dictionary<string, T>> HGetAllAsync<T>(string key) => this.DeserializeDictionaryInternal<string, T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HGetAllBytesAsync(k)));
+		async public Task<Dictionary<string, T>> HGetAllAsync<T>(string key) => this.DeserializeRedisValueDictionaryInternal<string, T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HGetAllBytesAsync(k)));
 		/// <summary>
 		/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 		/// </summary>
@@ -1585,7 +1584,7 @@ namespace CSRedis {
 		/// <param name="fields">一个或多个字段</param>
 		/// <returns></returns>
 		async public Task<T[]> HMGetAsync<T>(string key, params string[] fields) => fields == null || fields.Any() == false ? new T[0] :
-			this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HMGetBytesAsync(k, fields)));
+			this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HMGetBytesAsync(k, fields)));
 		/// <summary>
 		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
 		/// </summary>
@@ -1601,7 +1600,7 @@ namespace CSRedis {
 				var v = keyValues[a + 1];
 				if (string.IsNullOrEmpty(k)) throw new Exception("keyValues 参数是键值对，并且 key 不可为空");
 				parms.Add(k);
-				parms.Add(this.SerializeInternal(v));
+				parms.Add(this.SerializeRedisValueInternal(v));
 			}
 			return await ExecuteScalarAsync(key, (c, k) => c.Value.HMSetAsync(k, parms.ToArray())) == "OK";
 		}
@@ -1612,7 +1611,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">值</param>
 		/// <returns>如果字段是哈希表中的一个新建字段，并且值设置成功，返回true。如果哈希表中域字段已经存在且旧值已被新值覆盖，返回false。</returns>
-		public Task<bool> HSetAsync(string key, string field, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.HSetAsync(k, field, this.SerializeInternal(value)));
+		public Task<bool> HSetAsync(string key, string field, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.HSetAsync(k, field, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 只有在字段 field 不存在时，设置哈希表字段的值
 		/// </summary>
@@ -1620,7 +1619,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">值(string 或 byte[])</param>
 		/// <returns></returns>
-		public Task<bool> HSetNxAsync(string key, string field, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.HSetNxAsync(k, field, this.SerializeInternal(value)));
+		public Task<bool> HSetNxAsync(string key, string field, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.HSetNxAsync(k, field, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 获取哈希表中所有值
 		/// </summary>
@@ -1633,7 +1632,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T[]> HValsAsync<T>(string key) => this.DeserializeArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HValsBytesAsync(k)));
+		async public Task<T[]> HValsAsync<T>(string key) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.HValsBytesAsync(k)));
 		/// <summary>
 		/// 迭代哈希表中的键值对
 		/// </summary>
@@ -1657,7 +1656,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Task<RedisScan<(string field, T value)>> HScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.HScanBytesAsync(k, cursor, pattern, count);
-			return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, this.DeserializeInternal<T>(z.Item2))).ToArray());
+			return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, this.DeserializeRedisValueInternal<T>(z.Item2))).ToArray());
 		});
 		#endregion
 
@@ -1668,7 +1667,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字符串</param>
 		/// <returns>追加指定值之后， key 中字符串的长度</returns>
-		public Task<long> AppendAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.AppendAsync(k, this.SerializeInternal(value)));
+		public Task<long> AppendAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.AppendAsync(k, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 计算给定位置被设置为 1 的比特位的数量
 		/// </summary>
@@ -1710,7 +1709,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T> GetAsync<T>(string key) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.GetBytesAsync(k)));
+		async public Task<T> GetAsync<T>(string key) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.GetBytesAsync(k)));
 		/// <summary>
 		/// 对 key 所储存的值，获取指定偏移量上的位(bit)
 		/// </summary>
@@ -1734,14 +1733,14 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="end">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		async public Task<T> GetRangeAsync<T>(string key, long start, long end) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.GetRangeBytesAsync(k, start, end)));
+		async public Task<T> GetRangeAsync<T>(string key, long start, long end) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.GetRangeBytesAsync(k, start, end)));
 		/// <summary>
 		/// 将给定 key 的值设为 value ，并返回 key 的旧值(old value)
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		public Task<string> GetSetAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.GetSetAsync(k, this.SerializeInternal(value)));
+		public Task<string> GetSetAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.GetSetAsync(k, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 将给定 key 的值设为 value ，并返回 key 的旧值(old value)
 		/// </summary>
@@ -1749,7 +1748,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		async public Task<T> GetSetAsync<T>(string key, object value) => this.DeserializeInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.GetSetBytesAsync(k, this.SerializeInternal(value))));
+		async public Task<T> GetSetAsync<T>(string key, object value) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.GetSetBytesAsync(k, this.SerializeRedisValueInternal(value))));
 		/// <summary>
 		/// 将 key 所储存的值加上给定的增量值（increment）
 		/// </summary>
@@ -1776,7 +1775,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
-		async public Task<T[]> MGetAsync<T>(params string[] keys) => this.DeserializeArrayInternal<T>(await ExecuteArrayAsync(keys, (c, k) => c.Value.MGetBytesAsync(k)));
+		async public Task<T[]> MGetAsync<T>(params string[] keys) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteArrayAsync(keys, (c, k) => c.Value.MGetBytesAsync(k)));
 		/// <summary>
 		/// 同时设置一个或多个 key-value 对
 		/// </summary>
@@ -1805,7 +1804,7 @@ namespace CSRedis {
 				var parms = new object[k.Length * 2];
 				for (var a = 0; a < k.Length; a++) {
 					parms[a * 2] = k[a];
-					parms[a * 2 + 1] = this.SerializeInternal(dic[string.IsNullOrEmpty(prefix) ? k[a] : k[a].Substring(prefix.Length)]);
+					parms[a * 2 + 1] = this.SerializeRedisValueInternal(dic[string.IsNullOrEmpty(prefix) ? k[a] : k[a].Substring(prefix.Length)]);
 				}
 				if (exists == RedisExistence.Nx) return await c.Value.MSetNxAsync(parms) ? 1 : 0;
 				return await c.Value.MSetAsync(parms) == "OK" ? 1 : 0;
@@ -1822,7 +1821,7 @@ namespace CSRedis {
 		/// <param name="exists">Nx, Xx</param>
 		/// <returns></returns>
 		async public Task<bool> SetAsync(string key, object value, int expireSeconds = -1, RedisExistence? exists = null) {
-			object redisValule = this.SerializeInternal(value);
+			object redisValule = this.SerializeRedisValueInternal(value);
 			if (expireSeconds <= 0 && exists == null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule)) == "OK";
 			if (expireSeconds <= 0 && exists != null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, null, exists)) == "OK";
 			if (expireSeconds > 0 && exists == null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, expireSeconds, null)) == "OK";
@@ -1843,7 +1842,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		public Task<bool> SetNxAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.SetNxAsync(k, this.SerializeInternal(value)));
+		public Task<bool> SetNxAsync(string key, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.SetNxAsync(k, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 用 value 参数覆写给定 key 所储存的字符串值，从偏移量 offset 开始
 		/// </summary>
@@ -1851,7 +1850,7 @@ namespace CSRedis {
 		/// <param name="offset">偏移量</param>
 		/// <param name="value">值</param>
 		/// <returns>被修改后的字符串长度</returns>
-		public Task<long> SetRangeAsync(string key, uint offset, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.SetRangeAsync(k, offset, this.SerializeInternal(value)));
+		public Task<long> SetRangeAsync(string key, uint offset, object value) => ExecuteScalarAsync(key, (c, k) => c.Value.SetRangeAsync(k, offset, this.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 返回 key 所储存的字符串值的长度
 		/// </summary>
@@ -2082,7 +2081,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Task<RedisScan<T>> ScanAsync<T>(int cursor, string pattern = null, int? count = null) => NodesNotSupportAsync("Scan<T>", async (c, k) => {
 			var scan = await c.Value.ScanBytesAsync(cursor, pattern, count);
-			return new RedisScan<T>(scan.Cursor, this.DeserializeArrayInternal<T>(scan.Items));
+			return new RedisScan<T>(scan.Cursor, this.DeserializeRedisValueArrayInternal<T>(scan.Items));
 		});
 		#endregion
 
@@ -2152,7 +2151,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		public Task<T[]> GeoRadiusAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, false, false, false)).Select(a => this.DeserializeInternal<T>(a.member)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, false, false, false)).Select(a => this.DeserializeRedisValueInternal<T>(a.member)).ToArray());
 
 		/// <summary>
 		/// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -2179,7 +2178,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		public Task<(T member, double dist)[]> GeoRadiusWithDistAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, false, true, false)).Select(a => (this.DeserializeInternal<T>(a.member), a.dist)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, false, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist)).ToArray());
 
 		/// <summary>
 		/// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -2206,7 +2205,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		private Task<(T member, double longitude, double latitude)[]> GeoRadiusWithCoordAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, true, false, false)).Select(a => (this.DeserializeInternal<T>(a.member), a.longitude, a.latitude)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, true, false, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.longitude, a.latitude)).ToArray());
 
 		/// <summary>
 		/// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -2233,7 +2232,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		public Task<(T member, double dist, double longitude, double latitude)[]> GeoRadiusWithDistAndCoordAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, true, true, false)).Select(a => (this.DeserializeInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, true, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray());
 
 		/// <summary>
 		/// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -2258,7 +2257,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		public Task<T[]> GeoRadiusByMemberAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, false, false, false)).Select(a => this.DeserializeInternal<T>(a.member)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, false, false, false)).Select(a => this.DeserializeRedisValueInternal<T>(a.member)).ToArray());
 
 		/// <summary>
 		/// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -2283,7 +2282,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		public Task<(T member, double dist)[]> GeoRadiusByMemberWithDistAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, false, true, false)).Select(a => (this.DeserializeInternal<T>(a.member), a.dist)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, false, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist)).ToArray());
 
 		/// <summary>
 		/// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -2308,7 +2307,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		private Task<(T member, double longitude, double latitude)[]> GeoRadiusByMemberWithCoordAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, true, false, false)).Select(a => (this.DeserializeInternal<T>(a.member), a.longitude, a.latitude)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, true, false, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.longitude, a.latitude)).ToArray());
 
 		/// <summary>
 		/// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -2333,7 +2332,7 @@ namespace CSRedis {
 		/// <param name="sorting">排序</param>
 		/// <returns></returns>
 		public Task<(T member, double dist, double longitude, double latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
-			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, true, true, false)).Select(a => (this.DeserializeInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray());
+			ExecuteScalarAsync(key, async (c, k) => (await c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, true, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray());
 		#endregion
 	}
 }

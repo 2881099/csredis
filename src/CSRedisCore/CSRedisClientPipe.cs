@@ -98,7 +98,7 @@ namespace CSRedis {
 		/// <param name="key">用于定位分区节点，不含prefix前辍</param>
 		/// <param name="args">参数</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<object> Eval(string script, string key, params object[] args) => PipeCommand(key, (c, k) => c.Value.Eval(script, new[] { k }, args?.Select(z => rds.SerializeInternal(z)).ToArray()));
+		public CSRedisClientPipe<object> Eval(string script, string key, params object[] args) => PipeCommand(key, (c, k) => c.Value.Eval(script, new[] { k }, args?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 执行脚本
 		/// </summary>
@@ -106,7 +106,7 @@ namespace CSRedis {
 		/// <param name="key">用于定位分区节点，不含prefix前辍</param>
 		/// <param name="args">参数</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<object> EvalSHA(string sha1, string key, params object[] args) => PipeCommand(key, (c, k) => c.Value.EvalSHA(sha1, new[] { k }, args?.Select(z => rds.SerializeInternal(z)).ToArray()));
+		public CSRedisClientPipe<object> EvalSHA(string sha1, string key, params object[] args) => PipeCommand(key, (c, k) => c.Value.EvalSHA(sha1, new[] { k }, args?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		#endregion
 
 		#region Pub/Sub
@@ -129,7 +129,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="elements">元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<bool> PfAdd(string key, params object[] elements) => PipeCommand(key, (c, k) => c.Value.PfAdd(k, elements?.Select(z => rds.SerializeInternal(z)).ToArray()));
+		public CSRedisClientPipe<bool> PfAdd(string key, params object[] elements) => PipeCommand(key, (c, k) => c.Value.PfAdd(k, elements?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回给定 HyperLogLog 的基数估算值
 		/// </summary>
@@ -147,7 +147,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<long> ZAdd(string key, params (double, object)[] scoreMembers) {
 			if (scoreMembers == null || scoreMembers.Any() == false) throw new Exception("scoreMembers 参数不可为空");
-			var ms = scoreMembers.Select(a => new Tuple<double, object>(a.Item1, rds.SerializeInternal(a.Item2))).ToArray();
+			var ms = scoreMembers.Select(a => new Tuple<double, object>(a.Item1, rds.SerializeRedisValueInternal(a.Item2))).ToArray();
 			return PipeCommand(key, (c, k) => c.Value.ZAdd(k, ms));
 		}
 		/// <summary>
@@ -214,7 +214,7 @@ namespace CSRedis {
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRange<T>(string key, long start, long stop) =>
-			PipeCommand(key, (c, k) => { c.Value.ZRangeBytes(k, start, stop, false); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+			PipeCommand(key, (c, k) => { c.Value.ZRangeBytes(k, start, stop, false); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 通过索引区间返回有序集合成指定区间内的成员和分数
 		/// </summary>
@@ -234,7 +234,7 @@ namespace CSRedis {
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<(T member, double score)[]> ZRangeWithScores<T>(string key, long start, long stop) =>
-			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesWithScores(k, start, stop); return default((T member, double score)[]); }, obj => rds.DeserializeTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesWithScores(k, start, stop); return default((T member, double score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
 
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
@@ -259,7 +259,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRangeByScore<T>(string key, double min, double max, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员
 		/// </summary>
@@ -283,7 +283,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRangeByScore<T>(string key, string min, string max, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScore(k, min, max, false, offset, count); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
@@ -309,7 +309,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<(T member, double score)[]> ZRangeByScoreWithScores<T>(string key, double min, double max, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count); return default((T, double)[]); }, obj =>
-			rds.DeserializeTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+			rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
 		/// <summary>
 		/// 通过分数返回有序集合指定区间内的成员和分数
 		/// </summary>
@@ -333,7 +333,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<(T member, double score)[]> ZRangeByScoreWithScores<T>(string key, string min, string max, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, count); return default((T, double)[]); }, obj =>
-			rds.DeserializeTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+			rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
 
 		/// <summary>
 		/// 返回有序集合中指定成员的索引
@@ -341,7 +341,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long?> ZRank(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZRank(k, rds.SerializeInternal(member)));
+		public CSRedisClientPipe<long?> ZRank(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZRank(k, rds.SerializeRedisValueInternal(member)));
 		/// <summary>
 		/// 移除有序集合中的一个或多个成员
 		/// </summary>
@@ -350,7 +350,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<long> ZRem(string key, params object[] member) {
 			if (member == null || member.Any() == false) throw new Exception("member 参数不可为空");
-			return PipeCommand(key, (c, k) => c.Value.ZRem(k, member?.Select(z => rds.SerializeInternal(z)).ToArray()));
+			return PipeCommand(key, (c, k) => c.Value.ZRem(k, member?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
 		/// <summary>
 		/// 移除有序集合中给定的排名区间的所有成员
@@ -395,7 +395,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRevRange<T>(string key, long start, long stop) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytes(k, start, stop, false); return default(T[]); }, obj =>
-			 rds.DeserializeArrayInternal<T>((byte[][])obj));
+			 rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
 		/// </summary>
@@ -416,7 +416,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<(T member, double score)[]> ZRevRangeWithScores<T>(string key, long start, long stop) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesWithScores(k, start, stop); return default((T, double)[]); }, obj =>
-			rds.DeserializeTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+			rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
 
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
@@ -441,7 +441,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRevRangeByScore<T>(string key, double max, double min, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员，分数从高到低排序
 		/// </summary>
@@ -465,7 +465,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRevRangeByScore<T>(string key, string max, string min, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScore(k, max, min, false, offset, count); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -491,7 +491,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<(T member, double score)[]> ZRevRangeByScoreWithScores<T>(string key, double max, double min, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count); return default((T member, double score)[]); }, obj =>
-			rds.DeserializeTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+			rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
 		/// <summary>
 		/// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
 		/// </summary>
@@ -516,7 +516,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<(T member, double score)[]> ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? count = null, long offset = 0) =>
 			PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, count); return default((T, double)[]); }, obj =>
-			rds.DeserializeTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+			rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
 
 		/// <summary>
 		/// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
@@ -524,14 +524,14 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long?> ZRevRank(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZRevRank(k, rds.SerializeInternal(member)));
+		public CSRedisClientPipe<long?> ZRevRank(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZRevRank(k, rds.SerializeRedisValueInternal(member)));
 		/// <summary>
 		/// 返回有序集中，成员的分数值
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<double?> ZScore(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZScore(k, rds.SerializeInternal(member)));
+		public CSRedisClientPipe<double?> ZScore(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZScore(k, rds.SerializeRedisValueInternal(member)));
 
 		/// <summary>
 		/// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
@@ -574,7 +574,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<RedisScan<(T member, double score)>> ZScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.ZScanBytes(k, cursor, pattern, count); return default(RedisScan<(T, double)>); }, obj => {
 				var scan = (RedisScan<Tuple<byte[], double>>)obj;
-				return new RedisScan<(T, double)>(scan.Cursor, rds.DeserializeTuple1Internal<T, double>(scan.Items));
+				return new RedisScan<(T, double)>(scan.Cursor, rds.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
 			});
 
 		/// <summary>
@@ -599,7 +599,7 @@ namespace CSRedis {
 		/// <param name="offset">返回条件偏移位置</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> ZRangeByLex<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByLex(k, min, max, offset, count); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+			PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByLex(k, min, max, offset, count); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 
 		/// <summary>
 		/// 当有序集合的所有成员都具有相同的分值时，有序集合的元素会根据成员的字典序来进行排序，这个命令可以返回给定的有序集合键 key 中，值介于 min 和 max 之间的成员。
@@ -630,7 +630,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<long> SAdd(string key, params object[] members) {
 			if (members == null || members.Any() == false) throw new Exception("members 参数不可为空");
-			return PipeCommand(key, (c, k) => c.Value.SAdd(k, members?.Select(z => rds.SerializeInternal(z)).ToArray()));
+			return PipeCommand(key, (c, k) => c.Value.SAdd(k, members?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
 		/// <summary>
 		/// 获取集合的成员数
@@ -660,7 +660,7 @@ namespace CSRedis {
 			if (Nodes.Count > 1) throw new Exception("SDiff<T> 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => { c.Value.SDiffBytes(keys.Select(z => prefix + z).ToArray()); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		}
 		/// <summary>
 		/// 返回给定所有集合的差集并存储在 destination 中
@@ -697,7 +697,7 @@ namespace CSRedis {
 			if (Nodes.Count > 1) throw new Exception("SInter<T> 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => { c.Value.SInterBytes(keys.Select(z => prefix + z).ToArray()); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		}
 		/// <summary>
 		/// 返回给定所有集合的交集并存储在 destination 中
@@ -718,7 +718,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<bool> SIsMember(string key, object member) => PipeCommand(key, (c, k) => c.Value.SIsMember(k, rds.SerializeInternal(member)));
+		public CSRedisClientPipe<bool> SIsMember(string key, object member) => PipeCommand(key, (c, k) => c.Value.SIsMember(k, rds.SerializeRedisValueInternal(member)));
 		/// <summary>
 		/// 返回集合中的所有成员
 		/// </summary>
@@ -731,7 +731,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T[]> SMembers<T>(string key) => PipeCommand(key, (c, k) => { c.Value.SMembersBytes(k); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+		public CSRedisClientPipe<T[]> SMembers<T>(string key) => PipeCommand(key, (c, k) => { c.Value.SMembersBytes(k); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 将 member 元素从 source 集合移动到 destination 集合
 		/// </summary>
@@ -741,7 +741,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<bool> SMove(string source, string destination, object member) {
 			if (Nodes.Count > 1) throw new Exception("SMove 管道命令，在分区模式下不可用");
-			return PipeCommand(source, (c, k) => c.Value.SMove(k, (c.Pool as RedisClientPool)?.Prefix + destination, rds.SerializeInternal(member)));
+			return PipeCommand(source, (c, k) => c.Value.SMove(k, (c.Pool as RedisClientPool)?.Prefix + destination, rds.SerializeRedisValueInternal(member)));
 		}
 		/// <summary>
 		/// 移除并返回集合中的一个随机元素
@@ -755,7 +755,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> SPop<T>(string key) => PipeCommand(key, (c, k) => { c.Value.SPopBytes(k); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> SPop<T>(string key) => PipeCommand(key, (c, k) => { c.Value.SPopBytes(k); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 返回集合中的一个随机元素
 		/// </summary>
@@ -768,7 +768,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> SRandMember<T>(string key) => PipeCommand(key, (c, k) => { c.Value.SRandMemberBytes(k); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> SRandMember<T>(string key) => PipeCommand(key, (c, k) => { c.Value.SRandMemberBytes(k); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 返回集合中一个或多个随机数的元素
 		/// </summary>
@@ -783,7 +783,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="count">返回个数</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T[]> SRandMembers<T>(string key, int count = 1) => PipeCommand(key, (c, k) => { c.Value.SRandMembersBytes(k, count); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+		public CSRedisClientPipe<T[]> SRandMembers<T>(string key, int count = 1) => PipeCommand(key, (c, k) => { c.Value.SRandMembersBytes(k, count); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 移除集合中一个或多个成员
 		/// </summary>
@@ -792,7 +792,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<long> SRem(string key, params object[] members) {
 			if (members == null || members.Any() == false) throw new Exception("members 参数不可为空");
-			return PipeCommand(key, (c, k) => c.Value.SRem(k, members?.Select(z => rds.SerializeInternal(z)).ToArray()));
+			return PipeCommand(key, (c, k) => c.Value.SRem(k, members?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
 		/// <summary>
 		/// 返回所有给定集合的并集
@@ -816,7 +816,7 @@ namespace CSRedis {
 			if (Nodes.Count > 1) throw new Exception("SUnion<T> 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => { c.Value.SUnionBytes(keys.Select(z => prefix + z).ToArray()); return default(T[]); }, obj =>
-			rds.DeserializeArrayInternal<T>((byte[][])obj));
+			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		}
 		/// <summary>
 		/// 所有给定集合的并集存储在 destination 集合中
@@ -853,7 +853,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<RedisScan<T>> SScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.SScanBytes(k, cursor, pattern, count); return default(RedisScan<T>); }, obj => {
 				var scan = (RedisScan<byte[]>)obj;
-				return new RedisScan<T>(scan.Cursor, rds.DeserializeArrayInternal<T>(scan.Items));
+				return new RedisScan<T>(scan.Cursor, rds.DeserializeRedisValueArrayInternal<T>(scan.Items));
 			});
 		#endregion
 
@@ -872,7 +872,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="index">索引</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> LIndex<T>(string key, long index) => PipeCommand(key, (c, k) => { c.Value.LIndexBytes(k, index); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> LIndex<T>(string key, long index) => PipeCommand(key, (c, k) => { c.Value.LIndexBytes(k, index); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 在列表中的元素前面插入元素
 		/// </summary>
@@ -880,7 +880,7 @@ namespace CSRedis {
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> LInsertBefore(string key, string pivot, object value) => PipeCommand(key, (c, k) => c.Value.LInsert(k, RedisInsert.Before, pivot, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> LInsertBefore(string key, string pivot, object value) => PipeCommand(key, (c, k) => c.Value.LInsert(k, RedisInsert.Before, pivot, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 在列表中的元素后面插入元素
 		/// </summary>
@@ -888,7 +888,7 @@ namespace CSRedis {
 		/// <param name="pivot">列表的元素</param>
 		/// <param name="value">新元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> LInsertAfter(string key, string pivot, object value) => PipeCommand(key, (c, k) => c.Value.LInsert(k, RedisInsert.After, pivot, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> LInsertAfter(string key, string pivot, object value) => PipeCommand(key, (c, k) => c.Value.LInsert(k, RedisInsert.After, pivot, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 获取列表长度
 		/// </summary>
@@ -907,7 +907,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> LPop<T>(string key) => PipeCommand(key, (c, k) => { c.Value.LPopBytes(k); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> LPop<T>(string key) => PipeCommand(key, (c, k) => { c.Value.LPopBytes(k); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 将一个或多个值插入到列表头部
 		/// </summary>
@@ -916,7 +916,7 @@ namespace CSRedis {
 		/// <returns>执行 LPUSH 命令后，列表的长度</returns>
 		public CSRedisClientPipe<long> LPush(string key, params object[] value) {
 			if (value == null || value.Any() == false) throw new Exception("value 参数不可为空"); ;
-			return PipeCommand(key, (c, k) => c.Value.LPush(k, value?.Select(z => rds.SerializeInternal(z)).ToArray()));
+			return PipeCommand(key, (c, k) => c.Value.LPush(k, value?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
 		/// <summary>
 		/// 将一个值插入到已存在的列表头部
@@ -924,7 +924,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns>执行 LPUSHX 命令后，列表的长度。</returns>
-		public CSRedisClientPipe<long> LPushX(string key, object value) => PipeCommand(key, (c, k) => c.Value.LPushX(k, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> LPushX(string key, object value) => PipeCommand(key, (c, k) => c.Value.LPushX(k, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 获取列表指定范围内的元素
 		/// </summary>
@@ -941,7 +941,7 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T[]> LRange<T>(string key, long start, long stop) => PipeCommand(key, (c, k) => { c.Value.LRangeBytes(k, start, stop); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+		public CSRedisClientPipe<T[]> LRange<T>(string key, long start, long stop) => PipeCommand(key, (c, k) => { c.Value.LRangeBytes(k, start, stop); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 根据参数 count 的值，移除列表中与参数 value 相等的元素
 		/// </summary>
@@ -949,7 +949,7 @@ namespace CSRedis {
 		/// <param name="count">移除的数量，大于0时从表头删除数量count，小于0时从表尾删除数量-count，等于0移除所有</param>
 		/// <param name="value">元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> LRem(string key, long count, object value) => PipeCommand(key, (c, k) => c.Value.LRem(k, count, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> LRem(string key, long count, object value) => PipeCommand(key, (c, k) => c.Value.LRem(k, count, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 通过索引设置列表元素的值
 		/// </summary>
@@ -958,7 +958,7 @@ namespace CSRedis {
 		/// <param name="value">值</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<bool> LSet(string key, long index, object value) => PipeCommand(key, (c, k) => {
-			c.Value.LSet(k, index, rds.SerializeInternal(value));
+			c.Value.LSet(k, index, rds.SerializeRedisValueInternal(value));
 			return false;
 		}, ret => ret?.ToString() == "OK");
 		/// <summary>
@@ -984,7 +984,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> RPop<T>(string key) => PipeCommand(key, (c, k) => { c.Value.RPopBytes(k); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> RPop<T>(string key) => PipeCommand(key, (c, k) => { c.Value.RPopBytes(k); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 将列表 source 中的最后一个元素(尾元素)弹出，并返回给客户端。
 		/// 将 source 弹出的元素插入到列表 destination ，作为 destination 列表的的头元素。
@@ -1007,7 +1007,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<T> RPopLPush<T>(string source, string destination) {
 			if (Nodes.Count > 1) throw new Exception("RPopLPush<T> 管道命令，在分区模式下不可用");
 			return PipeCommand(source, (c, k) => { c.Value.RPopBytesLPush(k, (c.Pool as RedisClientPool)?.Prefix + destination); return default(T); }, obj =>
-				rds.DeserializeInternal<T>((byte[])obj));
+				rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		}
 		/// <summary>
 		/// 在列表中添加一个或多个值
@@ -1017,7 +1017,7 @@ namespace CSRedis {
 		/// <returns>执行 RPUSH 命令后，列表的长度</returns>
 		public CSRedisClientPipe<long> RPush(string key, params object[] value) {
 			if (value == null || value.Any() == false) throw new Exception("value 参数不可为空"); ;
-			return PipeCommand(key, (c, k) => c.Value.RPush(k, value?.Select(z => rds.SerializeInternal(z)).ToArray()));
+			return PipeCommand(key, (c, k) => c.Value.RPush(k, value?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
 		/// <summary>
 		/// 为已存在的列表添加值
@@ -1025,7 +1025,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSHX 命令后，列表的长度</returns>
-		public CSRedisClientPipe<long> RPushX(string key, object value) => PipeCommand(key, (c, k) => c.Value.RPushX(k, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> RPushX(string key, object value) => PipeCommand(key, (c, k) => c.Value.RPushX(k, rds.SerializeRedisValueInternal(value)));
 		#endregion
 
 		#region Hash
@@ -1060,7 +1060,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="field">字段</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> HGet<T>(string key, string field) => PipeCommand(key, (c, k) => { c.Value.HGetBytes(k, field); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> HGet<T>(string key, string field) => PipeCommand(key, (c, k) => { c.Value.HGetBytes(k, field); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 获取在哈希表中指定 key 的所有字段和值
 		/// </summary>
@@ -1074,7 +1074,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<Dictionary<string, T>> HGetAll<T>(string key) => PipeCommand(key, (c, k) => { c.Value.HGetAllBytes(k); return default(Dictionary<string, T>); }, obj =>
-			rds.DeserializeDictionaryInternal<string, T>((Dictionary<string, byte[]>)obj));
+			rds.DeserializeRedisValueDictionaryInternal<string, T>((Dictionary<string, byte[]>)obj));
 		/// <summary>
 		/// 为哈希表 key 中的指定字段的整数值加上增量 increment
 		/// </summary>
@@ -1122,7 +1122,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> HMGet<T>(string key, params string[] fields) {
 			if (fields == null || fields.Any() == false) throw new Exception("fields 参数不可为空");
-			return PipeCommand(key, (c, k) => { c.Value.HMGetBytes(k, fields); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+			return PipeCommand(key, (c, k) => { c.Value.HMGetBytes(k, fields); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		}
 		/// <summary>
 		/// 同时将多个 field-value (域-值)对设置到哈希表 key 中
@@ -1139,7 +1139,7 @@ namespace CSRedis {
 				var v = keyValues[a + 1];
 				if (string.IsNullOrEmpty(k)) throw new Exception("keyValues 参数是键值对，并且 key 不可为空");
 				parms.Add(k);
-				parms.Add(rds.SerializeInternal(v));
+				parms.Add(rds.SerializeRedisValueInternal(v));
 			}
 			return PipeCommand(key, (c, k) => { c.Value.HMSet(k, parms.ToArray()); return false; }, obj => obj?.ToString() == "OK");
 		}
@@ -1151,7 +1151,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">值</param>
 		/// <returns>如果字段是哈希表中的一个新建字段，并且值设置成功，返回true。如果哈希表中域字段已经存在且旧值已被新值覆盖，返回false。</returns>
-		public CSRedisClientPipe<bool> HSet(string key, string field, object value) => PipeCommand(key, (c, k) => c.Value.HSet(k, field, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<bool> HSet(string key, string field, object value) => PipeCommand(key, (c, k) => c.Value.HSet(k, field, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 只有在字段 field 不存在时，设置哈希表字段的值
 		/// </summary>
@@ -1159,7 +1159,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">值(string 或 byte[])</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<bool> HSetNx(string key, string field, object value) => PipeCommand(key, (c, k) => c.Value.HSetNx(k, field, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<bool> HSetNx(string key, string field, object value) => PipeCommand(key, (c, k) => c.Value.HSetNx(k, field, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 获取哈希表中所有值
 		/// </summary>
@@ -1172,7 +1172,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T[]> HVals<T>(string key) => PipeCommand(key, (c, k) => { c.Value.HValsBytes(k); return default(T[]); }, obj => rds.DeserializeArrayInternal<T>((byte[][])obj));
+		public CSRedisClientPipe<T[]> HVals<T>(string key) => PipeCommand(key, (c, k) => { c.Value.HValsBytes(k); return default(T[]); }, obj => rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
 		/// <summary>
 		/// 迭代哈希表中的键值对
 		/// </summary>
@@ -1198,7 +1198,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<RedisScan<(string field, T value)>> HScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.HScanBytes(k, cursor, pattern, count); return default(RedisScan<(string, T)>); }, obj => {
 				var scan = (RedisScan<Tuple<string, byte[]>>)obj;
-				return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, rds.DeserializeInternal<T>(z.Item2))).ToArray());
+				return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, rds.DeserializeRedisValueInternal<T>(z.Item2))).ToArray());
 			});
 		#endregion
 
@@ -1209,7 +1209,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字符串</param>
 		/// <returns>追加指定值之后， key 中字符串的长度</returns>
-		public CSRedisClientPipe<long> Append(string key, object value) => PipeCommand(key, (c, k) => c.Value.Append(k, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> Append(string key, object value) => PipeCommand(key, (c, k) => c.Value.Append(k, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 计算给定位置被设置为 1 的比特位的数量
 		/// </summary>
@@ -1253,7 +1253,7 @@ namespace CSRedis {
 		/// <typeparam name="T">byte[] 或其他类型</typeparam>
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> Get<T>(string key) => PipeCommand(key, (c, k) => { c.Value.GetBytes(k); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> Get<T>(string key) => PipeCommand(key, (c, k) => { c.Value.GetBytes(k); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 对 key 所储存的值，获取指定偏移量上的位(bit)
 		/// </summary>
@@ -1277,14 +1277,14 @@ namespace CSRedis {
 		/// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <param name="end">结束位置，0表示第一个元素，-1表示最后一个元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> GetRange<T>(string key, long start, long end) => PipeCommand(key, (c, k) => { c.Value.GetRangeBytes(k, start, end); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> GetRange<T>(string key, long start, long end) => PipeCommand(key, (c, k) => { c.Value.GetRangeBytes(k, start, end); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 将给定 key 的值设为 value ，并返回 key 的旧值(old value)
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">字符串</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<string> GetSet(string key, object value) => PipeCommand(key, (c, k) => c.Value.GetSet(k, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<string> GetSet(string key, object value) => PipeCommand(key, (c, k) => c.Value.GetSet(k, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 将给定 key 的值设为 value ，并返回 key 的旧值(old value)
 		/// </summary>
@@ -1292,7 +1292,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<T> GetSet<T>(string key, object value) => PipeCommand(key, (c, k) => { c.Value.GetSetBytes(k, rds.SerializeInternal(value)); return default(T); }, obj => rds.DeserializeInternal<T>((byte[])obj));
+		public CSRedisClientPipe<T> GetSet<T>(string key, object value) => PipeCommand(key, (c, k) => { c.Value.GetSetBytes(k, rds.SerializeRedisValueInternal(value)); return default(T); }, obj => rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		/// <summary>
 		/// 将 key 所储存的值加上给定的增量值（increment）
 		/// </summary>
@@ -1327,7 +1327,7 @@ namespace CSRedis {
 		/// <param name="exists">Nx, Xx</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<bool> Set(string key, object value, int expireSeconds = -1, RedisExistence? exists = null) {
-			object redisValule = rds.SerializeInternal(value);
+			object redisValule = rds.SerializeRedisValueInternal(value);
 			if (expireSeconds <= 0 && exists == null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule); return false; }, obj => obj?.ToString() == "OK");
 			if (expireSeconds <= 0 && exists != null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, null, exists); return false; }, obj => obj?.ToString() == "OK");
 			if (expireSeconds > 0 && exists == null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, expireSeconds, null); return false; }, obj => obj?.ToString() == "OK");
@@ -1348,7 +1348,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">值</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<bool> SetNx(string key, object value) => PipeCommand(key, (c, k) => c.Value.SetNx(k, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<bool> SetNx(string key, object value) => PipeCommand(key, (c, k) => c.Value.SetNx(k, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 用 value 参数覆写给定 key 所储存的字符串值，从偏移量 offset 开始
 		/// </summary>
@@ -1356,7 +1356,7 @@ namespace CSRedis {
 		/// <param name="offset">偏移量</param>
 		/// <param name="value">值</param>
 		/// <returns>被修改后的字符串长度</returns>
-		public CSRedisClientPipe<long> SetRange(string key, uint offset, object value) => PipeCommand(key, (c, k) => c.Value.SetRange(k, offset, rds.SerializeInternal(value)));
+		public CSRedisClientPipe<long> SetRange(string key, uint offset, object value) => PipeCommand(key, (c, k) => c.Value.SetRange(k, offset, rds.SerializeRedisValueInternal(value)));
 		/// <summary>
 		/// 返回 key 所储存的字符串值的长度
 		/// </summary>
@@ -1594,7 +1594,7 @@ namespace CSRedis {
 				c.Value.ScanBytes(cursor, pattern, count); return default(RedisScan<T>);
 			}, obj => {
 				var scan = (RedisScan<byte[]>)obj;
-				return new RedisScan<T>(scan.Cursor, rds.DeserializeArrayInternal<T>(scan.Items));
+				return new RedisScan<T>(scan.Cursor, rds.DeserializeRedisValueArrayInternal<T>(scan.Items));
 			});
 		}
 		#endregion

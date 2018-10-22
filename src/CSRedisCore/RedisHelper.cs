@@ -11,10 +11,7 @@ public abstract partial class RedisHelper {
 	private static CSRedisClient _instance;
 	/// <summary>
 	/// CSRedisClient 静态实例，使用前请初始化
-	/// RedisHelper.Initialization(
-	///		csredis: new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"), 
-	///		serialize: value => Newtonsoft.Json.JsonConvert.SerializeObject(value), 
-	///		deserialize: (data, type) => Newtonsoft.Json.JsonConvert.DeserializeObject(data, type))
+	/// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))
 	/// </summary>
 	public static CSRedisClient Instance {
 		get {
@@ -26,10 +23,7 @@ public abstract partial class RedisHelper {
 
 	/// <summary>
 	/// 初始化csredis静态访问类
-	/// RedisHelper.Initialization(new CSRedis.CSRedisClient(
-	///		connectionString: \"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"), 
-	///		serialize: value => Newtonsoft.Json.JsonConvert.SerializeObject(value), 
-	///		deserialize: (data, type) => Newtonsoft.Json.JsonConvert.DeserializeObject(data, type)))
+	/// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))
 	/// </summary>
 	/// <param name="csredis"></param>
 	public static void Initialization(CSRedisClient csredis) {
