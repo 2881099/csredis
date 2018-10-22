@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSRedis {
-	public partial class CSRedisClient {
+	public partial class CSRedisClient : IDisposable {
 		/// <summary>
 		/// 按 key 规则分区存储
 		/// </summary>
@@ -230,6 +230,9 @@ namespace CSRedis {
 				}
 			}
 			this.NodesServerManager = new NodesServerManagerProvider(this);
+		}
+		public void Dispose() {
+			foreach (var pool in this.Nodes.Values) pool.Dispose();
 		}
 
 		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 1) {

@@ -15,7 +15,7 @@ namespace CSRedis {
 			Exception ex = null;
 			var redirect = ParseClusterRedirect(null);
 			try {
-				obj = pool.Get();
+				obj = await pool.GetAsync();
 				try {
 					return await handerAsync(obj);
 				} catch (RedisException ex3) {
