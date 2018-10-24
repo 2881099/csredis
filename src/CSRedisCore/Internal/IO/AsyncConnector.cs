@@ -9,41 +9,41 @@ using System.Threading.Tasks;
 
 namespace CSRedis.Internal.IO
 {
-    class AsyncConnector : IDisposable
-    {
-        readonly SocketAsyncEventArgs _asyncConnectArgs;
-        readonly SocketAsyncPool _asyncTransferPool;
-        readonly ConcurrentQueue<IRedisAsyncCommandToken> _asyncReadQueue;
-        readonly ConcurrentQueue<IRedisAsyncCommandToken> _asyncWriteQueue;
-        readonly object _readLock;
-        readonly object _writeLock;
-        readonly int _concurrency;
-        readonly int _bufferSize;
-        readonly IRedisSocket _redisSocket;
-        readonly RedisIO _io;
+	class AsyncConnector : IDisposable
+	{
+		readonly SocketAsyncEventArgs _asyncConnectArgs;
+		readonly SocketAsyncPool _asyncTransferPool;
+		readonly ConcurrentQueue<IRedisAsyncCommandToken> _asyncReadQueue;
+		readonly ConcurrentQueue<IRedisAsyncCommandToken> _asyncWriteQueue;
+		readonly object _readLock;
+		readonly object _writeLock;
+		readonly int _concurrency;
+		readonly int _bufferSize;
+		readonly IRedisSocket _redisSocket;
+		readonly RedisIO _io;
 
-        bool _asyncConnectionStarted;
+		bool _asyncConnectionStarted;
 		readonly ConcurrentQueue<TaskCompletionSource<bool>> _connectionTaskSource;
 
-        public event EventHandler Connected;
+		public event EventHandler Connected;
 
 
-        public AsyncConnector(IRedisSocket socket, EndPoint endpoint, RedisIO io, int concurrency, int bufferSize)
-        {
-            _redisSocket = socket;
-            _io = io;
-            _concurrency = concurrency;
-            _bufferSize = bufferSize;
-            _asyncTransferPool = new SocketAsyncPool(concurrency, bufferSize);
-            _asyncTransferPool.Completed += OnSocketCompleted;
-            _asyncReadQueue = new ConcurrentQueue<IRedisAsyncCommandToken>();
-            _asyncWriteQueue = new ConcurrentQueue<IRedisAsyncCommandToken>();
-            _readLock = new object();
-            _writeLock = new object();
-            _asyncConnectArgs = new SocketAsyncEventArgs { RemoteEndPoint = endpoint };
-            _asyncConnectArgs.Completed += OnSocketCompleted;
+		public AsyncConnector(IRedisSocket socket, EndPoint endpoint, RedisIO io, int concurrency, int bufferSize)
+		{
+			_redisSocket = socket;
+			_io = io;
+			_concurrency = concurrency;
+			_bufferSize = bufferSize;
+			_asyncTransferPool = new SocketAsyncPool(concurrency, bufferSize);
+			_asyncTransferPool.Completed += OnSocketCompleted;
+			_asyncReadQueue = new ConcurrentQueue<IRedisAsyncCommandToken>();
+			_asyncWriteQueue = new ConcurrentQueue<IRedisAsyncCommandToken>();
+			_readLock = new object();
+			_writeLock = new object();
+			_asyncConnectArgs = new SocketAsyncEventArgs { RemoteEndPoint = endpoint };
+			_asyncConnectArgs.Completed += OnSocketCompleted;
 			_connectionTaskSource = new ConcurrentQueue<TaskCompletionSource<bool>>();
-        }
+		}
 
 		void SetConnectionTaskSourceResult(bool value, Exception exception, bool isCancel) {
 			while(_connectionTaskSource.TryDequeue(out var tcs)) {
@@ -78,19 +78,19 @@ namespace CSRedis.Internal.IO
 			return tcs.Task;
 		}
 
-        public Task<T> CallAsync<T>(RedisCommand<T> command)
-        {
+		public Task<T> CallAsync<T>(RedisCommand<T> command)
+		{
 			var token = new RedisAsyncCommandToken<T>(command);
-            _asyncWriteQueue.Enqueue(token);
+			_asyncWriteQueue.Enqueue(token);
 			ConnectAsync().ContinueWith(CallAsyncDeferred);
-            return token.TaskSource.Task;
-        }
+			return token.TaskSource.Task;
+		}
 
-        void CallAsyncDeferred(Task t)
-        {
-            lock (_writeLock)
+		void CallAsyncDeferred(Task t)
+		{
+			lock (_writeLock)
             {
-                IRedisAsyncCommandToken token;
+				IRedisAsyncCommandToken token;
 				if (!_asyncWriteQueue.TryDequeue(out token))
 					throw new Exception();
 
@@ -112,75 +112,179 @@ namespace CSRedis.Internal.IO
 					OnSocketSent(args, e);
 					throw e;
 				}
-                args.SetBuffer(args.Offset, bytes);
+				args.SetBuffer(args.Offset, bytes);
 
 				if (!_redisSocket.SendAsync(args))
 					OnSocketSent(args);
-            }
-        }
+        	}
+		}
 
-        void OnSocketCompleted(object sender, SocketAsyncEventArgs e)
-        {
-            switch (e.LastOperation)
-            {
-                case SocketAsyncOperation.Connect:
+		void OnSocketCompleted(object sender, SocketAsyncEventArgs e)
+		{
+			switch (e.LastOperation)
+			{
+				case SocketAsyncOperation.Connect:
 					try {
 						OnSocketConnected(e);
 					} catch (Exception socketConnectedException) {
 						this.SetConnectionTaskSourceResult(false, socketConnectedException, false);
 					}
-                    break;
-                case SocketAsyncOperation.Send:
-                    OnSocketSent(e);
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
+					break;
+				case SocketAsyncOperation.Send:
+					OnSocketSent(e);
+					break;
+				default:
+					throw new InvalidOperationException();
+			}
+		}
 
-        void OnSocketConnected(SocketAsyncEventArgs args)
-        {
-            if (Connected != null)
-                Connected(this, new EventArgs());
+		void OnSocketConnected(SocketAsyncEventArgs args)
+		{
+			if (Connected != null)
+				Connected(this, new EventArgs());
 
 			this.SetConnectionTaskSourceResult(_redisSocket.Connected, null, false);
 			_asyncConnectionStarted = false;
 		}
 
-        void OnSocketSent(SocketAsyncEventArgs args, Exception ex = null)
-        {
-            _asyncTransferPool.Release(args);
+		void OnSocketSent(SocketAsyncEventArgs args, Exception ex = null)
+		{
+			_asyncTransferPool.Release(args);
 
-            IRedisAsyncCommandToken token;
-            lock (_readLock)
-            {
-                if (_asyncReadQueue.TryDequeue(out token))
-                {
-                    try
-                    {
-						if (ex != null)
-							token.SetException(ex);
-                        else
+			IRedisAsyncCommandToken token;
+			if (_asyncReadQueue.TryDequeue(out token))
+			{
+				try
+				{
+					if (ex != null)
+						token.SetException(ex);
+					else
+						lock (_readLock)
 							token.SetResult(_io.Reader);
-                    }
-                    /*catch (IOException) // TODO implement async retry
-                    {
-                        if (ReconnectAttempts == 0)
-                            throw;
-                        Reconnect();
-                        _asyncWriteQueue.Enqueue(token);
-                        ConnectAsync().ContinueWith(CallAsyncDeferred);
-                    }*/
-                    catch (Exception e)
-                    {
-                        token.SetException(e);
-                    }
-                }
-            }
-        }
+				}
+				/*catch (IOException) // TODO implement async retry
+				{
+					if (ReconnectAttempts == 0)
+						throw;
+					Reconnect();
+					_asyncWriteQueue.Enqueue(token);
+					ConnectAsync().ContinueWith(CallAsyncDeferred);
+				}*/
+				catch (Exception e)
+				{
+					token.SetException(e);
+				}
+			}
+		}
 
-        public void Dispose()
-        {
+		//void OnSocketReceive(SocketAsyncEventArgs e, MemoryStream ms = null) {
+		//	if (e.SocketError == SocketError.Success) {
+		//		// 检查远程主机是否关闭连接
+		//		if (e.BytesTransferred > 0) {
+		//			var s = (Socket)e.UserToken;
+
+		//			if (s.Available == 0) {
+		//				byte[] data = new byte[e.BytesTransferred];
+		//				Array.Copy(e.Buffer, e.Offset, data, 0, data.Length);//从e.Buffer块中复制数据出来，保证它可重用
+
+		//				Exception ex = null;
+		//				object result = null;
+		//				bool isended = false;
+		//				try {
+		//					if (ms == null) {
+		//						if (data[0] == '+') {
+		//							for (var a = 1; a < data.Length; a++)
+		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+		//									result = a == 1 ? "" : _io.Encoding.GetString(data, 1, a - 1);
+		//									isended = true;
+		//									break;
+		//								}
+		//						}
+		//						if (data[0] == '-') {
+		//							for (var a = 1; a < data.Length; a++)
+		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n')
+		//									throw new CSRedis.RedisException(a == 1 ? "" : _io.Encoding.GetString(data, 1, a - 1));
+		//						}
+		//						if (data[0] == ':') {
+		//							for (var a = 2; a < data.Length; a++)
+		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+		//									result = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
+		//									isended = true;
+		//									break;
+		//								}
+		//						}
+		//						if (data[0] == '$') {
+		//							long startIndex = 0;
+		//							long len = -999;
+		//							for (var a = 2; a < data.Length; a++)
+		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+		//									if (len > 0) {
+		//										byte[] dest = new byte[len];
+		//										Array.Copy(data, startIndex, dest, 0, len);
+		//										result = dest;
+		//										break;
+		//									}
+		//									len = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
+		//									startIndex = a + 1;
+		//									if (len < 0) {
+		//										result = null;
+		//										isended = true;
+		//										break;
+		//									}
+		//									if (len == 0) {
+		//										result = "";
+		//										isended = true;
+		//										break;
+		//									}
+		//								}
+		//						}
+		//						//if (data[0] == '*') {
+		//						//	long startIndex = 0;
+		//						//	long len = -999;
+		//						//	for (var a = 2; a < data.Length; a++)
+		//						//		if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+		//						//			if (len > 0) {
+		//						//				byte[] dest = new byte[len];
+		//						//				Array.Copy(data, startIndex, dest, 0, len);
+		//						//				result = dest;
+		//						//				break;
+		//						//			}
+		//						//			len = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
+		//						//			startIndex = a + 1;
+		//						//			if (len < 0) {
+		//						//				result = null;
+		//						//				isended = true;
+		//						//				break;
+		//						//			}
+		//						//			if (len == 0) {
+		//						//				result = "";
+		//						//				isended = true;
+		//						//				break;
+		//						//			}
+		//						//		}
+		//						//}
+		//					}
+		//				} catch (Exception ex2) {
+		//					ex = ex2;
+		//				} finally {
+
+		//				}
+		//			}
+
+		//			//ms.Write(data, 0, data.Length);
+
+
+		//			//为接收下一段数据，投递接收请求，这个函数有可能同步完成，这时返回false，并且不会引发SocketAsyncEventArgs.Completed事件
+		//			if (!s.ReceiveAsync(e)) {
+		//				//同步接收时处理接收完成事件
+		//				OnSocketReceive(e, ms);
+		//			}
+		//		}
+		//	}
+		//}
+
+		public void Dispose()
+		{
 			while (_asyncReadQueue.TryDequeue(out var token))
 				try { token.SetException(new Exception("Error: Disposing...")); } catch { }
 
@@ -189,8 +293,8 @@ namespace CSRedis.Internal.IO
 
 			this.SetConnectionTaskSourceResult(false, null, true);
 
-            _asyncTransferPool.Dispose();
-            _asyncConnectArgs.Dispose();
-        }
-    }
+			_asyncTransferPool.Dispose();
+			_asyncConnectArgs.Dispose();
+		}
+	}
 }

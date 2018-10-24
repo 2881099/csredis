@@ -11,8 +11,8 @@ namespace CSRedis.Internal.IO
     {
         Task Task { get; }
         RedisCommand Command { get; }
-        void SetResult(RedisReader reader);
-        void SetException(Exception e);
+		void SetResult(RedisReader reader);
+		void SetException(Exception e);
     }
 
     class RedisAsyncCommandToken<T> : IRedisAsyncCommandToken
@@ -32,10 +32,14 @@ namespace CSRedis.Internal.IO
 
         public void SetResult(RedisReader reader)
         {
+			if (reader == null) {
+				_tcs.SetResult(default(T));
+				return;
+			}
             _tcs.SetResult(_command.Parse(reader));
         }
 
-        public void SetException(Exception e)
+		public void SetException(Exception e)
         {
             _tcs.SetException(e);
         }

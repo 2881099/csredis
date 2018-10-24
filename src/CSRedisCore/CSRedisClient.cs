@@ -21,7 +21,7 @@ namespace CSRedis {
 		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
 		internal Func<string, string> NodeRuleRaw;
 		internal Func<string, string> NodeRuleExternal;
-		private ConcurrentDictionary<string, bool> NodesLock = new ConcurrentDictionary<string, bool>();
+		private object NodesLock = new object();
 		public ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
 
 		private int AutoStartPipeCommitCount { get => Nodes.First().Value.AutoStartPipeCommitCount; set => Nodes.Values.ToList().ForEach(p => p.AutoStartPipeCommitCount = value); }
@@ -277,16 +277,18 @@ namespace CSRedis {
 		RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool) {
 			var nodeKey = $"{redirect.endpoint}/{pool._policy._database}";
 			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
-				if (NodesLock.TryAdd(nodeKey, true)) {
-					var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
-					movedPool = new RedisClientPool("", connectionString, client => { }, false);
-					if (this.TryAddNode(nodeKey, movedPool) == false) {
-						movedPool.Dispose();
-						movedPool = null;
+				lock (NodesLock) {
+					if (Nodes.TryGetValue(nodeKey, out movedPool) == false) {
+						var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
+						movedPool = new RedisClientPool("", connectionString, client => { }, false);
+						if (this.TryAddNode(nodeKey, movedPool) == false) {
+							movedPool.Dispose();
+							movedPool = null;
+						}
 					}
 				}
 				if (movedPool == null)
-					throw new Exception($"{(redirect.isMoved ? "MOVED": "ASK")} {redirect.slot} {redirect.endpoint}");
+					throw new Exception($"{(redirect.isMoved ? "MOVED" : "ASK")} {redirect.slot} {redirect.endpoint}");
 			}
 			// moved 永久定向，ask 临时性一次定向
 			if (redirect.isMoved && NodesKey.TryGetValue(nodeKey, out var nodeIndex2)) {

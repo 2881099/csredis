@@ -13,8 +13,9 @@ namespace CSRedis {
 		private CSRedisClient rds;
 		private ConcurrentDictionary<string, RedisClientPool> Nodes => rds.Nodes;
 		private Func<string, string> NodeRuleRaw => rds.NodeRuleRaw;
-		private Dictionary<string, (List<int> indexes, Object<RedisClient> conn)> Conns = new Dictionary<string, (List<int> indexes, Object<RedisClient> conn)>();
+		private ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> Conns = new ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)>();
 		private Queue<Func<object, object>> Parsers = new Queue<Func<object, object>>();
+		private static object ConnsLock = new object();
 		/// <summary>
 		/// 执行命令数量
 		/// </summary>
@@ -23,7 +24,7 @@ namespace CSRedis {
 		public CSRedisClientPipe(CSRedisClient csredis) {
 			rds = csredis;
 		}
-		private CSRedisClientPipe(CSRedisClient csredis, Dictionary<string, (List<int> indexes, Object<RedisClient> conn)> conns, Queue<Func<object, object>> parsers) {
+		private CSRedisClientPipe(CSRedisClient csredis, ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> conns, Queue<Func<object, object>> parsers) {
 			this.rds = csredis;
 			this.Conns = conns;
 			this.Parsers = parsers;
@@ -37,10 +38,10 @@ namespace CSRedis {
 			var ret = new object[Parsers.Count];
 			Exception ex = null;
 			try {
-				foreach (var conn in Conns) {
-					object[] tmp = tmp = conn.Value.conn.Value.EndPipe();
+				foreach (var conn in Conns.Values) {
+					object[] tmp = tmp = conn.conn.Value.EndPipe();
 					for (var a = 0; a < tmp.Length; a++) {
-						var retIdx = conn.Value.indexes[a];
+						var retIdx = conn.indexes[a];
 						ret[retIdx] = tmp[a];
 					}
 				}
@@ -48,8 +49,8 @@ namespace CSRedis {
 				ex = ex2;
 				throw ex;
 			} finally {
-				foreach (var conn in Conns)
-					(conn.Value.conn.Pool as RedisClientPool).Return(conn.Value.conn, ex);
+				foreach (var conn in Conns.Values)
+					(conn.conn.Pool as RedisClientPool).Return(conn.conn, ex);
 			}
 			for (var b = 0; b < ret.Length; b++) {
 				var parse = Parsers.Dequeue();
@@ -70,20 +71,31 @@ namespace CSRedis {
 		private CSRedisClientPipe<TReturn> PipeCommand<TReturn>(string key, Func<Object<RedisClient>, string, TReturn> handle, Func<object, object> parser) {
 			if (string.IsNullOrEmpty(key)) throw new Exception("key 不可为空或null");
 			var nodeKey = NodeRuleRaw == null || Nodes.Count == 1 ? Nodes.Keys.First() : NodeRuleRaw(key);
-			if (Nodes.TryGetValue(nodeKey, out var pool)) Nodes.TryGetValue(nodeKey = Nodes.Keys.First(), out pool);
+			if (Nodes.TryGetValue(nodeKey, out var pool) == false) Nodes.TryGetValue(nodeKey = Nodes.Keys.First(), out pool);
 
 			try {
 				if (Conns.TryGetValue(pool.Key, out var conn) == false) {
-					Conns.Add(pool.Key, conn = (new List<int>(), pool.Get()));
-					conn.conn.Value.StartPipe();
+					conn = (new List<int>(), pool.GetAsync().Result);
+					bool isStartPipe = false;
+					lock (ConnsLock) {
+						if (Conns.TryAdd(pool.Key, conn) == false) {
+							pool.Return(conn.conn);
+							Conns.TryGetValue(pool.Key, out conn);
+						} else {
+							isStartPipe = true;
+						}
+					}
+					if (isStartPipe) {
+						conn.conn.Value.StartPipe();
+					}
 				}
 				key = string.Concat(pool.Prefix, key);
 				handle(conn.conn, key);
 				conn.indexes.Add(Parsers.Count);
 				Parsers.Enqueue(parser);
 			} catch (Exception ex) {
-				foreach (var conn in Conns)
-					(conn.Value.conn.Pool as RedisClientPool).Return(conn.Value.conn, ex);
+				foreach (var conn in Conns.Values)
+					(conn.conn.Pool as RedisClientPool).Return(conn.conn, ex);
 				throw ex;
 			}
 			if (typeof(TReturn).FullName == typeof(TObject).FullName) return this as CSRedisClientPipe<TReturn>;// return (CSRedisClientPipe<TReturn>)Convert.ChangeType(this, typeof(CSRedisClientPipe<TReturn>));

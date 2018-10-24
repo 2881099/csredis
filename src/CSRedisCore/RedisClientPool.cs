@@ -41,7 +41,7 @@ namespace CSRedis {
 					var fcolor = Console.ForegroundColor;
 					Console.WriteLine($"");
 					Console.ForegroundColor = ConsoleColor.DarkYellow;
-					Console.WriteLine($"csreids 错误【{Policy.Name}】：{exception.Message}");
+					Console.WriteLine($"csreids 错误【{Policy.Name}】：{exception.Message} {exception.StackTrace}");
 					Console.ForegroundColor = fcolor;
 					Console.WriteLine($"");
 
@@ -86,15 +86,16 @@ namespace CSRedis {
 			set {
 				_connectionString = value;
 				if (string.IsNullOrEmpty(_connectionString)) return;
-				var vs = _connectionString.Split(',');
-				foreach (var v in vs) {
-					if (v.IndexOf('=') == -1) {
-						var host = v.Split(':');
-						_ip = string.IsNullOrEmpty(host[0].Trim()) == false ? host[0].Trim() : "127.0.0.1";
-						if (host.Length < 2 || int.TryParse(host[1].Trim(), out _port) == false) _port = 6379;
-						continue;
-					}
-					var kv = v.Split(new[] { '=' }, 2);
+
+				//支持密码中带有逗号，将原有 split(',') 改成以下处理方式
+				var vs = Regex.Split(_connectionString, @"\,([\w \t\r\n]+)=", RegexOptions.Multiline);
+
+				var host = vs[0].Split(':');
+				_ip = string.IsNullOrEmpty(host[0].Trim()) == false ? host[0].Trim() : "127.0.0.1";
+				if (host.Length < 2 || int.TryParse(host[1].Trim(), out _port) == false) _port = 6379;
+
+				for (var a = 1; a < vs.Length; a += 2) {
+					var kv = new[] { vs[a], vs[a + 1] };
 					if (kv[0].ToLower().Trim() == "password") _password = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0].ToLower().Trim() == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0].ToLower().Trim() == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _database) ? _database : 0;
@@ -119,7 +120,7 @@ namespace CSRedis {
 		public RedisClient OnCreate() {
 			var ips = Dns.GetHostAddresses(_ip);
 			if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-			var client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 1000, _writebuffer);
+			var client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 100, _writebuffer);
 			client.Connected += Connected;
 			return client;
 		}

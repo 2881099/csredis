@@ -1,6 +1,7 @@
 ﻿using CSRedis.Internal.IO;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace CSRedis.Internal
         readonly Stream _destination;
         readonly RedisWriter _writer;
         readonly RedisReader _reader;
-        readonly Queue<Func<object>> _parsers;
+        readonly ConcurrentQueue<Func<object>> _parsers;
 
         public bool Active { get; private set; }
 
@@ -23,7 +24,7 @@ namespace CSRedis.Internal
             _destination = io.Stream;
             _buffer = new MemoryStream();
             _writer = new RedisWriter(io);
-            _parsers = new Queue<Func<object>>();
+            _parsers = new ConcurrentQueue<Func<object>>();
         }
 
         public T Write<T>(RedisCommand<T> command)
@@ -45,7 +46,7 @@ namespace CSRedis.Internal
 
             object[] results = new object[_parsers.Count];
             for (int i = 0; i < results.Length; i++)
-                results[i] = _parsers.Dequeue()();
+                if (_parsers.TryDequeue(out var func)) results[i] = func();
             _buffer.SetLength(0);
             Active = false;
             return results;

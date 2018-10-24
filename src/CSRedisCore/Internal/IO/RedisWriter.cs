@@ -29,7 +29,7 @@ namespace CSRedis.Internal.IO
         }
 
         public int Write(RedisCommand command, byte[] buffer, int offset)
-        {
+		{
 			int b = 0;
 			byte[] data = Prepare(command);
 			var dataLen = data.Length;
@@ -40,7 +40,7 @@ namespace CSRedis.Internal.IO
 			return b;
         }
 
-        byte[] Prepare(RedisCommand command)
+        public byte[] Prepare(RedisCommand command)
         {
             var parts = command.Command.Split(' ');
             int length = parts.Length + command.Arguments.Length;

@@ -58,7 +58,7 @@ namespace CSRedis.Internal.Commands
 
         public static TimeSpan ToTimestamp(DateTime date)
         {
-            return date - _epoch;
+            return date.ToUniversalTime().Subtract(_epoch);
         }
     }
 }
