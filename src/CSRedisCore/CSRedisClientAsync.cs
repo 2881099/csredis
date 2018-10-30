@@ -640,7 +640,7 @@ namespace CSRedis {
 
 		#region Pub/Sub
 		/// <summary>
-		/// 用于将信息发送到指定分区节点的频道
+		/// 用于将信息发送到指定分区节点的频道，最终消息发布格式：1|message
 		/// </summary>
 		/// <param name="channel">频道名</param>
 		/// <param name="message">消息文本</param>
@@ -649,6 +649,13 @@ namespace CSRedis {
 			var msgid = await HIncrByAsync("csredisclient:Publish:msgid", channel, 1);
 			return await ExecuteScalarAsync(channel, (c, k) => c.Value.PublishAsync(channel, $"{msgid}|{message}"));
 		}
+		/// <summary>
+		/// 用于将信息发送到指定分区节点的频道，与 Publish 方法不同，不返回消息id头，即 1|
+		/// </summary>
+		/// <param name="channel">频道名</param>
+		/// <param name="message">消息文本</param>
+		/// <returns></returns>
+		public Task<long> PublishNoneMessageIdAsync(string channel, string message) => ExecuteScalarAsync(channel, (c, k) => c.Value.PublishAsync(channel, message));
 		/// <summary>
 		/// 查看所有订阅频道
 		/// </summary>
