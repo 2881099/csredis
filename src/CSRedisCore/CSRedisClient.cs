@@ -168,7 +168,8 @@ namespace CSRedis {
 
 				if (isElse == false) {
 					if (obj == null) return default(T);
-					return (T)Convert.ChangeType(obj, typeof(T));
+					return (T)obj;
+					//return (T)Convert.ChangeType(obj, typeof(T));
 				}
 			}
 
@@ -3141,8 +3142,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			name = $"CSRedisClientLock:{name}";
 			var startTime = DateTime.Now;
 			while (DateTime.Now.Subtract(startTime).TotalSeconds < timeoutSeconds) {
-				if (this.SetNx(name, "1") == true) {
-					this.Expire(name, TimeSpan.FromSeconds(timeoutSeconds));
+				if (this.Set(name, 1, timeoutSeconds, RedisExistence.Nx) == true) {
 					return new CSRedisClientLock { Name = name, _client = this };
 				}
 				Thread.CurrentThread.Join(3);
