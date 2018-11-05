@@ -138,14 +138,11 @@ namespace CSRedis {
 				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 || obj.Value.IsConnected == false) {
 					try {
 						obj.Value.Ping();
-					} catch(Exception ex) {
+					} catch {
 						obj.ResetValue();
-						if (_pool.SetUnavailable(ex) == true)
-							throw new Exception($"【{this.Name}】状态不可用，等待后台检查程序恢复方可使用。{ex.Message}");
 					}
 				}
 			}
-
 		}
 
 		async public Task OnGetAsync(Object<RedisClient> obj) {
@@ -154,10 +151,8 @@ namespace CSRedis {
 				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 || obj.Value.IsConnected == false) {
 					try {
 						await obj.Value.PingAsync();
-					} catch (Exception ex) {
+					} catch {
 						obj.ResetValue();
-						if (_pool.SetUnavailable(ex) == true)
-							throw new Exception($"【{this.Name}】状态不可用，等待后台检查程序恢复方可使用。{ex.Message}");
 					}
 				}
 			}
