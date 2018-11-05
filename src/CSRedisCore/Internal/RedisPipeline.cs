@@ -29,7 +29,7 @@ namespace CSRedis.Internal
 
         public T Write<T>(RedisCommand<T> command)
         {
-            _writer.Write(command, _buffer);
+			_writer.Write(command, _buffer);
             _parsers.Enqueue(() => command.Parse(_reader));
             return default(T);
         }
@@ -41,15 +41,19 @@ namespace CSRedis.Internal
 
         public object[] Flush()
         {
-            _buffer.Position = 0;
-            _buffer.CopyTo(_destination);
+			try {
+				_buffer.Position = 0;
+				_buffer.CopyTo(_destination);
 
-            object[] results = new object[_parsers.Count];
-            for (int i = 0; i < results.Length; i++)
-                if (_parsers.TryDequeue(out var func)) results[i] = func();
-            _buffer.SetLength(0);
-            Active = false;
-            return results;
+				object[] results = new object[_parsers.Count];
+				for (int i = 0; i < results.Length; i++)
+					if (_parsers.TryDequeue(out var func)) results[i] = func();
+
+				return results;
+			} finally {
+				_buffer.SetLength(0);
+				Active = false;
+			}
         }
 
         public void Dispose()
