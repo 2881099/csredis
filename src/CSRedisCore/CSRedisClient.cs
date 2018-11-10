@@ -239,7 +239,7 @@ namespace CSRedis {
 			foreach (var pool in this.Nodes.Values) pool.Dispose();
 		}
 
-		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 1) {
+		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
 			var redirect = ParseClusterRedirect(null);

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace CSRedis {
 	public partial class CSRedisClient {
 
-		async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 1) {
+		async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 100) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
 			var redirect = ParseClusterRedirect(null);
