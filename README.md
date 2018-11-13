@@ -108,6 +108,8 @@ RedisHelper.Publish("chan1", "123123123");
 //无论是分区或普通模式，RedisHelper.Publish 都可以正常通信
 ```
 
+参考资料：[【由浅至深】redis 实现发布订阅的几种方式](https://www.cnblogs.com/kellynic/p/9952386.html)
+
 ## 3、缓存壳
 
 ```csharp
