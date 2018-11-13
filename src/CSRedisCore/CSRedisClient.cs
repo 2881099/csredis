@@ -1382,6 +1382,133 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		}
 		#endregion
 
+		#region 使用列表现实订阅发布 lpush + blpop
+		/// <summary>
+		/// 使用lpush + blpop订阅端（多端非争抢模式），都可以收到消息
+		/// </summary>
+		/// <param name="listKey">list key（不含prefix前辍）</param>
+		/// <param name="clientId">订阅端标识，若重复则争抢，若唯一必然收到消息</param>
+		/// <param name="onMessage">接收消息委托</param>
+		/// <returns></returns>
+		public SubscribeListBroadcastObject SubscribeListBroadcast(string listKey, string clientId, Action<string> onMessage) {
+			this.HSetNx($"{listKey}_SubscribeListBroadcast", clientId, 1);
+			var subobj = new SubscribeListBroadcastObject {
+				OnDispose = () => {
+					this.HDel($"{listKey}_SubscribeListBroadcast", clientId);
+				}
+			};
+			//订阅其他端转发的消息
+			subobj.SubscribeLists.Add(this.SubscribeList($"{listKey}_{clientId}", onMessage));
+			//订阅主消息，接收消息后分发
+			subobj.SubscribeLists.Add(this.SubscribeList(listKey, msg => {
+				try {
+					this.HSetNx($"{listKey}_SubscribeListBroadcast", clientId, 1);
+					if (msg == null) return;
+
+					var clients = this.HKeys($"{listKey}_SubscribeListBroadcast");
+					var pipe = this.StartPipe();
+					foreach (var c in clients)
+						if (string.Compare(clientId, c, true) != 0) //过滤本端分发
+							pipe.LPush($"{listKey}_{c}", msg);
+					pipe.EndPipe();
+					onMessage?.Invoke(msg);
+				} catch (Exception ex) {
+					var bgcolor = Console.BackgroundColor;
+					var forecolor = Console.ForegroundColor;
+					Console.BackgroundColor = ConsoleColor.DarkRed;
+					Console.ForegroundColor = ConsoleColor.White;
+					Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}\r\n{ex.StackTrace}");
+					Console.BackgroundColor = bgcolor;
+					Console.ForegroundColor = forecolor;
+					Console.WriteLine();
+				}
+			}, true));
+
+			AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
+				subobj.Dispose();
+			};
+			Console.CancelKeyPress += (s1, e1) => {
+				subobj.Dispose();
+			};
+
+			return subobj;
+		}
+		public class SubscribeListBroadcastObject : IDisposable {
+			internal Action OnDispose;
+			internal List<SubscribeListObject> SubscribeLists = new List<SubscribeListObject>();
+
+			~SubscribeListBroadcastObject() {
+				this.Dispose();
+			}
+			public void Dispose() {
+				OnDispose?.Invoke();
+				foreach (var sub in SubscribeLists) sub.Dispose();
+			}
+		}
+		/// <summary>
+		/// 使用lpush + blpop订阅端（多端争抢模式），只有一端收到消息
+		/// </summary>
+		/// <param name="listKey">list key（不含prefix前辍）</param>
+		/// <param name="onMessage">接收消息委托</param>
+		/// <returns></returns>
+		public SubscribeListObject SubscribeList(string listKey, Action<string> onMessage) => SubscribeList(listKey, onMessage, false);
+		private SubscribeListObject SubscribeList(string listKey, Action<string> onMessage, bool ignoreEmpty) {
+			var subobj = new SubscribeListObject();
+
+			var bgcolor = Console.BackgroundColor;
+			var forecolor = Console.ForegroundColor;
+			Console.BackgroundColor = ConsoleColor.DarkGreen;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Write($"正在订阅列表(listKey:{listKey})");
+			Console.BackgroundColor = bgcolor;
+			Console.ForegroundColor = forecolor;
+			Console.WriteLine();
+
+			new Thread(() => {
+				while (subobj.IsUnsubscribed == false) {
+					try {
+						var msg = this.BLPop(5, listKey);
+						if (ignoreEmpty == true || string.IsNullOrEmpty(msg) == false) {
+							onMessage?.Invoke(msg);
+						}
+					} catch (Exception ex) {
+						bgcolor = Console.BackgroundColor;
+						forecolor = Console.ForegroundColor;
+						Console.BackgroundColor = ConsoleColor.DarkRed;
+						Console.ForegroundColor = ConsoleColor.White;
+						Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}\r\n{ex.StackTrace}");
+						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
+
+						Thread.CurrentThread.Join(3000);
+					}
+				}
+			}).Start();
+
+			AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
+				subobj.Dispose();
+			};
+			Console.CancelKeyPress += (s1, e1) => {
+				subobj.Dispose();
+			};
+
+			return subobj;
+		}
+		public class SubscribeListObject : IDisposable {
+			internal List<SubscribeListObject> OtherSubs = new List<SubscribeListObject>();
+			public bool IsUnsubscribed { get; set; }
+
+			~SubscribeListObject() {
+				this.Dispose();
+			}
+			public void Dispose() {
+				this.IsUnsubscribed = true;
+				foreach (var sub in OtherSubs) sub.Dispose();
+			}
+		}
+		#endregion
+
 		#region HyperLogLog
 		/// <summary>
 		/// 添加指定元素到 HyperLogLog
