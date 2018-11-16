@@ -40,8 +40,10 @@ namespace CSRedis.Internal.IO
         {
             if (_pipeline != null)
                 _pipeline.Dispose();
-            if (_stream != null)
-                _stream.Dispose();
+			if (_stream != null) {
+				try { _stream.Close(); } catch { }
+				_stream.Dispose();
+			}
         }
 
         static T GetOrThrow<T>(T obj)

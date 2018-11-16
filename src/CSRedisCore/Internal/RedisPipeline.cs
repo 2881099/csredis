@@ -59,6 +59,7 @@ namespace CSRedis.Internal
         public void Dispose()
         {
             _buffer.Dispose();
-        }
+
+		}
     }
 }

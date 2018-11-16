@@ -193,6 +193,24 @@ public abstract partial class RedisHelper {
 	public static CSRedisClient.PSubscribeObject PSubscribe(string[] channelPatterns, Action<CSRedisClient.PSubscribePMessageEventArgs> pmessage) => Instance.PSubscribe(channelPatterns, pmessage);
 	#endregion
 
+	#region 使用列表现实订阅发布 lpush + blpop
+	/// <summary>
+	/// 使用lpush + blpop订阅端（多端非争抢模式），都可以收到消息
+	/// </summary>
+	/// <param name="listKey">list key（不含prefix前辍）</param>
+	/// <param name="clientId">订阅端标识，若重复则争抢，若唯一必然收到消息</param>
+	/// <param name="onMessage">接收消息委托</param>
+	/// <returns></returns>
+	public static CSRedisClient.SubscribeListBroadcastObject SubscribeListBroadcast(string listKey, string clientId, Action<string> onMessage) => Instance.SubscribeListBroadcast(listKey, clientId, onMessage);
+	/// <summary>
+	/// 使用lpush + blpop订阅端（多端争抢模式），只有一端收到消息
+	/// </summary>
+	/// <param name="listKey">list key（不含prefix前辍）</param>
+	/// <param name="onMessage">接收消息委托</param>
+	/// <returns></returns>
+	public static CSRedisClient.SubscribeListObject SubscribeList(string listKey, Action<string> onMessage) => Instance.SubscribeList(listKey, onMessage);
+	#endregion
+
 	#region HyperLogLog
 	/// <summary>
 	/// 添加指定元素到 HyperLogLog
