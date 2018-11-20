@@ -2,7 +2,7 @@ ServiceStack.Redis 是商业版，免费版有限制；
 
 StackExchange.Redis 是免费版，但是内核在 .NETCore 运行有问题经常 Timeout，暂无法解决；
 
-CSRedis于2016年开始支持.NETCore一直跌代至今，实现了低门槛、高性能，和分区高级玩法的.NETCore redis-cli SDK；
+CSRedis于2016年开始支持.NETCore一直迭代至今，实现了低门槛、高性能，和分区高级玩法的.NETCore redis-cli SDK；
 
 ## v3.0 更新功能
 
