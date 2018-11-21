@@ -20,7 +20,7 @@ namespace CSRedis.Internal.IO
     class RedisSocket : IRedisSocket
     {
         readonly bool _ssl;
-        Socket _socket;
+        internal Socket _socket;
         EndPoint _remote;
 
         public bool Connected { get { return _socket == null ? false : _socket.Connected; } }
@@ -83,13 +83,16 @@ namespace CSRedis.Internal.IO
         {
 			try { _socket.Shutdown(SocketShutdown.Both); } catch { }
 			try { _socket.Close(); } catch { }
-			_socket.Dispose();
-        }
+			try { _socket.Dispose(); } catch { }
+		}
 
         void InitSocket(EndPoint endpoint)
         {
-            if (_socket != null)
-                _socket.Dispose();
+			if (_socket != null) {
+				try { _socket.Shutdown(SocketShutdown.Both); } catch { }
+				try { _socket.Close(); } catch { }
+				try { _socket.Dispose(); } catch { }
+			}
 
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _remote = endpoint;

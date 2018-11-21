@@ -7,28 +7,30 @@ using System.Threading.Tasks;
 using System.IO;
 using CSRedis.Internal.IO;
 using System.Net;
+using System.Net.Sockets;
 
 namespace CSRedis
 {
-    /// <summary>
-    /// Represents a client connection to a Redis server instance
-    /// </summary>
-    public partial class RedisClient : IRedisClientSync, IRedisClientAsync
-    {
-        const int DefaultPort = 6379;
-        const bool DefaultSSL = false;
-        const int DefaultConcurrency = 1000;
-        const int DefaultBufferSize = 10240;
-        readonly RedisConnector _connector;
-        readonly RedisTransaction _transaction;
-        readonly SubscriptionListener _subscription;
-        readonly MonitorListener _monitor;
-        bool _streaming;
+	/// <summary>
+	/// Represents a client connection to a Redis server instance
+	/// </summary>
+	public partial class RedisClient : IRedisClientSync, IRedisClientAsync {
+		const int DefaultPort = 6379;
+		const bool DefaultSSL = false;
+		const int DefaultConcurrency = 1000;
+		const int DefaultBufferSize = 10240;
+		readonly RedisConnector _connector;
+		readonly RedisTransaction _transaction;
+		readonly SubscriptionListener _subscription;
+		readonly MonitorListener _monitor;
+		bool _streaming;
 
-        /// <summary>
-        /// Occurs when a subscription message is received
-        /// </summary>
-        public event EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived;
+		internal Socket Socket => (_connector?._redisSocket as RedisSocket)?._socket;
+
+		/// <summary>
+		/// Occurs when a subscription message is received
+		/// </summary>
+		public event EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived;
 
         /// <summary>
         /// Occurs when a subscription channel is added or removed

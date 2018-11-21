@@ -17,7 +17,7 @@ namespace CSRedis.Internal
         readonly int _concurrency;
         readonly int _bufferSize;
         readonly Lazy<AsyncConnector> _asyncConnector;
-        readonly IRedisSocket _redisSocket;
+        internal readonly IRedisSocket _redisSocket;
         readonly EndPoint _endPoint;
         readonly RedisIO _io;
 

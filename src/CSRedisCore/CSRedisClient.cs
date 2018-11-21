@@ -1117,9 +1117,8 @@ namespace CSRedis {
 			private void Subscribe(object state) {
 				var subscr = ((string[] chans, Object<RedisClient> conn))state;
 				var pool = subscr.conn.Pool as RedisClientPool;
+				//var testPublishText = $"CSRedis_TestSubscribe{Guid.NewGuid().ToString()}";
 
-				EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
-				};
 				EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
 					try {
 						if (b.Message.Type == "message" && this.OnMessageDic != null && this.OnMessageDic.TryGetValue(b.Message.Channel, out var action) == true) {
@@ -1130,11 +1129,12 @@ namespace CSRedis {
 									Body = b.Message.Body.Substring(msgidIdx + 1),
 									Channel = b.Message.Channel
 								});
-							else action(new SubscribeMessageEventArgs {
-								MessageId = 0,
-								Body = b.Message.Body,
-								Channel = b.Message.Channel
-							});
+							else //if (b.Message.Body != testPublishText)
+								action(new SubscribeMessageEventArgs {
+									MessageId = 0,
+									Body = b.Message.Body,
+									Channel = b.Message.Channel
+								});
 						}
 					} catch (Exception ex) {
 						var bgcolor = Console.BackgroundColor;
@@ -1147,9 +1147,25 @@ namespace CSRedis {
 						Console.WriteLine();
 					}
 				};
-				subscr.conn.Value.MonitorReceived += MonitorReceived;
 				subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
 
+				//bool isSubscribeing = false;
+				//bool isKeepliveReSubscribe = false;
+				//Timer keeplive = new Timer(state2 => {
+				//	if (isSubscribeing == false) return;
+				//	try {
+				//		foreach (var chan in subscr.chans) {
+				//			if (Redis.PublishNoneMessageId(chan, testPublishText) <= 0) {
+				//				isKeepliveReSubscribe = true;
+				//				//订阅掉线，重新订阅
+				//				try { subscr.conn.Value.Unsubscribe(); } catch { }
+				//				try { subscr.conn.Value.Quit(); } catch { }
+				//			}
+				//		}
+				//	} catch {
+
+				//	}
+				//}, null, 5000, 5000);
 				while (IsUnsubscribed == false) {
 					try {
 						subscr.conn.Value.Ping();
@@ -1163,12 +1179,17 @@ namespace CSRedis {
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
 
+						//isSubscribeing = true;
+						//isKeepliveReSubscribe = false;
+						subscr.conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
 						subscr.conn.Value.Subscribe(subscr.chans);
 
 						if (IsUnsubscribed == false) {
 							subscr.conn.ResetValue();
-							subscr.conn.Value.MonitorReceived += MonitorReceived;
 							subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
+
+							//if (isKeepliveReSubscribe == true)
+							//	throw new Exception("每5秒检查发现订阅频道丢失");
 
 							//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
 							if (subscr.conn.Value.IsConnected == false)
@@ -1188,6 +1209,10 @@ namespace CSRedis {
 						Thread.CurrentThread.Join(1000 * 3);
 					}
 				}
+				subscr.conn.Value.SubscriptionReceived -= SubscriptionReceived;
+				//isSubscribeing = false;
+				//isKeepliveReSubscribe = false;
+				//try { keeplive.Dispose(); } catch { }
 			}
 
 			public void Unsubscribe() {
@@ -1270,8 +1295,6 @@ namespace CSRedis {
 				var pool = conn.Pool as RedisClientPool;
 				var psubscribeKey = string.Join("pSpLiT", Channels);
 
-				EventHandler<RedisMonitorEventArgs> MonitorReceived = (a, b) => {
-				};
 				EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
 					try {
 						if (b.Message.Type == "pmessage" && this.OnPMessage != null) {
@@ -1313,7 +1336,6 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 
 					}
 				};
-				conn.Value.MonitorReceived += MonitorReceived;
 				conn.Value.SubscriptionReceived += SubscriptionReceived;
 
 				while (true) {
@@ -1329,11 +1351,11 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
 
+						conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
 						conn.Value.PSubscribe(this.Channels);
 
 						if (IsPUnsubscribed == false) {
 							conn.ResetValue();
-							conn.Value.MonitorReceived += MonitorReceived;
 							conn.Value.SubscriptionReceived += SubscriptionReceived;
 
 							//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
@@ -1412,12 +1434,13 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 							pipe.LPush($"{listKey}_{c}", msg);
 					pipe.EndPipe();
 					onMessage?.Invoke(msg);
+				} catch (ObjectDisposedException) {
 				} catch (Exception ex) {
 					var bgcolor = Console.BackgroundColor;
 					var forecolor = Console.ForegroundColor;
 					Console.BackgroundColor = ConsoleColor.DarkRed;
 					Console.ForegroundColor = ConsoleColor.White;
-					Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}\r\n{ex.StackTrace}");
+					Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}");
 					Console.BackgroundColor = bgcolor;
 					Console.ForegroundColor = forecolor;
 					Console.WriteLine();
@@ -1441,7 +1464,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 				this.Dispose();
 			}
 			public void Dispose() {
-				OnDispose?.Invoke();
+				try { OnDispose?.Invoke(); } catch (ObjectDisposedException) { }
 				foreach (var sub in SubscribeLists) sub.Dispose();
 			}
 		}
@@ -1471,12 +1494,13 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 						if (ignoreEmpty == true || string.IsNullOrEmpty(msg) == false) {
 							onMessage?.Invoke(msg);
 						}
+					} catch (ObjectDisposedException) {
 					} catch (Exception ex) {
 						bgcolor = Console.BackgroundColor;
 						forecolor = Console.ForegroundColor;
 						Console.BackgroundColor = ConsoleColor.DarkRed;
 						Console.ForegroundColor = ConsoleColor.White;
-						Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}\r\n{ex.StackTrace}");
+						Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}");
 						Console.BackgroundColor = bgcolor;
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
