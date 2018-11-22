@@ -1117,7 +1117,7 @@ namespace CSRedis {
 			private void Subscribe(object state) {
 				var subscr = ((string[] chans, Object<RedisClient> conn))state;
 				var pool = subscr.conn.Pool as RedisClientPool;
-				//var testPublishText = $"CSRedis_TestSubscribe{Guid.NewGuid().ToString()}";
+				var testCSRedis_Subscribe_Keepalive = "0\r\n";// $"CSRedis_Subscribe_Keepalive{Guid.NewGuid().ToString()}";
 
 				EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) => {
 					try {
@@ -1129,7 +1129,7 @@ namespace CSRedis {
 									Body = b.Message.Body.Substring(msgidIdx + 1),
 									Channel = b.Message.Channel
 								});
-							else //if (b.Message.Body != testPublishText)
+							else if (b.Message.Body != testCSRedis_Subscribe_Keepalive)
 								action(new SubscribeMessageEventArgs {
 									MessageId = 0,
 									Body = b.Message.Body,
@@ -1149,23 +1149,23 @@ namespace CSRedis {
 				};
 				subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
 
-				//bool isSubscribeing = false;
-				//bool isKeepliveReSubscribe = false;
-				//Timer keeplive = new Timer(state2 => {
-				//	if (isSubscribeing == false) return;
-				//	try {
-				//		foreach (var chan in subscr.chans) {
-				//			if (Redis.PublishNoneMessageId(chan, testPublishText) <= 0) {
-				//				isKeepliveReSubscribe = true;
-				//				//订阅掉线，重新订阅
-				//				try { subscr.conn.Value.Unsubscribe(); } catch { }
-				//				try { subscr.conn.Value.Quit(); } catch { }
-				//			}
-				//		}
-				//	} catch {
-
-				//	}
-				//}, null, 5000, 5000);
+				bool isSubscribeing = false;
+				bool isKeepliveReSubscribe = false;
+				Timer keeplive = new Timer(state2 => {
+					if (isSubscribeing == false) return;
+					try {
+						foreach (var chan in subscr.chans) {
+							if (Redis.PublishNoneMessageId(chan, testCSRedis_Subscribe_Keepalive) <= 0) {
+								isKeepliveReSubscribe = true;
+								//订阅掉线，重新订阅
+								try { subscr.conn.Value.Unsubscribe(); } catch { }
+								try { subscr.conn.Value.Quit(); } catch { }
+								try { subscr.conn.Value.Socket?.Shutdown(System.Net.Sockets.SocketShutdown.Both); } catch { }
+							}
+						}
+					} catch {
+					}
+				}, null, 60000, 60000);
 				while (IsUnsubscribed == false) {
 					try {
 						subscr.conn.Value.Ping();
@@ -1179,17 +1179,18 @@ namespace CSRedis {
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
 
-						//isSubscribeing = true;
-						//isKeepliveReSubscribe = false;
-						subscr.conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
+						isSubscribeing = true;
+						isKeepliveReSubscribe = false;
+						//SetSocketOption KeepAlive 经测试无效，仍然侍丢失频道
+						//subscr.conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
 						subscr.conn.Value.Subscribe(subscr.chans);
 
 						if (IsUnsubscribed == false) {
 							subscr.conn.ResetValue();
 							subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
 
-							//if (isKeepliveReSubscribe == true)
-							//	throw new Exception("每5秒检查发现订阅频道丢失");
+							if (isKeepliveReSubscribe == true)
+								throw new Exception("每60秒检查发现订阅频道丢失");
 
 							//服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
 							if (subscr.conn.Value.IsConnected == false)
@@ -1210,9 +1211,9 @@ namespace CSRedis {
 					}
 				}
 				subscr.conn.Value.SubscriptionReceived -= SubscriptionReceived;
-				//isSubscribeing = false;
-				//isKeepliveReSubscribe = false;
-				//try { keeplive.Dispose(); } catch { }
+				isSubscribeing = false;
+				isKeepliveReSubscribe = false;
+				try { keeplive.Dispose(); } catch { }
 			}
 
 			public void Unsubscribe() {
