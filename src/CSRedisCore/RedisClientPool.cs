@@ -93,14 +93,14 @@ namespace CSRedis {
 				if (host.Length < 2 || int.TryParse(host[1].Trim(), out _port) == false) _port = 6379;
 
 				for (var a = 1; a < vs.Length; a += 2) {
-					var kv = new[] { vs[a].ToLower().Trim(), vs[a + 1].ToLower().Trim() };
+					var kv = new[] { vs[a].ToLower().Trim(), vs[a + 1] };
 					if (kv[0] == "password") _password = kv.Length > 1 ? kv[1] : "";
 					else if (kv[0] == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
-					else if (kv[0] == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _database) ? _database : 0;
-					else if (kv[0] == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1] : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
-					else if (kv[0] == "ssl") _ssl = kv.Length > 1 ? kv[1] == "true" : false;
-					else if (kv[0] == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1] : "10240", out _writebuffer) ? _writebuffer : 10240;
-					else if (kv[0] == "preheat") _preheat = kv.Length > 1 ? kv[1] == "true" : false;
+					else if (kv[0] == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _database) ? _database : 0;
+					else if (kv[0] == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
+					else if (kv[0] == "ssl") _ssl = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
+					else if (kv[0] == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10240", out _writebuffer) ? _writebuffer : 10240;
+					else if (kv[0] == "preheat") _preheat = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
 				}
 
 				if (_preheat) {
