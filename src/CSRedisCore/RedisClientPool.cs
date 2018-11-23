@@ -11,7 +11,7 @@ using System.Threading;
 namespace CSRedis {
 	public class RedisClientPool : ObjectPool<RedisClient> {
 
-		public RedisClientPool(string name, string connectionString, Action<RedisClient> onConnected, bool isPreheat = true) : base(null) {
+		public RedisClientPool(string name, string connectionString, Action<RedisClient> onConnected) : base(null) {
 			_policy = new RedisClientPoolPolicy {
 				_pool = this
 			};
@@ -22,7 +22,6 @@ namespace CSRedis {
 				onConnected(s as RedisClient);
 			};
 			this.Policy = _policy;
-			_policy.isPreheat = isPreheat;
 			_policy.ConnectionString = connectionString;
 		}
 
@@ -66,10 +65,9 @@ namespace CSRedis {
 		internal RedisClientPool _pool;
 		internal int _port = 6379, _database = 0, _writebuffer = 10240;
 		internal string _ip = "127.0.0.1", _password = "";
-		internal bool _ssl = false;
+		internal bool _ssl = false, _preheat = true;
 		internal string Key => $"{_ip}:{_port}/{_database}";
 		internal string Prefix { get; set; }
-		internal bool isPreheat { get; set; }
 		public event EventHandler Connected;
 
 		public string Name { get => Key; set { throw new Exception("RedisClientPoolPolicy 不提供设置 Name 属性值。"); } }
@@ -95,18 +93,19 @@ namespace CSRedis {
 				if (host.Length < 2 || int.TryParse(host[1].Trim(), out _port) == false) _port = 6379;
 
 				for (var a = 1; a < vs.Length; a += 2) {
-					var kv = new[] { vs[a], vs[a + 1] };
-					if (kv[0].ToLower().Trim() == "password") _password = kv.Length > 1 ? kv[1] : "";
-					else if (kv[0].ToLower().Trim() == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
-					else if (kv[0].ToLower().Trim() == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _database) ? _database : 0;
-					else if (kv[0].ToLower().Trim() == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1] : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
-					else if (kv[0].ToLower().Trim() == "ssl") _ssl = kv.Length > 1 ? kv[1] == "true" : false;
-					else if (kv[0].ToLower().Trim() == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1] : "10240", out _writebuffer) ? _writebuffer : 10240;
+					var kv = new[] { vs[a].ToLower().Trim(), vs[a + 1].ToLower().Trim() };
+					if (kv[0] == "password") _password = kv.Length > 1 ? kv[1] : "";
+					else if (kv[0] == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
+					else if (kv[0] == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1] : "0", out _database) ? _database : 0;
+					else if (kv[0] == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1] : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
+					else if (kv[0] == "ssl") _ssl = kv.Length > 1 ? kv[1] == "true" : false;
+					else if (kv[0] == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1] : "10240", out _writebuffer) ? _writebuffer : 10240;
+					else if (kv[0] == "preheat") _preheat = kv.Length > 1 ? kv[1] == "true" : false;
 				}
 
-				if (isPreheat) {
+				if (_preheat) {
 					var initConns = new Object<RedisClient>[PoolSize];
-					for (var a = 0; a < PoolSize; a++) try { initConns[a] = _pool.Get(); } catch { }
+					for (var a = 0; a < PoolSize; a++) try { initConns[a] = _pool.Get(); initConns[a].Value.Ping(); } catch { break; } //预热失败一次就退出
 					foreach (var conn in initConns) _pool.Return(conn);
 				}
 			}

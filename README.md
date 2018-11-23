@@ -27,8 +27,18 @@ CSRedis于2016年开始支持.NETCore一直迭代至今，实现了低门槛、�
 ## 普通模式
 
 ```csharp
-var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍");
+var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,preheat=true,ssl=false,writeBuffer=10240,prefix=key前辍");
 ```
+
+| 参数名 | 默认值 | 说明 |  |
+| :---------------- | --------------: | :------------------- | -------------------: |
+| password          | <空> | 密码 |
+| defaultDatabase   | 0    | 默认数据库 |
+| poolsize          | 50   | 连接池大小 |
+| preheat           | true | 预热连接 |
+| ssl               | false | 是否开启加密传输 |
+| writeBuffer       | 10240 | 异步方法写入缓冲区大小(字节) |
+| prefix            | <空> | key前辍，所有方法都会附带此前辍，csredis.Set(prefix + "key", 111); |
 
 # 官方集群
 
@@ -51,10 +61,10 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 
 ```csharp
 var csredis = new CSRedis.CSRedisClient(null,
-  "127.0.0.1:6371,password=123,defaultDatabase=11,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍", 
-  "127.0.0.1:6372,password=123,defaultDatabase=12,poolsize=11,ssl=false,writeBuffer=10240,prefix=key前辍",
-  "127.0.0.1:6373,password=123,defaultDatabase=13,poolsize=12,ssl=false,writeBuffer=10240,prefix=key前辍",
-  "127.0.0.1:6374,password=123,defaultDatabase=14,poolsize=13,ssl=false,writeBuffer=10240,prefix=key前辍");
+  "127.0.0.1:6371,password=123,defaultDatabase=11,poolsize=10,preheat=true,ssl=false,writeBuffer=10240,prefix=key前辍", 
+  "127.0.0.1:6372,password=123,defaultDatabase=12,poolsize=11,preheat=true,ssl=false,writeBuffer=10240,prefix=key前辍",
+  "127.0.0.1:6373,password=123,defaultDatabase=13,poolsize=12,preheat=true,ssl=false,writeBuffer=10240,prefix=key前辍",
+  "127.0.0.1:6374,password=123,defaultDatabase=14,poolsize=13,preheat=true,ssl=false,writeBuffer=10240,prefix=key前辍");
 //实现思路：根据key.GetHashCode() % 节点总数量，确定连向的节点
 //也可以自定义规则(第一个参数设置)
 ```
@@ -79,7 +89,7 @@ RedisHelper.Get("test1");
 > 如果确定一定以及肯定非要有切换数据库的需求，请看以下代码：
 
 ```csharp
-var connectionString = "127.0.0.1:6379,password=123,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍";
+var connectionString = "127.0.0.1:6379,password=123,poolsize=10,preheat=true,ssl=false,writeBuffer=10240,prefix=key前辍";
 var redis = new CSRedisClient[14]; //定义成单例
 for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionString + ",defualtDatabase=" + a);
 

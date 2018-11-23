@@ -280,8 +280,8 @@ namespace CSRedis {
 			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
 				lock (NodesLock) {
 					if (Nodes.TryGetValue(nodeKey, out movedPool) == false) {
-						var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
-						movedPool = new RedisClientPool("", connectionString, client => { }, false);
+						var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},preheat=false,ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
+						movedPool = new RedisClientPool("", connectionString, client => { });
 						if (this.TryAddNode(nodeKey, movedPool) == false) {
 							movedPool.Dispose();
 							movedPool = null;
