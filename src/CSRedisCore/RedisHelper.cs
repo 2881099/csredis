@@ -218,7 +218,7 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="elements">元素</param>
 	/// <returns></returns>
-	public static bool PfAdd(string key, params object[] elements) => Instance.PfAdd(key, elements);
+	public static bool PfAdd<T>(string key, params T[] elements) => Instance.PfAdd(key, elements);
 	/// <summary>
 	/// 返回给定 HyperLogLog 的基数估算值
 	/// </summary>
@@ -427,7 +427,7 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="member">一个或多个成员</param>
 	/// <returns></returns>
-	public static long ZRem(string key, params object[] member) => Instance.ZRem(key, member);
+	public static long ZRem<T>(string key, params T[] member) => Instance.ZRem(key, member);
 	/// <summary>
 	/// 移除有序集合中给定的排名区间的所有成员
 	/// </summary>
@@ -678,7 +678,7 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="members">一个或多个成员</param>
 	/// <returns></returns>
-	public static long SAdd(string key, params object[] members) => Instance.SAdd(key, members);
+	public static long SAdd<T>(string key, params T[] members) => Instance.SAdd(key, members);
 	/// <summary>
 	/// 获取集合的成员数
 	/// </summary>
@@ -800,7 +800,7 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="members">一个或多个成员</param>
 	/// <returns></returns>
-	public static long SRem(string key, params object[] members) => Instance.SRem(key, members);
+	public static long SRem<T>(string key, params T[] members) => Instance.SRem(key, members);
 	/// <summary>
 	/// 返回所有给定集合的并集
 	/// </summary>
@@ -980,7 +980,7 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="value">一个或多个值</param>
 	/// <returns>执行 LPUSH 命令后，列表的长度</returns>
-	public static long LPush(string key, params object[] value) => Instance.LPush(key, value);
+	public static long LPush<T>(string key, params T[] value) => Instance.LPush(key, value);
 	/// <summary>
 	/// 将一个值插入到已存在的列表头部
 	/// </summary>
@@ -1065,7 +1065,7 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="value">一个或多个值</param>
 	/// <returns>执行 RPUSH 命令后，列表的长度</returns>
-	public static long RPush(string key, params object[] value) => Instance.RPush(key, value);
+	public static long RPush<T>(string key, params T[] value) => Instance.RPush(key, value);
 	/// <summary>
 	/// 为已存在的列表添加值
 	/// </summary>

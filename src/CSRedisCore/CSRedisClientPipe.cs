@@ -148,7 +148,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="elements">元素</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<bool> PfAdd(string key, params object[] elements) => PipeCommand(key, (c, k) => c.Value.PfAdd(k, elements?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
+		public CSRedisClientPipe<bool> PfAdd<T>(string key, params T[] elements) => PipeCommand(key, (c, k) => c.Value.PfAdd(k, elements?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回给定 HyperLogLog 的基数估算值
 		/// </summary>
@@ -367,7 +367,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">一个或多个成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> ZRem(string key, params object[] member) {
+		public CSRedisClientPipe<long> ZRem<T>(string key, params T[] member) {
 			if (member == null || member.Any() == false) throw new Exception("member 参数不可为空");
 			return PipeCommand(key, (c, k) => c.Value.ZRem(k, member?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
@@ -647,7 +647,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> SAdd(string key, params object[] members) {
+		public CSRedisClientPipe<long> SAdd<T>(string key, params T[] members) {
 			if (members == null || members.Any() == false) throw new Exception("members 参数不可为空");
 			return PipeCommand(key, (c, k) => c.Value.SAdd(k, members?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
@@ -809,7 +809,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<long> SRem(string key, params object[] members) {
+		public CSRedisClientPipe<long> SRem<T>(string key, params T[] members) {
 			if (members == null || members.Any() == false) throw new Exception("members 参数不可为空");
 			return PipeCommand(key, (c, k) => c.Value.SRem(k, members?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
@@ -933,7 +933,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 LPUSH 命令后，列表的长度</returns>
-		public CSRedisClientPipe<long> LPush(string key, params object[] value) {
+		public CSRedisClientPipe<long> LPush<T>(string key, params T[] value) {
 			if (value == null || value.Any() == false) throw new Exception("value 参数不可为空"); ;
 			return PipeCommand(key, (c, k) => c.Value.LPush(k, value?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}
@@ -1034,7 +1034,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSH 命令后，列表的长度</returns>
-		public CSRedisClientPipe<long> RPush(string key, params object[] value) {
+		public CSRedisClientPipe<long> RPush<T>(string key, params T[] value) {
 			if (value == null || value.Any() == false) throw new Exception("value 参数不可为空"); ;
 			return PipeCommand(key, (c, k) => c.Value.RPush(k, value?.Select(z => rds.SerializeRedisValueInternal(z)).ToArray()));
 		}

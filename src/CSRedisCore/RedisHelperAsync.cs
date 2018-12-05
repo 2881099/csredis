@@ -138,7 +138,7 @@ partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="elements">元素</param>
 	/// <returns></returns>
-	public static Task<bool> PfAddAsync(string key, params object[] elements) => Instance.PfAddAsync(key, elements);
+	public static Task<bool> PfAddAsync<T>(string key, params T[] elements) => Instance.PfAddAsync(key, elements);
 	/// <summary>
 	/// 返回给定 HyperLogLog 的基数估算值
 	/// </summary>
@@ -343,7 +343,7 @@ partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="member">一个或多个成员</param>
 	/// <returns></returns>
-	public static Task<long> ZRemAsync(string key, params object[] member) => Instance.ZRemAsync(key, member);
+	public static Task<long> ZRemAsync<T>(string key, params T[] member) => Instance.ZRemAsync(key, member);
 	/// <summary>
 	/// 移除有序集合中给定的排名区间的所有成员
 	/// </summary>
@@ -592,7 +592,7 @@ partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="members">一个或多个成员</param>
 	/// <returns></returns>
-	public static Task<long> SAddAsync(string key, params object[] members) => Instance.SAddAsync(key, members);
+	public static Task<long> SAddAsync<T>(string key, params T[] members) => Instance.SAddAsync(key, members);
 	/// <summary>
 	/// 获取集合的成员数
 	/// </summary>
@@ -714,7 +714,7 @@ partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="members">一个或多个成员</param>
 	/// <returns></returns>
-	public static Task<long> SRemAsync(string key, params object[] members) => Instance.SRemAsync(key, members);
+	public static Task<long> SRemAsync<T>(string key, params T[] members) => Instance.SRemAsync(key, members);
 	/// <summary>
 	/// 返回所有给定集合的并集
 	/// </summary>
@@ -813,7 +813,7 @@ partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="value">一个或多个值</param>
 	/// <returns>执行 LPUSH 命令后，列表的长度</returns>
-	public static Task<long> LPushAsync(string key, params object[] value) => Instance.LPushAsync(key, value);
+	public static Task<long> LPushAsync<T>(string key, params T[] value) => Instance.LPushAsync(key, value);
 	/// <summary>
 	/// 将一个值插入到已存在的列表头部
 	/// </summary>
@@ -898,7 +898,7 @@ partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <param name="value">一个或多个值</param>
 	/// <returns>执行 RPUSH 命令后，列表的长度</returns>
-	public static Task<long> RPushAsync(string key, params object[] value) => Instance.RPushAsync(key, value);
+	public static Task<long> RPushAsync<T>(string key, params T[] value) => Instance.RPushAsync(key, value);
 	/// <summary>
 	/// 为已存在的列表添加值
 	/// </summary>

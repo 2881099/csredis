@@ -1541,7 +1541,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="elements">元素</param>
 		/// <returns></returns>
-		public bool PfAdd(string key, params object[] elements) => elements == null || elements.Any() == false ? false : ExecuteScalar(key, (c, k) => c.Value.PfAdd(k, elements?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		public bool PfAdd<T>(string key, params T[] elements) => elements == null || elements.Any() == false ? false : ExecuteScalar(key, (c, k) => c.Value.PfAdd(k, elements?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回给定 HyperLogLog 的基数估算值
 		/// </summary>
@@ -1755,7 +1755,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">一个或多个成员</param>
 		/// <returns></returns>
-		public long ZRem(string key, params object[] member) => member == null || member.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.ZRem(k, member?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		public long ZRem<T>(string key, params T[] member) => member == null || member.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.ZRem(k, member?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 移除有序集合中给定的排名区间的所有成员
 		/// </summary>
@@ -2014,7 +2014,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		public long SAdd(string key, params object[] members) => members == null || members.Any() == false ? 0 :
+		public long SAdd<T>(string key, params T[] members) => members == null || members.Any() == false ? 0 :
 			ExecuteScalar(key, (c, k) => c.Value.SAdd(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 获取集合的成员数
@@ -2152,7 +2152,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		public long SRem(string key, params object[] members) => members == null || members.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.SRem(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		public long SRem<T>(string key, params T[] members) => members == null || members.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.SRem(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回所有给定集合的并集
 		/// </summary>
@@ -2353,7 +2353,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 LPUSH 命令后，列表的长度</returns>
-		public long LPush(string key, params object[] value) => value == null || value.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.LPush(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		public long LPush<T>(string key, params T[] value) => value == null || value.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.LPush(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 将一个值插入到已存在的列表头部
 		/// </summary>
@@ -2438,7 +2438,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSH 命令后，列表的长度</returns>
-		public long RPush(string key, params object[] value) => value == null || value.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.RPush(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		public long RPush<T>(string key, params T[] value) => value == null || value.Any() == false ? 0 : ExecuteScalar(key, (c, k) => c.Value.RPush(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 为已存在的列表添加值
 		/// </summary>

@@ -692,7 +692,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="elements">元素</param>
 		/// <returns></returns>
-		async public Task<bool> PfAddAsync(string key, params object[] elements) => elements == null || elements.Any() == false ? false : await ExecuteScalarAsync(key, (c, k) => c.Value.PfAddAsync(k, elements?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		async public Task<bool> PfAddAsync<T>(string key, params T[] elements) => elements == null || elements.Any() == false ? false : await ExecuteScalarAsync(key, (c, k) => c.Value.PfAddAsync(k, elements?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回给定 HyperLogLog 的基数估算值
 		/// </summary>
@@ -906,7 +906,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="member">一个或多个成员</param>
 		/// <returns></returns>
-		async public Task<long> ZRemAsync(string key, params object[] member) => member == null || member.Any() == false ? 0 : await ExecuteScalarAsync(key, (c, k) => c.Value.ZRemAsync(k, member?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
+		async public Task<long> ZRemAsync<T>(string key, params T[] member) => member == null || member.Any() == false ? 0 : await ExecuteScalarAsync(key, (c, k) => c.Value.ZRemAsync(k, member?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 移除有序集合中给定的排名区间的所有成员
 		/// </summary>
@@ -1165,7 +1165,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		async public Task<long> SAddAsync(string key, params object[] members) => members == null || members.Any() == false ? 0 :
+		async public Task<long> SAddAsync<T>(string key, params T[] members) => members == null || members.Any() == false ? 0 :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.SAddAsync(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 获取集合的成员数
@@ -1303,7 +1303,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="members">一个或多个成员</param>
 		/// <returns></returns>
-		async public Task<long> SRemAsync(string key, params object[] members) => members == null || members.Any() == false ? 0 :
+		async public Task<long> SRemAsync<T>(string key, params T[] members) => members == null || members.Any() == false ? 0 :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.SRemAsync(k, members?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 返回所有给定集合的并集
@@ -1406,7 +1406,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 LPUSH 命令后，列表的长度</returns>
-		async public Task<long> LPushAsync(string key, params object[] value) => value == null || value.Any() == false ? 0 :
+		async public Task<long> LPushAsync<T>(string key, params T[] value) => value == null || value.Any() == false ? 0 :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.LPushAsync(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 将一个值插入到已存在的列表头部
@@ -1492,7 +1492,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">一个或多个值</param>
 		/// <returns>执行 RPUSH 命令后，列表的长度</returns>
-		async public Task<long> RPushAsync(string key, params object[] value) => value == null || value.Any() == false ? 0 :
+		async public Task<long> RPushAsync<T>(string key, params T[] value) => value == null || value.Any() == false ? 0 :
 			await ExecuteScalarAsync(key, (c, k) => c.Value.RPushAsync(k, value?.Select(z => this.SerializeRedisValueInternal(z)).ToArray()));
 		/// <summary>
 		/// 为已存在的列表添加值
