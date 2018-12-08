@@ -576,7 +576,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<(string member, double score)>> ZScan(string key, int cursor, string pattern = null, int? count = null) =>
+		public CSRedisClientPipe<RedisScan<(string member, double score)>> ZScan(string key, long cursor, string pattern = null, long? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.ZScan(k, cursor, pattern, count); return default(RedisScan<(string, double)>); }, obj => {
 				var scan = (RedisScan<Tuple<string, double>>)obj;
 				return new RedisScan<(string, double)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
@@ -590,7 +590,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<(T member, double score)>> ZScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
+		public CSRedisClientPipe<RedisScan<(T member, double score)>> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.ZScanBytes(k, cursor, pattern, count); return default(RedisScan<(T, double)>); }, obj => {
 				var scan = (RedisScan<Tuple<byte[], double>>)obj;
 				return new RedisScan<(T, double)>(scan.Cursor, rds.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
@@ -858,7 +858,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<string>> SScan(string key, int cursor, string pattern = null, int? count = null) =>
+		public CSRedisClientPipe<RedisScan<string>> SScan(string key, long cursor, string pattern = null, long? count = null) =>
 			PipeCommand(key, (c, k) => c.Value.SScan(k, cursor, pattern, count));
 		/// <summary>
 		/// 迭代集合中的元素
@@ -869,7 +869,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<T>> SScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
+		public CSRedisClientPipe<RedisScan<T>> SScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.SScanBytes(k, cursor, pattern, count); return default(RedisScan<T>); }, obj => {
 				var scan = (RedisScan<byte[]>)obj;
 				return new RedisScan<T>(scan.Cursor, rds.DeserializeRedisValueArrayInternal<T>(scan.Items));
@@ -1200,7 +1200,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<(string field, string value)>> HScan(string key, int cursor, string pattern = null, int? count = null) =>
+		public CSRedisClientPipe<RedisScan<(string field, string value)>> HScan(string key, long cursor, string pattern = null, long? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.HScan(k, cursor, pattern, count); return default(RedisScan<(string, string)>); }, obj => {
 				var scan = (RedisScan<Tuple<string, string>>)obj;
 				return new RedisScan<(string, string)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
@@ -1214,7 +1214,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<(string field, T value)>> HScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
+		public CSRedisClientPipe<RedisScan<(string field, T value)>> HScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
 			PipeCommand(key, (c, k) => { c.Value.HScanBytes(k, cursor, pattern, count); return default(RedisScan<(string, T)>); }, obj => {
 				var scan = (RedisScan<Tuple<string, byte[]>>)obj;
 				return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, rds.DeserializeRedisValueInternal<T>(z.Item2))).ToArray());
@@ -1594,7 +1594,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<string>> Scan(int cursor, string pattern = null, int? count = null) {
+		public CSRedisClientPipe<RedisScan<string>> Scan(long cursor, string pattern = null, long? count = null) {
 			if (Nodes.Count > 1) throw new Exception("Scan 管道命令，在分区模式下不可用");
 			return PipeCommand("Scan", (c, k) => c.Value.Scan(cursor, pattern, count));
 		}
@@ -1607,7 +1607,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<RedisScan<T>> Scan<T>(string key, int cursor, string pattern = null, int? count = null) {
+		public CSRedisClientPipe<RedisScan<T>> Scan<T>(string key, long cursor, string pattern = null, long? count = null) {
 			if (Nodes.Count > 1) throw new Exception("Scan<T> 管道命令，在分区模式下不可用");
 			return PipeCommand("Scan<T>", (c, k) => {
 				c.Value.ScanBytes(cursor, pattern, count); return default(RedisScan<T>);

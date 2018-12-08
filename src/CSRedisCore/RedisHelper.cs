@@ -613,7 +613,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<(string member, double score)> ZScan(string key, int cursor, string pattern = null, int? count = null) =>
+	public static RedisScan<(string member, double score)> ZScan(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.ZScan(key, cursor, pattern, count);
 	/// <summary>
 	/// 迭代有序集合中的元素
@@ -624,7 +624,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<(T member, double score)> ZScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
+	public static RedisScan<(T member, double score)> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.ZScan<T>(key, cursor, pattern, count);
 
 	/// <summary>
@@ -829,7 +829,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<string> SScan(string key, int cursor, string pattern = null, int? count = null) =>
+	public static RedisScan<string> SScan(string key, long cursor, string pattern = null, long? count = null) =>
 		Instance.SScan(key, cursor, pattern, count);
 	/// <summary>
 	/// 迭代集合中的元素
@@ -840,7 +840,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<T> SScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
+	public static RedisScan<T> SScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.SScan<T>(key, cursor, pattern, count);
 	#endregion
 
@@ -1205,7 +1205,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<(string field, string value)> HScan(string key, int cursor, string pattern = null, int? count = null) =>
+	public static RedisScan<(string field, string value)> HScan(string key, long cursor, string pattern = null, long? count = null) =>
 		Instance.HScan(key, cursor, pattern, count);
 	/// <summary>
 	/// 迭代哈希表中的键值对
@@ -1216,7 +1216,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<(string field, T value)> HScan<T>(string key, int cursor, string pattern = null, int? count = null) =>
+	public static RedisScan<(string field, T value)> HScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
 		Instance.HScan<T>(key, cursor, pattern, count);
 	#endregion
 
@@ -1569,7 +1569,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<string> Scan(int cursor, string pattern = null, int? count = null) => Instance.Scan(cursor, pattern, count);
+	public static RedisScan<string> Scan(long cursor, string pattern = null, long? count = null) => Instance.Scan(cursor, pattern, count);
 	/// <summary>
 	/// 迭代当前数据库中的数据库键
 	/// </summary>
@@ -1579,7 +1579,7 @@ public abstract partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static RedisScan<T> Scan<T>(string key, int cursor, string pattern = null, int? count = null) => Instance.Scan<T>(cursor, pattern, count);
+	public static RedisScan<T> Scan<T>(string key, long cursor, string pattern = null, long? count = null) => Instance.Scan<T>(cursor, pattern, count);
 	#endregion
 
 	#region Geo redis-server 3.2

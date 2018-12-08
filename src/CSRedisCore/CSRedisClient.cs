@@ -1945,7 +1945,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<(string member, double score)> ZScan(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => {
+		public RedisScan<(string member, double score)> ZScan(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalar(key, (c, k) => {
 			var scan = c.Value.ZScan(k, cursor, pattern, count);
 			return new RedisScan<(string, double)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
 		});
@@ -1958,7 +1958,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<(T member, double score)> ZScan<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => {
+		public RedisScan<(T member, double score)> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalar(key, (c, k) => {
 			var scan = c.Value.ZScanBytes(k, cursor, pattern, count);
 			return new RedisScan<(T, double)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
 		});
@@ -2181,7 +2181,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<string> SScan(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => c.Value.SScan(k, cursor, pattern, count));
+		public RedisScan<string> SScan(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalar(key, (c, k) => c.Value.SScan(k, cursor, pattern, count));
 		/// <summary>
 		/// 迭代集合中的元素
 		/// </summary>
@@ -2191,7 +2191,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<T> SScan<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => {
+		public RedisScan<T> SScan<T>(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalar(key, (c, k) => {
 			var scan = c.Value.SScanBytes(k, cursor, pattern, count);
 			return new RedisScan<T>(scan.Cursor, this.DeserializeRedisValueArrayInternal<T>(scan.Items));
 		});
@@ -2590,7 +2590,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<(string field, string value)> HScan(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => {
+		public RedisScan<(string field, string value)> HScan(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalar(key, (c, k) => {
 			var scan = c.Value.HScan(k, cursor, pattern, count);
 			return new RedisScan<(string, string)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
 		});
@@ -2603,7 +2603,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<(string field, T value)> HScan<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalar(key, (c, k) => {
+		public RedisScan<(string field, T value)> HScan<T>(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalar(key, (c, k) => {
 			var scan = c.Value.HScanBytes(k, cursor, pattern, count);
 			return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, this.DeserializeRedisValueInternal<T>(z.Item2))).ToArray());
 		});
@@ -3019,7 +3019,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<string> Scan(int cursor, string pattern = null, int? count = null) => NodesNotSupport("Scan", (c, k) => c.Value.Scan(cursor, pattern, count));
+		public RedisScan<string> Scan(long cursor, string pattern = null, long? count = null) => NodesNotSupport("Scan", (c, k) => c.Value.Scan(cursor, pattern, count));
 		/// <summary>
 		/// 迭代当前数据库中的数据库键
 		/// </summary>
@@ -3028,7 +3028,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public RedisScan<T> Scan<T>(int cursor, string pattern = null, int? count = null) => NodesNotSupport("Scan<T>", (c, k) => {
+		public RedisScan<T> Scan<T>(long cursor, string pattern = null, long? count = null) => NodesNotSupport("Scan<T>", (c, k) => {
 			var scan = c.Value.ScanBytes(cursor, pattern, count);
 			return new RedisScan<T>(scan.Cursor, this.DeserializeRedisValueArrayInternal<T>(scan.Items));
 		});

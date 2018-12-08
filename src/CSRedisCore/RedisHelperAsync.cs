@@ -527,7 +527,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<(string member, double score)>> ZScanAsync(string key, int cursor, string pattern = null, int? count = null) =>
+	public static Task<RedisScan<(string member, double score)>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.ZScanAsync(key, cursor, pattern, count);
 	/// <summary>
 	/// 迭代有序集合中的元素
@@ -538,7 +538,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) =>
+	public static Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.ZScanAsync<T>(key, cursor, pattern, count);
 
 	/// <summary>
@@ -743,7 +743,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<string>> SScanAsync(string key, int cursor, string pattern = null, int? count = null) => Instance.SScanAsync(key, cursor, pattern, count);
+	public static Task<RedisScan<string>> SScanAsync(string key, long cursor, string pattern = null, long? count = null) => Instance.SScanAsync(key, cursor, pattern, count);
 	/// <summary>
 	/// 迭代集合中的元素
 	/// </summary>
@@ -753,7 +753,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<T>> SScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => Instance.SScanAsync<T>(key, cursor, pattern, count);
+	public static Task<RedisScan<T>> SScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) => Instance.SScanAsync<T>(key, cursor, pattern, count);
 	#endregion
 
 	#region List
@@ -1038,7 +1038,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<(string field, string value)>> HScanAsync(string key, int cursor, string pattern = null, int? count = null) =>
+	public static Task<RedisScan<(string field, string value)>> HScanAsync(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.HScanAsync(key, cursor, pattern, count);
 	/// <summary>
 	/// 迭代哈希表中的键值对
@@ -1049,7 +1049,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<(string field, T value)>> HScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) =>
+	public static Task<RedisScan<(string field, T value)>> HScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) =>
 		   Instance.HScanAsync<T>(key, cursor, pattern, count);
 	#endregion
 
@@ -1401,7 +1401,7 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<string>> ScanAsync(int cursor, string pattern = null, int? count = null) => Instance.ScanAsync(cursor, pattern, count);
+	public static Task<RedisScan<string>> ScanAsync(long cursor, string pattern = null, long? count = null) => Instance.ScanAsync(cursor, pattern, count);
 	/// <summary>
 	/// 迭代当前数据库中的数据库键
 	/// </summary>
@@ -1410,6 +1410,6 @@ partial class RedisHelper {
 	/// <param name="pattern">模式</param>
 	/// <param name="count">数量</param>
 	/// <returns></returns>
-	public static Task<RedisScan<T>> ScanAsync<T>(int cursor, string pattern = null, int? count = null) => Instance.ScanAsync<T>(cursor, pattern, count);
+	public static Task<RedisScan<T>> ScanAsync<T>(long cursor, string pattern = null, long? count = null) => Instance.ScanAsync<T>(cursor, pattern, count);
 	#endregion
 }

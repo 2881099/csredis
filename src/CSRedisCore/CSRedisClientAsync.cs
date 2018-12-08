@@ -1096,7 +1096,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<(string member, double score)>> ZScanAsync(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
+		public Task<RedisScan<(string member, double score)>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.ZScanAsync(k, cursor, pattern, count);
 			return new RedisScan<(string, double)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
 		});
@@ -1109,7 +1109,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
+		public Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.ZScanBytesAsync(k, cursor, pattern, count);
 			return new RedisScan<(T, double)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
 		});
@@ -1333,7 +1333,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<string>> SScanAsync(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, (c, k) => c.Value.SScanAsync(k, cursor, pattern, count));
+		public Task<RedisScan<string>> SScanAsync(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalarAsync(key, (c, k) => c.Value.SScanAsync(k, cursor, pattern, count));
 		/// <summary>
 		/// 迭代集合中的元素
 		/// </summary>
@@ -1343,7 +1343,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<T>> SScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
+		public Task<RedisScan<T>> SScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.SScanBytesAsync(k, cursor, pattern, count);
 			return new RedisScan<T>(scan.Cursor, this.DeserializeRedisValueArrayInternal<T>(scan.Items));
 		});
@@ -1648,7 +1648,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<(string field, string value)>> HScanAsync(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
+		public Task<RedisScan<(string field, string value)>> HScanAsync(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.HScanAsync(k, cursor, pattern, count);
 			return new RedisScan<(string, string)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
 		});
@@ -1661,7 +1661,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<(string field, T value)>> HScanAsync<T>(string key, int cursor, string pattern = null, int? count = null) => ExecuteScalarAsync(key, async (c, k) => {
+		public Task<RedisScan<(string field, T value)>> HScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) => ExecuteScalarAsync(key, async (c, k) => {
 			var scan = await c.Value.HScanBytesAsync(k, cursor, pattern, count);
 			return new RedisScan<(string, T)>(scan.Cursor, scan.Items.Select(z => (z.Item1, this.DeserializeRedisValueInternal<T>(z.Item2))).ToArray());
 		});
@@ -2077,7 +2077,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<string>> ScanAsync(int cursor, string pattern = null, int? count = null) => NodesNotSupportAsync("Scan", (c, k) => c.Value.ScanAsync(cursor, pattern, count));
+		public Task<RedisScan<string>> ScanAsync(long cursor, string pattern = null, long? count = null) => NodesNotSupportAsync("Scan", (c, k) => c.Value.ScanAsync(cursor, pattern, count));
 		/// <summary>
 		/// 迭代当前数据库中的数据库键
 		/// </summary>
@@ -2086,7 +2086,7 @@ namespace CSRedis {
 		/// <param name="pattern">模式</param>
 		/// <param name="count">数量</param>
 		/// <returns></returns>
-		public Task<RedisScan<T>> ScanAsync<T>(int cursor, string pattern = null, int? count = null) => NodesNotSupportAsync("Scan<T>", async (c, k) => {
+		public Task<RedisScan<T>> ScanAsync<T>(long cursor, string pattern = null, long? count = null) => NodesNotSupportAsync("Scan<T>", async (c, k) => {
 			var scan = await c.Value.ScanBytesAsync(cursor, pattern, count);
 			return new RedisScan<T>(scan.Cursor, this.DeserializeRedisValueArrayInternal<T>(scan.Items));
 		});
