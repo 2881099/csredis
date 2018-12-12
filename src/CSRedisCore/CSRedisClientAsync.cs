@@ -16,17 +16,31 @@ namespace CSRedis {
 			var redirect = ParseClusterRedirect(null);
 			try {
 				obj = await pool.GetAsync();
-				try {
-					return await handerAsync(obj);
-				} catch (RedisException ex3) {
-					redirect = ParseClusterRedirect(ex3);
-					if (redirect == null || jump <= 0) {
-						ex = ex3;
-						throw ex;
+				var errtimes = 0;
+				while (true) { //因网络出错重试，默认1次
+					try {
+						var ret = await handerAsync(obj);
+						return ret;
+					} catch (RedisException ex3) {
+						redirect = ParseClusterRedirect(ex3); //官方集群跳转
+						if (redirect == null || jump <= 0) {
+							ex = ex3;
+							throw ex;
+						}
+						break;
+					} catch (Exception ex2) {
+						ex = ex2;
+						if (++errtimes > pool._policy._tryit) throw ex; //重试次数完成
+						Console.WriteLine($"tryit ({errtimes}) ...");
+
+						try {
+							obj.Value.Ping();
+							throw ex; //非网络错误，跳出重试逻辑，抛出异常
+						} catch {
+							obj.ResetValue();
+							await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
+						}
 					}
-				} catch (Exception ex2) {
-					ex = ex2;
-					throw ex;
 				}
 			} finally {
 				pool.Return(obj, ex);

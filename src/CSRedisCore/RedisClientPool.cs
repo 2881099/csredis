@@ -35,15 +35,19 @@ namespace CSRedis {
 		public void Return(Object<RedisClient> obj, Exception exception, bool isRecreate = false) {
 			if (exception != null) {
 				try {
-					obj.Value.Ping();
+					try {
+						obj.Value.Ping();
 
-					var fcolor = Console.ForegroundColor;
-					Console.WriteLine($"");
-					Console.ForegroundColor = ConsoleColor.DarkYellow;
-					Console.WriteLine($"csreids 错误【{Policy.Name}】：{exception.Message} {exception.StackTrace}");
-					Console.ForegroundColor = fcolor;
-					Console.WriteLine($"");
-
+						var fcolor = Console.ForegroundColor;
+						Console.WriteLine($"");
+						Console.ForegroundColor = ConsoleColor.DarkYellow;
+						Console.WriteLine($"csreids 错误【{Policy.Name}】：{exception.Message} {exception.StackTrace}");
+						Console.ForegroundColor = fcolor;
+						Console.WriteLine($"");
+					} catch {
+						obj.ResetValue();
+						obj.Value.Ping();
+					}
 				} catch(Exception ex) {
 					base.SetUnavailable(ex);
 				}
@@ -63,8 +67,8 @@ namespace CSRedis {
 	public class RedisClientPoolPolicy : IPolicy<RedisClient> {
 
 		internal RedisClientPool _pool;
-		internal int _port = 6379, _database = 0, _writebuffer = 10240;
-		internal string _ip = "127.0.0.1", _password = "";
+		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0;
+		internal string _ip = "127.0.0.1", _password = "", _clientname = "";
 		internal bool _ssl = false, _preheat = true;
 		internal string Key => $"{_ip}:{_port}/{_database}";
 		internal string Prefix { get; set; }
@@ -101,6 +105,8 @@ namespace CSRedis {
 					else if (kv[0] == "ssl") _ssl = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
 					else if (kv[0] == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10240", out _writebuffer) ? _writebuffer : 10240;
 					else if (kv[0] == "preheat") _preheat = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
+					else if (kv[0] == "name") _clientname = kv.Length > 1 ? kv[1] : "";
+					else if (kv[0] == "tryit") _tryit = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _tryit) ? _tryit : 0;
 				}
 
 				if (_preheat) {
@@ -120,7 +126,10 @@ namespace CSRedis {
 			var ips = Dns.GetHostAddresses(_ip);
 			if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
 			var client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 100, _writebuffer);
-			client.Connected += Connected;
+			client.Connected += (s, o) => {
+				Connected(s, o);
+				if (!string.IsNullOrEmpty(_clientname)) client.ClientSetName(_clientname);
+			};
 			return client;
 		}
 
