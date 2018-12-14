@@ -129,7 +129,7 @@ namespace CSRedis {
 		/// <param name="message">消息文本</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<long> Publish(string channel, string message) {
-			var msgid = HIncrBy("csredisclient:Publish:msgid", channel, 1);
+			var msgid = rds.HIncrBy("csredisclient:Publish:msgid", channel, 1);
 			return PipeCommand(channel, (c, k) => c.Value.Publish(channel, $"{msgid}|{message}"));
 		}
 		/// <summary>
