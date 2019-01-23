@@ -111,7 +111,7 @@ namespace CSRedis {
 				switch (basename) {
 					case "System.Boolean":
 						if (valueStr == "1") obj = true;
-						else if (valueStr == "0") obj = true;
+						else if (valueStr == "0") obj = false;
 						break;
 					case "System.Byte":
 						if (byte.TryParse(valueStr, out var trybyte)) obj = trybyte;

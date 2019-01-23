@@ -22,7 +22,7 @@ CSRedis于2016年开始支持.NETCore一直迭代至今，实现了低门槛、�
 
 1、现实分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。
 
-> nuget Install-Package CSRedisCore
+> dotnet add package CSRedisCore
 
 ## 普通模式
 
@@ -71,7 +71,7 @@ var csredis = new CSRedis.CSRedisClient(null,
 //也可以自定义规则(第一个参数设置)
 ```
 
-> mvc分布式缓存注入 nuget Install-Package Caching.CSRedis
+> mvc分布式缓存注入 dotnet add package Caching.CSRedis
 
 ```csharp
 //初始化 RedisHelper
