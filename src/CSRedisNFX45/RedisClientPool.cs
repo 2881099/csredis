@@ -123,9 +123,14 @@ namespace CSRedis {
 		}
 
 		public RedisClient OnCreate() {
-			var ips = Dns.GetHostAddresses(_ip);
-			if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
-			var client = new RedisClient(new IPEndPoint(ips[0], _port), _ssl, 100, _writebuffer);
+			RedisClient client = null;
+			if (IPAddress.TryParse(_ip, out var tryip)) {
+				client = new RedisClient(new IPEndPoint(tryip, _port), _ssl, 100, _writebuffer);
+			} else {
+				var ips = Dns.GetHostAddresses(_ip);
+				if (ips.Length == 0) throw new Exception($"无法解析“{_ip}”");
+				client = new RedisClient(_ip, _port, _ssl, 100, _writebuffer);
+			}
 			client.Connected += (s, o) => {
 				Connected(s, o);
 				if (!string.IsNullOrEmpty(_clientname)) client.ClientSetName(_clientname);
