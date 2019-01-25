@@ -575,11 +575,22 @@ namespace CSRedis {
 		/// <returns></returns>
 		public Task<string> EchoAsync(string nodeKey, string message) => GetAndExecuteAsync(GetNodeOrThrowNotFound(nodeKey), c => c.Value.EchoAsync(message));
 		/// <summary>
+		/// 打印字符串
+		/// </summary>
+		/// <param name="message">消息</param>
+		/// <returns></returns>
+		public Task<string> EchoAsync(string message) => GetAndExecuteAsync(Nodes.First().Value, c => c.Value.EchoAsync(message));
+		/// <summary>
 		/// 查看服务是否运行
 		/// </summary>
 		/// <param name="nodeKey">分区key</param>
 		/// <returns></returns>
 		public Task<bool> PingAsync(string nodeKey) => GetAndExecuteAsync(GetNodeOrThrowNotFound(nodeKey), async c => await c.Value.PingAsync() == "PONG");
+		/// <summary>
+		/// 查看服务是否运行
+		/// </summary>
+		/// <returns></returns>
+		public Task<bool> PingAsync() => GetAndExecuteAsync(Nodes.First().Value, async c => await c.Value.PingAsync() == "PONG");
 		/// <summary>
 		/// 关闭当前连接
 		/// </summary>

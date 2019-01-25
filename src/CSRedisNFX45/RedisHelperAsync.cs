@@ -49,11 +49,22 @@ partial class RedisHelper {
 	/// <returns></returns>
 	public static Task<string> EchoAsync(string nodeKey, string message) => Instance.EchoAsync(nodeKey, message);
 	/// <summary>
+	/// 打印字符串
+	/// </summary>
+	/// <param name="message">消息</param>
+	/// <returns></returns>
+	public static Task<string> EchoAsync(string message) => Instance.EchoAsync(message);
+	/// <summary>
 	/// 查看服务是否运行
 	/// </summary>
 	/// <param name="nodeKey">分区key</param>
 	/// <returns></returns>
 	public static Task<bool> PingAsync(string nodeKey) => Instance.PingAsync(nodeKey);
+	/// <summary>
+	/// 查看服务是否运行
+	/// </summary>
+	/// <returns></returns>
+	public static Task<bool> PingAsync() => Instance.PingAsync();
 	#endregion
 
 	#region Script

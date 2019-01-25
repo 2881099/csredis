@@ -98,11 +98,22 @@ public abstract partial class RedisHelper {
 	/// <returns></returns>
 	public static string Echo(string nodeKey, string message) => Instance.Echo(nodeKey, message);
 	/// <summary>
+	/// 打印字符串
+	/// </summary>
+	/// <param name="message">消息</param>
+	/// <returns></returns>
+	public static string Echo(string message) => Instance.Echo(message);
+	/// <summary>
 	/// 查看服务是否运行
 	/// </summary>
 	/// <param name="nodeKey">分区key</param>
 	/// <returns></returns>
 	public static bool Ping(string nodeKey) => Instance.Ping(nodeKey);
+	/// <summary>
+	/// 查看服务是否运行
+	/// </summary>
+	/// <returns></returns>
+	public static bool Ping() => Instance.Ping();
 	#endregion
 
 	#region Script

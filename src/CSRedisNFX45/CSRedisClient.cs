@@ -972,11 +972,22 @@ namespace CSRedis {
 		/// <returns></returns>
 		public string Echo(string nodeKey, string message) => GetAndExecute(GetNodeOrThrowNotFound(nodeKey), c => c.Value.Echo(message));
 		/// <summary>
+		/// 打印字符串
+		/// </summary>
+		/// <param name="message">消息</param>
+		/// <returns></returns>
+		public string Echo(string message) => GetAndExecute(Nodes.First().Value, c => c.Value.Echo(message));
+		/// <summary>
 		/// 查看服务是否运行
 		/// </summary>
 		/// <param name="nodeKey">分区key</param>
 		/// <returns></returns>
 		public bool Ping(string nodeKey) => GetAndExecute(GetNodeOrThrowNotFound(nodeKey), c => c.Value.Ping()) == "PONG";
+		/// <summary>
+		/// 查看服务是否运行
+		/// </summary>
+		/// <returns></returns>
+		public bool Ping() => GetAndExecute(Nodes.First().Value, c => c.Value.Ping()) == "PONG";
 		/// <summary>
 		/// 关闭当前连接
 		/// </summary>
