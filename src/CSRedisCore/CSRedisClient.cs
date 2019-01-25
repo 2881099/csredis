@@ -3344,6 +3344,6 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 	}
 
 	public enum KeyType { None, String, List, Set, ZSet, Hash }
-	public enum InfoSection { Server, Clients, Memory, Persistence, Stats, Replication, CPU, Keyspace }
+	public enum InfoSection { Server, Clients, Memory, Persistence, Stats, Replication, CPU, CommandStats, Cluster, Keyspace }
 	public enum ClientKillType { normal, slave, pubsub }
 }
