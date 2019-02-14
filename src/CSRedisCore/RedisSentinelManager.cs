@@ -158,6 +158,7 @@ namespace CSRedis
 					} catch (Exception ex) {
 
 						Trace.WriteLine(ex.Message);
+						Console.WriteLine(ex.Message);
 						continue;
 					}
 

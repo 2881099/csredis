@@ -230,7 +230,16 @@ namespace CSRedis {
 			if (sentinels?.Any() == true) {
 				if (connectionStrings.Length > 1) throw new Exception("Redis Sentinel 不可设置多个 ConnectionString");
 				SentinelManager = new RedisSentinelManager(sentinels);
-				SentinelManager.Connected += (s, e) => SentinelManager.Call(c => c.Auth(tmppoolPolicy._password));
+				SentinelManager.Connected += (s, e) => {
+					if (!string.IsNullOrEmpty(tmppoolPolicy._password)) {
+						try {
+							SentinelManager.Call(c => c.Auth(tmppoolPolicy._password));
+						} catch (Exception authEx) {
+							if (authEx.Message != "ERR Client sent AUTH, but no password is set")
+								throw authEx;
+						}
+					}
+				};
 				SentinelMasterName = connectionStrings.First().Split(',').FirstOrDefault() ?? "mymaster";
 				SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
 			}
@@ -306,6 +315,7 @@ namespace CSRedis {
 								Console.ForegroundColor = forecolor;
 								Console.WriteLine();
 
+								BackgroundGetSentinelMasterValueIng = false;
 								return;
 							}
 						} catch (Exception ex21) {
