@@ -48,7 +48,9 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 # 哨兵模式
 
 ```csharp
-var csredis = new CSRedis.CSRedisClient("mymaster,password=123,prefix=key前辍", new [] { "192.169.1.10:26379", "192.169.1.11:26379", "192.169.1.12:26379" });
+var csredis = new CSRedis.CSRedisClient(
+    "mymaster,password=123,prefix=key前辍", 
+    new [] { "192.169.1.10:26379", "192.169.1.11:26379", "192.169.1.12:26379" });
 ```
 
 连接字符串中的 mymaster 是哨兵监听的名称，其他配置参数与普通模式一致
