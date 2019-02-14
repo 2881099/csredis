@@ -124,38 +124,68 @@ namespace SafeObjectPool {
 					}
 				}
 
-				bool isRestored = false;
-				if (UnavailableException != null) {
-
-					lock (UnavailableLock) {
-
-						if (UnavailableException != null) {
-
-							UnavailableException = null;
-							UnavailableTime = null;
-							isRestored = true;
-						}
-					}
-				}
-
-				if (isRestored) {
-
-					lock (_allObjectsLock)
-						_allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
-
-					Policy.OnAvailable();
-
-					var bgcolor = Console.BackgroundColor;
-					var forecolor = Console.ForegroundColor;
-					Console.BackgroundColor = ConsoleColor.DarkGreen;
-					Console.ForegroundColor = ConsoleColor.White;
-					Console.Write($"【{Policy.Name}】已恢复工作");
-					Console.BackgroundColor = bgcolor;
-					Console.ForegroundColor = forecolor;
-					Console.WriteLine();
-				}
+				RestoreToAvailable();
 
 			}).Start();
+		}
+
+		private void RestoreToAvailable() {
+
+			bool isRestored = false;
+			if (UnavailableException != null) {
+
+				lock (UnavailableLock) {
+
+					if (UnavailableException != null) {
+
+						UnavailableException = null;
+						UnavailableTime = null;
+						isRestored = true;
+					}
+				}
+			}
+
+			if (isRestored) {
+
+				lock (_allObjectsLock)
+					_allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
+
+				Policy.OnAvailable();
+
+				var bgcolor = Console.BackgroundColor;
+				var forecolor = Console.ForegroundColor;
+				Console.BackgroundColor = ConsoleColor.DarkGreen;
+				Console.ForegroundColor = ConsoleColor.White;
+				Console.Write($"【{Policy.Name}】已恢复工作");
+				Console.BackgroundColor = bgcolor;
+				Console.ForegroundColor = forecolor;
+				Console.WriteLine();
+			}
+		}
+
+		protected bool LiveCheckAvailable() {
+
+			try {
+
+				var conn = getFree(false);
+				if (conn == null) throw new Exception($"LiveCheckAvailable 无法获得资源，{this.Statistics}");
+
+				try {
+
+					if (Policy.OnCheckAvailable(conn) == false) throw new Exception("LiveCheckAvailable 应抛出异常，代表仍然不可用。");
+
+				} finally {
+
+					Return(conn);
+				}
+
+			} catch {
+				return false;
+			}
+
+			RestoreToAvailable();
+
+			return true;
 		}
 
 		/// <summary>

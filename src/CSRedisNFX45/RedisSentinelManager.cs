@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -35,7 +36,7 @@ namespace CSRedis
                 string[] parts = host.Split(':');
                 string hostname = parts[0].Trim();
                 int port = Int32.Parse(parts[1]);
-                Add(host, port);
+                Add(hostname, port);
             }
         }
 
@@ -68,18 +69,18 @@ namespace CSRedis
         /// </summary>
         /// <param name="masterName">Name of Redis master</param>
         /// <param name="timeout">Connection timeout (milliseconds)</param>
-        /// <returns>host:port of Sentinel server that responded</returns>
+        /// <returns>host:port of Master server that responded</returns>
         public string Connect(string masterName, int timeout = 200)
         {
             _masterName = masterName;
             _connectTimeout = timeout;
 
-            string sentinel = SetMaster(masterName, timeout);
-            if (sentinel == null)
+            string masterEndPoint = SetMaster(masterName, timeout);
+            if (masterEndPoint == null)
                 throw new IOException("Could not connect to sentinel or master");
 
             _redisClient.ReconnectAttempts = 0;
-            return sentinel;
+            return masterEndPoint;
         }
 
         /// <summary>
@@ -137,19 +138,30 @@ namespace CSRedis
                     if (master == null)
                         continue;
 
-                    _redisClient = new RedisClient(master.Item1, master.Item2);
+					if (_redisClient != null)
+						_redisClient.Dispose();
+					_redisClient = new RedisClient(master.Item1, master.Item2);
                     _redisClient.Connected += OnConnectionConnected;
-                    if (!_redisClient.Connect(timeout))
-                        continue;
 
-                    var role = _redisClient.Role();
-                    if (role.RoleName != "master")
-                        continue;
+					try {
+						if (!_redisClient.Connect(timeout))
+							continue;
 
-                    foreach (var remoteSentinel in sentinel.Sentinels(name))
-                        Add(remoteSentinel.Ip, remoteSentinel.Port);
 
-                    return sentinel.Host + ':' + sentinel.Port;
+						var role = _redisClient.Role();
+						if (role.RoleName != "master")
+							continue;
+
+						foreach (var remoteSentinel in sentinel.Sentinels(name))
+							Add(remoteSentinel.Ip, remoteSentinel.Port);
+
+					} catch (Exception ex) {
+
+						Trace.WriteLine(ex.Message);
+						continue;
+					}
+
+					return master.Item1 + ':' + master.Item2;
                 }
 
             }

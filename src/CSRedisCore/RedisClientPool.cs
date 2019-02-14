@@ -7,17 +7,25 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Diagnostics;
 
 namespace CSRedis {
 	public class RedisClientPool : ObjectPool<RedisClient> {
 
-		public RedisClientPool(string name, string connectionString, Action<RedisClient> onConnected) : base(null) {
+		public RedisClientPool(string connectionString, Action<RedisClient> onConnected) : base(null) {
 			_policy = new RedisClientPoolPolicy {
 				_pool = this
 			};
 			_policy.Connected += (s, o) => {
 				RedisClient rc = s as RedisClient;
-				if (!string.IsNullOrEmpty(_policy._password)) rc.Auth(_policy._password);
+				if (!string.IsNullOrEmpty(_policy._password)) {
+					try {
+						rc.Auth(_policy._password);
+					} catch (Exception authEx) {
+						if (authEx.Message != "ERR Client sent AUTH, but no password is set")
+							throw authEx;
+					}
+				}
 				if (_policy._database > 0) rc.Select(_policy._database);
 				onConnected(s as RedisClient);
 			};
@@ -36,6 +44,7 @@ namespace CSRedis {
 			if (exception != null) {
 				try {
 					try {
+						if (!obj.Value.IsConnected) obj.Value.Connect(_policy._connectTimeout);
 						obj.Value.Ping();
 
 						var fcolor = Console.ForegroundColor;
@@ -46,6 +55,7 @@ namespace CSRedis {
 						Console.WriteLine($"");
 					} catch {
 						obj.ResetValue();
+						if (!obj.Value.IsConnected) obj.Value.Connect(_policy._connectTimeout);
 						obj.Value.Ping();
 					}
 				} catch(Exception ex) {
@@ -54,6 +64,8 @@ namespace CSRedis {
 			}
 			base.Return(obj, isRecreate);
 		}
+
+		internal bool CheckAvailable() => base.LiveCheckAvailable();
 
 		internal RedisClientPoolPolicy _policy;
 		public string Key => _policy.Key;
@@ -67,7 +79,7 @@ namespace CSRedis {
 	public class RedisClientPoolPolicy : IPolicy<RedisClient> {
 
 		internal RedisClientPool _pool;
-		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0;
+		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = -1;
 		internal string _ip = "127.0.0.1", _password = "", _clientname = "";
 		internal bool _ssl = false, _preheat = true;
 		internal string Key => $"{_ip}:{_port}/{_database}";
@@ -81,6 +93,11 @@ namespace CSRedis {
 		public bool IsThrowGetTimeoutException { get; set; } = true;
 		public int CheckAvailableInterval { get; set; } = 5;
 		
+		internal void SetHost(string host) {
+			var spt = (host ?? "").Split(':');
+			_ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
+			if (spt.Length < 2 || int.TryParse(spt[1].Trim(), out _port) == false) _port = 6379;
+		}
 
 		private string _connectionString;
 		public string ConnectionString {
@@ -91,27 +108,55 @@ namespace CSRedis {
 
 				//支持密码中带有逗号，将原有 split(',') 改成以下处理方式
 				var vs = Regex.Split(_connectionString, @"\,([\w \t\r\n]+)=", RegexOptions.Multiline);
-
-				var host = vs[0].Split(':');
-				_ip = string.IsNullOrEmpty(host[0].Trim()) == false ? host[0].Trim() : "127.0.0.1";
-				if (host.Length < 2 || int.TryParse(host[1].Trim(), out _port) == false) _port = 6379;
+				this.SetHost(vs[0]);
 
 				for (var a = 1; a < vs.Length; a += 2) {
 					var kv = new[] { vs[a].ToLower().Trim(), vs[a + 1] };
-					if (kv[0] == "password") _password = kv.Length > 1 ? kv[1] : "";
-					else if (kv[0] == "prefix") Prefix = kv.Length > 1 ? kv[1] : "";
-					else if (kv[0] == "defaultdatabase") _database = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _database) ? _database : 0;
-					else if (kv[0] == "poolsize") PoolSize = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
-					else if (kv[0] == "ssl") _ssl = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
-					else if (kv[0] == "writebuffer") _writebuffer = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10240", out _writebuffer) ? _writebuffer : 10240;
-					else if (kv[0] == "preheat") _preheat = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
-					else if (kv[0] == "name") _clientname = kv.Length > 1 ? kv[1] : "";
-					else if (kv[0] == "tryit") _tryit = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _tryit) ? _tryit : 0;
+					switch (kv[0]) {
+						case "password":
+							_password = kv.Length > 1 ? kv[1] : "";
+							break;
+						case "prefix":
+							Prefix = kv.Length > 1 ? kv[1] : "";
+							break;
+						case "defaultdatabase":
+							_database = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _database) ? _database : 0;
+							break;
+						case "poolsize":
+							PoolSize = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out var poolsize) == false || poolsize <= 0 ? 50 : poolsize;
+							break;
+						case "ssl":
+							_ssl = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
+							break;
+						case "writebuffer":
+							_writebuffer = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10240", out _writebuffer) ? _writebuffer : 10240;
+							break;
+						case "preheat":
+							_preheat = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
+							break;
+						case "name":
+							_clientname = kv.Length > 1 ? kv[1] : "";
+							break;
+						case "tryit":
+							_tryit = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _tryit) ? _tryit : 0;
+							break;
+						case "connecttimeout":
+							_connectTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "-1", out var connectTimeout) == false || connectTimeout <= 0 ? -1 : connectTimeout;
+							break;
+					}
 				}
 
 				if (_preheat) {
-					var initConns = new Object<RedisClient>[PoolSize];
-					for (var a = 0; a < PoolSize; a++) try { initConns[a] = _pool.Get(); initConns[a].Value.Ping(); } catch { break; } //预热失败一次就退出
+					var initConns = new List<Object<RedisClient>>();
+					for (var a = 0; a < PoolSize; a++)
+						try {
+							var conn = _pool.Get();
+							initConns.Add(conn);
+							if (!conn.Value.IsConnected) conn.Value.Connect(_connectTimeout);
+							conn.Value.Ping();
+						} catch {
+							break; //预热失败一次就退出
+						}
 					foreach (var conn in initConns) _pool.Return(conn);
 				}
 			}
@@ -119,6 +164,7 @@ namespace CSRedis {
 
 		public bool OnCheckAvailable(Object<RedisClient> obj) {
 			obj.ResetValue();
+			if (!obj.Value.IsConnected) obj.Value.Connect(_connectTimeout);
 			return obj.Value.Ping() == "PONG";
 		}
 
@@ -150,6 +196,7 @@ namespace CSRedis {
 			if (_pool.IsAvailable) {
 				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 || obj.Value.IsConnected == false) {
 					try {
+						if (!obj.Value.IsConnected) obj.Value.Connect(_connectTimeout);
 						obj.Value.Ping();
 					} catch {
 						obj.ResetValue();
@@ -163,6 +210,7 @@ namespace CSRedis {
 			if (_pool.IsAvailable) {
 				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 || obj.Value.IsConnected == false) {
 					try {
+						if (!obj.Value.IsConnected) obj.Value.Connect(_connectTimeout);
 						await obj.Value.PingAsync();
 					} catch {
 						obj.ResetValue();

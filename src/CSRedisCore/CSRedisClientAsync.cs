@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 namespace CSRedis {
 	public partial class CSRedisClient {
 
-		async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 100) {
+		async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 100, int errtimes = 0) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
 			var redirect = ParseClusterRedirect(null);
+			var isSentinelRetry = false;
 			try {
 				obj = await pool.GetAsync();
-				var errtimes = 0;
 				while (true) { //因网络出错重试，默认1次
 					try {
 						var ret = await handerAsync(obj);
@@ -30,13 +30,22 @@ namespace CSRedis {
 						break;
 					} catch (Exception ex2) {
 						ex = ex2;
-						if (++errtimes > pool._policy._tryit) throw ex; //重试次数完成
-						Console.WriteLine($"tryit ({errtimes}) ...");
+						if (SentinelManager == null) {
+							if (++errtimes > pool._policy._tryit) throw ex; //重试次数完成
+							Trace.WriteLine($"csredis tryit ({errtimes}) ...");
+						}
 
 						try {
-							obj.Value.Ping();
+							await obj.Value.PingAsync();
 							throw ex; //非网络错误，跳出重试逻辑，抛出异常
 						} catch {
+							if (SentinelManager != null) { //哨兵轮询
+								if (pool.SetUnavailable(ex) == true) {
+									BackgroundGetSentinelMasterValue();
+								}
+								throw new Exception("Redis Sentinel Master is switching.");
+							}
+
 							obj.ResetValue();
 							await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
 						}
@@ -45,11 +54,14 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
+			if (isSentinelRetry)
+				return await GetAndExecuteAsync<T>(pool, handerAsync, jump - 1, errtimes);
+
 			var redirectHanderAsync = redirect.Value.isMoved ? handerAsync : async redirectObj => {
 				await redirectObj.Value.CallAsync("ASKING");
 				return await handerAsync(redirectObj);
 			};
-			return await GetAndExecuteAsync<T>(GetRedirectPool(redirect.Value, pool), handerAsync, jump - 1);
+			return await GetAndExecuteAsync<T>(GetRedirectPool(redirect.Value, pool), redirectHanderAsync, jump - 1);
 		}
 
 		async Task<T> NodesNotSupportAsync<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], Task<T>> callbackAsync) {
@@ -63,7 +75,7 @@ namespace CSRedis {
 			return await GetAndExecuteAsync(pool, conn => callbackAsync(conn, rkeys));
 		}
 		Task<T> NodesNotSupportAsync<T>(string key, Func<Object<RedisClient>, string, Task<T>> callback) {
-			if (Nodes.Count > 1) throw new Exception("由于开启了分区模式，无法使用此功能");
+			if (IsMultiNode) throw new Exception("由于开启了分区模式，无法使用此功能");
 			return ExecuteScalarAsync<T>(key, callback);
 		}
 

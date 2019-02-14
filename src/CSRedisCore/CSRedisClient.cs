@@ -21,6 +21,10 @@ namespace CSRedis {
 		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
 		internal Func<string, string> NodeRuleRaw;
 		internal Func<string, string> NodeRuleExternal;
+		internal RedisSentinelManager SentinelManager;
+		internal string SentinelMasterName;
+		internal string SentinelMasterValue;
+		internal bool IsMultiNode => Nodes.Count > 1 && SentinelManager == null;
 		private object NodesLock = new object();
 		public ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
 
@@ -202,18 +206,37 @@ namespace CSRedis {
 		#endregion
 
 		/// <summary>
-		/// 创建redis访问类
+		/// 创建redis访问类(支持单机或集群)
 		/// </summary>
 		/// <param name="connectionString">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
-		public CSRedisClient(string connectionString) : this(null, connectionString) { }
+		public CSRedisClient(string connectionString) : this(null, new string[0], connectionString) { }
 		/// <summary>
-		/// 创建redis访问分区类，通过 KeyRule 对 key 进行分区，连接对应的 connectionString
+		/// 创建redis哨兵访问类(Redis Sentinel)
+		/// </summary>
+		/// <param name="connectionString">mymaster,password=123456,poolsize=50,connectTimeout=200,ssl=false</param>
+		/// <param name="sentinels">哨兵节点，如：ip1:26379、ip2:26379</param>
+		public CSRedisClient(string connectionString, string[] sentinels) : this(null, sentinels, connectionString) { }
+		/// <summary>
+		/// 创建redis分区访问类，通过 KeyRule 对 key 进行分区，连接对应的 connectionString
 		/// </summary>
 		/// <param name="NodeRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
 		/// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
-		public CSRedisClient(Func<string, string> NodeRule, params string[] connectionStrings) {
+		public CSRedisClient(Func<string, string> NodeRule, params string[] connectionStrings) : this(NodeRule, null, connectionStrings) { }
+		CSRedisClient(Func<string, string> NodeRule, string[] sentinels, params string[] connectionStrings) {
+			if (connectionStrings == null || connectionStrings.Any() == false) throw new Exception("Redis ConnectionString 未设置");
+			var tmppoolPolicy = new RedisClientPoolPolicy();
+			tmppoolPolicy.ConnectionString = connectionStrings.First() + ",preheat=false";
+
+			if (sentinels?.Any() == true) {
+				if (connectionStrings.Length > 1) throw new Exception("Redis Sentinel 不可设置多个 ConnectionString");
+				SentinelManager = new RedisSentinelManager(sentinels);
+				SentinelManager.Connected += (s, e) => SentinelManager.Call(c => c.Auth(tmppoolPolicy._password));
+				SentinelMasterName = connectionStrings.First().Split(',').FirstOrDefault() ?? "mymaster";
+				SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
+			}
 			this.NodeRuleRaw = key => {
 				if (Nodes.Count <= 1) return NodesIndex[0];
+
 				var slot = GetClusterSlot(string.Concat(Nodes.First().Value.Prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
 				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
 				if (this.NodeRuleExternal == null) {
@@ -223,29 +246,84 @@ namespace CSRedis {
 				return this.NodeRuleExternal(key);
 			};
 			this.NodeRuleExternal = NodeRule;
-			if (connectionStrings == null || connectionStrings.Any() == false) throw new Exception("Redis ConnectionString 未设置");
+
 			foreach (var connectionString in connectionStrings) {
-				var pool = new RedisClientPool("", connectionString, client => { });
-				if (Nodes.ContainsKey(pool.Key)) throw new Exception($"Node: {pool.Key} 重复，请检查");
-				if (this.TryAddNode(pool.Key, pool) == false) {
+				var connStr = connectionString;
+				if (SentinelManager != null) {
+					var startIdx = connStr.IndexOf(',');
+					if (startIdx != -1) connStr = connStr.Substring(startIdx);
+					connStr = $"{SentinelMasterValue}{connStr}";
+				}
+
+				var pool = new RedisClientPool(connStr, client => { });
+				var nodeKey = SentinelMasterName ?? pool.Key;
+				if (Nodes.ContainsKey(nodeKey)) throw new Exception($"Node: {nodeKey} 重复，请检查");
+				if (this.TryAddNode(nodeKey, pool) == false) {
 					pool.Dispose();
 					pool = null;
-					throw new Exception($"Node: {pool.Key} 无法添加");
+					throw new Exception($"Node: {nodeKey} 无法添加");
 				}
 			}
 			this.NodesServerManager = new NodesServerManagerProvider(this);
 		}
+
 		public void Dispose() {
 			foreach (var pool in this.Nodes.Values) pool.Dispose();
+			SentinelManager?.Dispose();
 		}
 
-		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100) {
+		bool BackgroundGetSentinelMasterValueIng = false;
+		object BackgroundGetSentinelMasterValueIngLock = new object();
+		bool BackgroundGetSentinelMasterValue() {
+			if (SentinelManager == null) return false;
+			if (Nodes.Count > 1) return false;
+
+			var ing = false;
+			if (BackgroundGetSentinelMasterValueIng == false) {
+				lock(BackgroundGetSentinelMasterValueIngLock) {
+					if (BackgroundGetSentinelMasterValueIng == false) {
+						BackgroundGetSentinelMasterValueIng = ing = true;
+					}
+				}
+			}
+
+			if (ing) {
+				var pool = Nodes.First().Value;
+				new Thread(() => {
+					while (true) {
+						Thread.CurrentThread.Join(1000);
+						try {
+							SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
+							pool._policy.SetHost(SentinelMasterValue);
+							if (pool.CheckAvailable()) {
+
+								var bgcolor = Console.BackgroundColor;
+								var forecolor = Console.ForegroundColor;
+								Console.BackgroundColor = ConsoleColor.DarkGreen;
+								Console.ForegroundColor = ConsoleColor.White;
+								Console.Write($"Redis Sentinel Pool 已切换至 {SentinelMasterValue}");
+								Console.BackgroundColor = bgcolor;
+								Console.ForegroundColor = forecolor;
+								Console.WriteLine();
+
+								BackgroundGetSentinelMasterValueIng = false;
+								return;
+							}
+						} catch (Exception ex21) {
+							Trace.WriteLine($"Redis Sentinel: {ex21.Message}");
+						}
+					}
+				}).Start();
+			}
+			return ing;
+		}
+		T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100, int errtimes = 0) {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
 			var redirect = ParseClusterRedirect(null);
+			var isSentinelRetry = false;
 			try {
 				obj = pool.Get();
-				var errtimes = 0;
 				while (true) { //因网络出错重试，默认1次
 					try {
 						var ret = handler(obj);
@@ -259,13 +337,22 @@ namespace CSRedis {
 						break;
 					} catch (Exception ex2) {
 						ex = ex2;
-						if (++errtimes > pool._policy._tryit) throw ex; //重试次数完成
-						Console.WriteLine($"tryit ({errtimes}) ...");
+						if (SentinelManager == null) {
+							if (++errtimes > pool._policy._tryit) throw ex; //重试次数完成
+							Trace.WriteLine($"csredis tryit ({errtimes}) ...");
+						}
 
 						try {
 							obj.Value.Ping();
 							throw ex; //非网络错误，跳出重试逻辑，抛出异常
 						} catch {
+							if (SentinelManager != null) { //哨兵轮询
+								if (pool.SetUnavailable(ex) == true) {
+									BackgroundGetSentinelMasterValue();
+								}
+								throw new Exception("Redis Sentinel Master is switching.");
+							}
+
 							obj.ResetValue();
 							obj.Value.Ping(); //此时再报错，说明真的网络问题，抛出异常
 						}
@@ -274,6 +361,9 @@ namespace CSRedis {
 			} finally {
 				pool.Return(obj, ex);
 			}
+			if (isSentinelRetry)
+				return GetAndExecute(pool, handler, jump - 1, errtimes);
+
 			var redirectHander = redirect.Value.isMoved ? handler : redirectObj => {
 				redirectObj.Value.Call("ASKING");
 				return handler(redirectObj);
@@ -294,8 +384,8 @@ namespace CSRedis {
 			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
 				lock (NodesLock) {
 					if (Nodes.TryGetValue(nodeKey, out movedPool) == false) {
-						var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},preheat=false,ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},prefix={pool._policy.Prefix}";
-						movedPool = new RedisClientPool("", connectionString, client => { });
+						var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},connectTimeout={pool._policy._connectTimeout},preheat=false,ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},tryit={pool._policy._tryit},name={pool._policy._clientname},prefix={pool._policy.Prefix}";
+						movedPool = new RedisClientPool(connectionString, client => { });
 						if (this.TryAddNode(nodeKey, movedPool) == false) {
 							movedPool.Dispose();
 							movedPool = null;
@@ -333,11 +423,12 @@ namespace CSRedis {
 			return GetAndExecute(pool, conn => callback(conn, rkeys));
 		}
 		T NodesNotSupport<T>(string key, Func<Object<RedisClient>, string, T> callback) {
-			if (Nodes.Count > 1) throw new Exception("由于开启了分区模式，无法使用此功能");
+			if (IsMultiNode) throw new Exception("由于开启了分区模式，无法使用此功能");
 			return ExecuteScalar<T>(key, callback);
 		}
 
 		RedisClientPool GetNodeOrThrowNotFound(string nodeKey) {
+			if (Nodes.Count == 1) return Nodes.First().Value;
 			if (Nodes.ContainsKey(nodeKey) == false) throw new Exception($"找不到群集节点：{nodeKey}");
 			return Nodes[nodeKey];
 		}
@@ -573,7 +664,7 @@ namespace CSRedis {
 		#endregion
 
 		/// <summary>
-		/// 创建管道传输
+		/// 创建管道传输，注意：官方集群时请务必预热slotCache，否则会产生moved错误
 		/// </summary>
 		/// <param name="handler"></param>
 		/// <returns></returns>
@@ -585,7 +676,7 @@ namespace CSRedis {
 		}
 
 		/// <summary>
-		/// 创建管道传输，打包提交如：RedisHelper.StartPipe().Set("a", "1").HSet("b", "f", "2").EndPipe();
+		/// 创建管道传输，注意：官方集群时请务必预热slotCache，否则会产生moved错误，打包提交如：RedisHelper.StartPipe().Set("a", "1").HSet("b", "f", "2").EndPipe();
 		/// </summary>
 		/// <returns></returns>
 		public CSRedisClientPipe<string> StartPipe() {

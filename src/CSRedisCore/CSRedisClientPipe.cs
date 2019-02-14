@@ -12,6 +12,7 @@ namespace CSRedis {
 	public partial class CSRedisClientPipe<TObject> : IDisposable {
 		private CSRedisClient rds;
 		private ConcurrentDictionary<string, RedisClientPool> Nodes => rds.Nodes;
+		private bool IsMultiNode => rds.IsMultiNode;
 		private Func<string, string> NodeRuleRaw => rds.NodeRuleRaw;
 		private ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> Conns = new ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)>();
 		private Queue<Func<object, object>> Parsers = new Queue<Func<object, object>>();
@@ -211,7 +212,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<long> ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
 			if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
-			if (Nodes.Count > 1) throw new Exception("ZInterStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("ZInterStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.ZInterStore(k, weights, aggregate, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -563,7 +564,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<long> ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
 			if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
-			if (Nodes.Count > 1) throw new Exception("ZUnionStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("ZUnionStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.ZUnionStore(k, weights, aggregate, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -664,7 +665,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<string[]> SDiff(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SDiff 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SDiff 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => c.Value.SDiff(keys.Select(z => prefix + z).ToArray()));
 		}
@@ -676,7 +677,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> SDiff<T>(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SDiff<T> 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SDiff<T> 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => { c.Value.SDiffBytes(keys.Select(z => prefix + z).ToArray()); return default(T[]); }, obj =>
 			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
@@ -690,7 +691,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<long> SDiffStore(string destination, params string[] keys) {
 			if (string.IsNullOrEmpty(destination)) throw new Exception("destination 参数不可为空");
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SDiffStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SDiffStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.SDiffStore(k, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -701,7 +702,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<string[]> SInter(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SInter 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SInter 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => c.Value.SInter(keys.Select(z => prefix + z).ToArray()));
 		}
@@ -713,7 +714,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> SInter<T>(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SInter<T> 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SInter<T> 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => { c.Value.SInterBytes(keys.Select(z => prefix + z).ToArray()); return default(T[]); }, obj =>
 			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
@@ -727,7 +728,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<long> SInterStore(string destination, params string[] keys) {
 			if (string.IsNullOrEmpty(destination)) throw new Exception("destination 参数不可为空");
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SInterStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SInterStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.SInterStore(k, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -759,7 +760,7 @@ namespace CSRedis {
 		/// <param name="member">成员</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<bool> SMove(string source, string destination, object member) {
-			if (Nodes.Count > 1) throw new Exception("SMove 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SMove 管道命令，在分区模式下不可用");
 			return PipeCommand(source, (c, k) => c.Value.SMove(k, (c.Pool as RedisClientPool)?.Prefix + destination, rds.SerializeRedisValueInternal(member)));
 		}
 		/// <summary>
@@ -820,7 +821,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<string[]> SUnion(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SUnion 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SUnion 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => c.Value.SUnion(keys.Select(z => prefix + z).ToArray()));
 		}
@@ -832,7 +833,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<T[]> SUnion<T>(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SUnion<T> 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SUnion<T> 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => { c.Value.SUnionBytes(keys.Select(z => prefix + z).ToArray()); return default(T[]); }, obj =>
 			rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
@@ -846,7 +847,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<long> SUnionStore(string destination, params string[] keys) {
 			if (string.IsNullOrEmpty(destination)) throw new Exception("destination 参数不可为空");
 			if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
-			if (Nodes.Count > 1) throw new Exception("SUnionStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SUnionStore 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destination, (c, k) => c.Value.SUnionStore(k, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -1012,7 +1013,7 @@ namespace CSRedis {
 		/// <param name="destination">目标key，不含prefix前辍</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<string> RPopLPush(string source, string destination) {
-			if (Nodes.Count > 1) throw new Exception("RPopLPush 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("RPopLPush 管道命令，在分区模式下不可用");
 			return PipeCommand(source, (c, k) => c.Value.RPopLPush(k, (c.Pool as RedisClientPool)?.Prefix + destination));
 		}
 		/// <summary>
@@ -1024,7 +1025,7 @@ namespace CSRedis {
 		/// <param name="destination">目标key，不含prefix前辍</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<T> RPopLPush<T>(string source, string destination) {
-			if (Nodes.Count > 1) throw new Exception("RPopLPush<T> 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("RPopLPush<T> 管道命令，在分区模式下不可用");
 			return PipeCommand(source, (c, k) => { c.Value.RPopBytesLPush(k, (c.Pool as RedisClientPool)?.Prefix + destination); return default(T); }, obj =>
 				rds.DeserializeRedisValueInternal<T>((byte[])obj));
 		}
@@ -1247,7 +1248,7 @@ namespace CSRedis {
 		public CSRedisClientPipe<long> BitOp(RedisBitOp op, string destKey, params string[] keys) {
 			if (string.IsNullOrEmpty(destKey)) throw new Exception("destKey 不能为空");
 			if (keys == null || keys.Length == 0) throw new Exception("keys 不能为空");
-			if (Nodes.Count > 1) throw new Exception("BitOp 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("BitOp 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(destKey, (c, k) => c.Value.BitOp(op, k, keys.Select(z => prefix + z).ToArray()));
 		}
@@ -1333,7 +1334,7 @@ namespace CSRedis {
 		/// <returns></returns>
 		public CSRedisClientPipe<string[]> MGet(params string[] keys) {
 			if (keys == null || keys.Length == 0) throw new Exception("keys 不能为空");
-			if (Nodes.Count > 1) throw new Exception("MGet 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("MGet 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(keys.First(), (c, k) => c.Value.MGet(keys.Select(z => prefix + z).ToArray()));
 		}
@@ -1430,7 +1431,7 @@ namespace CSRedis {
 		/// <param name="pattern">如：runoob*</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<string[]> Keys(string pattern) {
-			if (Nodes.Count > 1) throw new Exception("SInterStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SInterStore 管道命令，在分区模式下不可用");
 			return PipeCommand("Keys", (c, k) => c.Value.Keys(pattern));
 		}
 		/// <summary>
@@ -1514,7 +1515,7 @@ namespace CSRedis {
 		/// <param name="newKey">新名称，不含prefix前辍</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<bool> Rename(string key, string newKey) {
-			if (Nodes.Count > 1) throw new Exception("Rename 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("Rename 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(key, (c, k) => { c.Value.Rename(k, prefix + newKey); return false; }, obj => obj?.ToString() == "OK");
 		}
@@ -1525,7 +1526,7 @@ namespace CSRedis {
 		/// <param name="newKey">新名称，不含prefix前辍</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<bool> RenameNx(string key, string newKey) {
-			if (Nodes.Count > 1) throw new Exception("RenameNx 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("RenameNx 管道命令，在分区模式下不可用");
 			var prefix = Nodes.First().Value.Prefix;
 			return PipeCommand(key, (c, k) => { c.Value.RenameNx(k, prefix + newKey); return false; }, obj => obj?.ToString() == "OK");
 		}
@@ -1556,7 +1557,7 @@ namespace CSRedis {
 		/// <param name="get">根据排序的结果来取出相应的键值</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<string[]> Sort(string key, long? count = null, long offset = 0, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get) {
-			if (Nodes.Count > 1) throw new Exception("Sort 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("Sort 管道命令，在分区模式下不可用");
 			return PipeCommand(key, (c, k) => c.Value.Sort(k, offset, count, by, dir, isAlpha, get));
 		}
 		/// <summary>
@@ -1572,7 +1573,7 @@ namespace CSRedis {
 		/// <param name="get">根据排序的结果来取出相应的键值</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<long> SortAndStore(string key, string destination, long? count = null, long offset = 0, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get) {
-			if (Nodes.Count > 1) throw new Exception("SortAndStore 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("SortAndStore 管道命令，在分区模式下不可用");
 			return PipeCommand(key, (c, k) => c.Value.SortAndStore(k, (c.Pool as RedisClientPool)?.Prefix + destination, offset, count, by, dir, isAlpha, get));
 		}
 		/// <summary>
@@ -1595,7 +1596,7 @@ namespace CSRedis {
 		/// <param name="count">数量</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<RedisScan<string>> Scan(long cursor, string pattern = null, long? count = null) {
-			if (Nodes.Count > 1) throw new Exception("Scan 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("Scan 管道命令，在分区模式下不可用");
 			return PipeCommand("Scan", (c, k) => c.Value.Scan(cursor, pattern, count));
 		}
 		/// <summary>
@@ -1608,7 +1609,7 @@ namespace CSRedis {
 		/// <param name="count">数量</param>
 		/// <returns></returns>
 		public CSRedisClientPipe<RedisScan<T>> Scan<T>(string key, long cursor, string pattern = null, long? count = null) {
-			if (Nodes.Count > 1) throw new Exception("Scan<T> 管道命令，在分区模式下不可用");
+			if (IsMultiNode) throw new Exception("Scan<T> 管道命令，在分区模式下不可用");
 			return PipeCommand("Scan<T>", (c, k) => {
 				c.Value.ScanBytes(cursor, pattern, count); return default(RedisScan<T>);
 			}, obj => {

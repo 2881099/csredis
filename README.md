@@ -18,6 +18,8 @@ CSRedis于2016年开始支持.NETCore一直迭代至今（解决上述Bug），�
 
 5、增加官方集群 redis-trib.rb 支持；
 
+6、增加哨兵模式支持；
+
 # 功能介绍
 
 1、现实分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。
@@ -27,7 +29,7 @@ CSRedis于2016年开始支持.NETCore一直迭代至今（解决上述Bug），�
 ## 普通模式
 
 ```csharp
-var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,preheat=true,ssl=false,writeBuffer=10240,tryit=0,name=clientName,prefix=key前辍");
+var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,prefix=key前辍");
 ```
 
 | 参数名 | 默认值 | 说明 |
@@ -35,6 +37,7 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 | password          | <空>  | 密码 |
 | defaultDatabase   | 0     | 默认数据库 |
 | poolsize          | 50    | 连接池大小 |
+| connectTimeout    | -1    | 连接超时设置 |
 | preheat           | true  | 预热连接 |
 | ssl               | false | 是否开启加密传输 |
 | writeBuffer       | 10240 | 异步方法写入缓冲区大小(字节) |
@@ -42,11 +45,19 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 | name              | <空>  | 连接名称，可以使用 Client List 命令查看 |
 | prefix            | <空>  | key前辍，所有方法都会附带此前辍，csredis.Set(prefix + "key", 111); |
 
+# 哨兵模式
+
+```csharp
+var csredis = new CSRedis.CSRedisClient("mymaster,password=123,prefix=key前辍", new [] { "192.169.1.10:26379", "192.169.1.11:26379", "192.169.1.12:26379" });
+```
+
+连接字符串中的 mymaster 是哨兵监听的名称，其他配置参数与普通模式一致
+
 # 官方集群
 
 假设你已经配置好 redis-trib 集群，定义一个【普通模式】的 CSRedisClient 对象，它会根据 redis-server 返回的 MOVED | ASK 错误记录slot，自动增加节点 Nodes 属性。
 
-> 127.0.0.1:6379,password=123,defaultDatabase=0,poolsize=50,ssl=false,writeBuffer=10240,prefix=
+> 127.0.0.1:6379,password=123,defaultDatabase=0,poolsize=50,prefix=
 
 > 其他节点在运行过程中自动增加，确保每个节点密码一致。
 
