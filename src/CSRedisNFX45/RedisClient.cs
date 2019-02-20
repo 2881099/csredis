@@ -210,7 +210,7 @@ namespace CSRedis
         {
 			// use invariant culture - we have to set it explicitly for every thread we create to 
 			// prevent any floating-point problems (mostly because of number formats in non en-US cultures).
-			CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+			//CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture; 这行会影响 string.Compare 结果
 
             _connector = new RedisConnector(endpoint, socket, asyncConcurrency, asyncBufferSize);
             _transaction = new RedisTransaction(_connector);
