@@ -256,6 +256,7 @@ namespace CSRedis {
 			};
 			this.NodeRuleExternal = NodeRule;
 
+			RedisClientPool firstPool = null;
 			foreach (var connectionString in connectionStrings) {
 				var connStr = connectionString;
 				if (SentinelManager != null) {
@@ -272,8 +273,37 @@ namespace CSRedis {
 					pool = null;
 					throw new Exception($"Node: {nodeKey} 无法添加");
 				}
+				if (firstPool == null) firstPool = pool;
 			}
 			this.NodesServerManager = new NodesServerManagerProvider(this);
+			//尝试求出其他节点，并缓存slot
+			try {
+				byte[] cnret = null;
+				using (var obj = firstPool.Get()) {
+					cnret = obj.Value.Call("cluster nodes") as byte[];
+				}
+				if (cnret != null) {
+					var cnodes = firstPool.Encoding.GetString(cnret).Split('\n');
+					foreach (var cnode in cnodes) {
+						if (string.IsNullOrEmpty(cnode)) continue;
+						var dt = cnode.Trim().Split(' ');
+						if (dt.Length == 9) {
+							if (dt[2].StartsWith("master") || dt[2].EndsWith("master")) {
+								if (dt[7] == "connected") {
+									var endpoint = dt[1];
+									var slots = dt[8].Split('-');
+									if (ushort.TryParse(slots[0], out var tryslotStart) &&
+										ushort.TryParse(slots[1], out var tryslotEnd)) {
+										for (var slot = tryslotStart; slot <= tryslotEnd; slot++) {
+											GetRedirectPool((true, false, slot, endpoint), firstPool);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			} catch { }
 		}
 
 		public void Dispose() {
