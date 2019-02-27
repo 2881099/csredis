@@ -249,7 +249,7 @@ namespace CSRedis {
 				var slot = GetClusterSlot(string.Concat(Nodes.First().Value.Prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
 				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
 				if (this.NodeRuleExternal == null) {
-					var idx = Math.Abs(string.Concat(key).GetHashCode()) % NodesIndex.Count;
+					var idx = GetClusterSlot(key ?? string.Empty) % NodesIndex.Count;
 					return idx < 0 || idx >= NodesIndex.Count ? NodesIndex[0] : NodesIndex[idx];
 				}
 				return this.NodeRuleExternal(key);

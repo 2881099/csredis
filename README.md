@@ -80,7 +80,7 @@ var csredis = new CSRedis.CSRedisClient(null,
   "127.0.0.1:6372,password=123,defaultDatabase=12,poolsize=11",
   "127.0.0.1:6373,password=123,defaultDatabase=13,poolsize=12",
   "127.0.0.1:6374,password=123,defaultDatabase=14,poolsize=13");
-//实现思路：根据key.GetHashCode() % 节点总数量，确定连向的节点
+//实现思路：根据CRC16(key) % 节点总数量，确定连向的节点
 //也可以自定义规则(第一个参数设置)
 ```
 
