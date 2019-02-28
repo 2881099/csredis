@@ -17,7 +17,7 @@ namespace CSRedis {
 		/// </summary>
 		public ConcurrentDictionary<string, RedisClientPool> Nodes { get; } = new ConcurrentDictionary<string, RedisClientPool>();
 		private int NodesIndexIncrement = -1;
-		private ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
+		public ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
 		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
 		internal Func<string, string> NodeRuleRaw;
 		internal Func<string, string> NodeRuleExternal;
@@ -243,20 +243,22 @@ namespace CSRedis {
 				SentinelMasterName = connectionStrings.First().Split(',').FirstOrDefault() ?? "mymaster";
 				SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
 			}
+			RedisClientPool firstPool = null;
 			this.NodeRuleRaw = key => {
 				if (Nodes.Count <= 1) return NodesIndex[0];
 
-				var slot = GetClusterSlot(string.Concat(Nodes.First().Value.Prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
+				var prefix = firstPool?.Prefix;
+				var slot = GetClusterSlot(string.Concat(prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
 				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
 				if (this.NodeRuleExternal == null) {
-					var idx = GetClusterSlot(key ?? string.Empty) % NodesIndex.Count;
+					if (string.IsNullOrEmpty(prefix) == false) slot = GetClusterSlot(key ?? string.Empty);
+					var idx = slot % NodesIndex.Count;
 					return idx < 0 || idx >= NodesIndex.Count ? NodesIndex[0] : NodesIndex[idx];
 				}
 				return this.NodeRuleExternal(key);
 			};
 			this.NodeRuleExternal = NodeRule;
 
-			RedisClientPool firstPool = null;
 			foreach (var connectionString in connectionStrings) {
 				var connStr = connectionString;
 				if (SentinelManager != null) {
