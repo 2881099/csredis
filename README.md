@@ -22,7 +22,7 @@ CSRedis于2016年开始支持.NETCore一直迭代至今（解决上述Bug），�
 
 # 功能介绍
 
-1、现实分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。
+1、实现分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。
 
 > dotnet add package CSRedisCore
 

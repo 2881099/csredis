@@ -1560,7 +1560,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		}
 		#endregion
 
-		#region 使用列表现实订阅发布 lpush + blpop
+		#region 使用列表实现订阅发布 lpush + blpop
 		/// <summary>
 		/// 使用lpush + blpop订阅端（多端非争抢模式），都可以收到消息
 		/// </summary>

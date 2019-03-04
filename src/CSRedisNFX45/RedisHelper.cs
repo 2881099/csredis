@@ -204,7 +204,7 @@ public abstract partial class RedisHelper {
 	public static CSRedisClient.PSubscribeObject PSubscribe(string[] channelPatterns, Action<CSRedisClient.PSubscribePMessageEventArgs> pmessage) => Instance.PSubscribe(channelPatterns, pmessage);
 	#endregion
 
-	#region 使用列表现实订阅发布 lpush + blpop
+	#region 使用列表实现订阅发布 lpush + blpop
 	/// <summary>
 	/// 使用lpush + blpop订阅端（多端非争抢模式），都可以收到消息
 	/// </summary>
