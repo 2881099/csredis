@@ -20,6 +20,11 @@ CSRedis于2016年开始支持.NETCore一直迭代至今（解决上述Bug），�
 
 6、增加哨兵模式支持；
 
+| Package Name |  NuGet | Downloads | |
+|--------------|  ------- |  ---- | -- |
+| CSRedisCore | [![nuget](https://img.shields.io/nuget/v/CSRedisCore.svg?style=flat-square)](https://www.nuget.org/packages/CSRedisCore) | [![stats](https://img.shields.io/nuget/dt/CSRedisCore.svg?style=flat-square)](https://www.nuget.org/stats/packages/CSRedisCore?groupby=Version) |
+| Caching.CSRedis | [![nuget](https://img.shields.io/nuget/v/Caching.CSRedis.svg?style=flat-square)](https://www.nuget.org/packages/Caching.CSRedis) | [![stats](https://img.shields.io/nuget/dt/Caching.CSRedis.svg?style=flat-square)](https://www.nuget.org/stats/packages/Caching.CSRedis?groupby=Version) | IDistributedCache |
+
 # 功能介绍
 
 1、实现分区与连接池管理类CSRedisClient，静态类RedisHelper快速上手，<font color=darkgreen>方法名与redis-cli保持一致</font>。
