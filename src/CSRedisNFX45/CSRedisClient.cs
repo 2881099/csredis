@@ -241,7 +241,11 @@ namespace CSRedis {
 					}
 				};
 				SentinelMasterName = connectionStrings.First().Split(',').FirstOrDefault() ?? "mymaster";
-				SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
+				try {
+					SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
+				} catch {
+					//没有可用的master
+				}
 			}
 			this.NodeRuleRaw = key => {
 				if (Nodes.Count <= 1) return NodesIndex[0];
@@ -262,7 +266,10 @@ namespace CSRedis {
 				if (SentinelManager != null) {
 					var startIdx = connStr.IndexOf(',');
 					if (startIdx != -1) connStr = connStr.Substring(startIdx);
-					connStr = $"{SentinelMasterValue}{connStr}";
+					if (string.IsNullOrEmpty(SentinelMasterValue))
+						connStr = $"255.255.255.255:19736{connStr},preheat=false"; //这是一个等待恢复的 pool
+					else
+						connStr = $"{SentinelMasterValue}{connStr}";
 				}
 
 				var pool = new RedisClientPool(connStr, client => { });
