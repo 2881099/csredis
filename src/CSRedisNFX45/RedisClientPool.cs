@@ -18,6 +18,10 @@ namespace CSRedis {
 			};
 			_policy.Connected += (s, o) => {
 				RedisClient rc = s as RedisClient;
+				try {
+					rc.ReceiveTimeout = _policy._syncTimeout;
+					rc.SendTimeout = _policy._syncTimeout;
+				} catch { }
 				if (!string.IsNullOrEmpty(_policy._password)) {
 					try {
 						rc.Auth(_policy._password);
@@ -79,7 +83,7 @@ namespace CSRedis {
 	public class RedisClientPoolPolicy : IPolicy<RedisClient> {
 
 		internal RedisClientPool _pool;
-		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = -1;
+		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 5000;
 		internal string _ip = "127.0.0.1", _password = "", _clientname = "";
 		internal bool _ssl = false, _preheat = true;
 		internal string Key => $"{_ip}:{_port}/{_database}";
@@ -141,7 +145,10 @@ namespace CSRedis {
 							_tryit = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out _tryit) ? _tryit : 0;
 							break;
 						case "connecttimeout":
-							_connectTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "-1", out var connectTimeout) == false || connectTimeout <= 0 ? -1 : connectTimeout;
+							_connectTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "5000", out var connectTimeout) == false || connectTimeout <= 0 ? 5000 : connectTimeout;
+							break;
+						case "synctimeout":
+							_syncTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "5000", out var syncTimeout) == false || syncTimeout <= 0 ? 5000 : syncTimeout;
 							break;
 					}
 				}

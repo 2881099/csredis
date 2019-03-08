@@ -1654,7 +1654,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 				while (subobj.IsUnsubscribed == false) {
 					try {
 						var msg = this.BLPop(5, listKey);
-						if (ignoreEmpty == true || string.IsNullOrEmpty(msg) == false) {
+						if (!ignoreEmpty || (ignoreEmpty && !string.IsNullOrEmpty(msg))) {
 							onMessage?.Invoke(msg);
 						}
 					} catch (ObjectDisposedException) {

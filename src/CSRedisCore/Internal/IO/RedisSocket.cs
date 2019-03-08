@@ -44,7 +44,7 @@ namespace CSRedis.Internal.IO
 
         public void Connect(EndPoint endpoint)
         {
-            Connect(endpoint, -1);
+			Connect(endpoint, 5000);// -1);
         }
 
         public void Connect(EndPoint endpoint, int timeout)
@@ -60,7 +60,7 @@ namespace CSRedis.Internal.IO
         public bool ConnectAsync(SocketAsyncEventArgs args)
         {
             InitSocket(args.RemoteEndPoint);
-            return _socket.ConnectAsync(args);
+			return _socket.ConnectAsync(args);
         }
 
         public bool SendAsync(SocketAsyncEventArgs args)
@@ -72,7 +72,7 @@ namespace CSRedis.Internal.IO
         {
             Stream netStream = new NetworkStream(_socket);
 
-            if (!_ssl) return netStream;
+			if (!_ssl) return netStream;
 
             var sslStream = new SslStream(netStream, true);
 			sslStream.AuthenticateAsClientAsync(GetHostForAuthentication()).Wait();
