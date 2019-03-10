@@ -44,6 +44,7 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 | poolsize          | 50    | 连接池大小 |
 | connectTimeout    | 5000  | 连接超时设置(毫秒) |
 | syncTimeout       | 10000 | 发送/接收超时设置(毫秒) |
+| idleTimeout       | 0     | 连接池内元素空闲时间(毫秒)，适用连接远程redis-server |
 | preheat           | true  | 预热连接 |
 | ssl               | false | 是否开启加密传输 |
 | writeBuffer       | 10240 | 异步方法写入缓冲区大小(字节) |

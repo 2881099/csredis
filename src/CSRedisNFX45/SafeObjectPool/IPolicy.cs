@@ -22,6 +22,11 @@ namespace SafeObjectPool {
 		TimeSpan SyncGetTimeout { get; set; }
 
 		/// <summary>
+		/// 空闲时间，获取时若超出，则重新创建
+		/// </summary>
+		TimeSpan IdleTimeout { get; set; }
+
+		/// <summary>
 		/// 异步获取排队队列大小，小于等于0不生效
 		/// </summary>
 		int AsyncGetCapacity { get; set; }

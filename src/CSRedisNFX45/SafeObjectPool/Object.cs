@@ -58,9 +58,14 @@ namespace SafeObjectPool {
 		/// 重置 Value 值
 		/// </summary>
 		public void ResetValue() {
-			try { this.Pool.Policy.OnDestroy(this.Value); } catch { }
-			try { (this.Value as IDisposable)?.Dispose(); } catch { }
-			this.Value = this.Pool.Policy.OnCreate();
+			if (this.Value != null) {
+				try { this.Pool.Policy.OnDestroy(this.Value); } catch { }
+				try { (this.Value as IDisposable)?.Dispose(); } catch { }
+			}
+			T value = default(T);
+			try { value = this.Pool.Policy.OnCreate(); } catch { }
+			this.Value = value;
+			this.LastReturnTime = DateTime.Now;
 		}
 
 		public void Dispose() {

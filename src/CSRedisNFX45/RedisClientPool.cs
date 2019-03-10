@@ -26,7 +26,7 @@ namespace CSRedis {
 					try {
 						rc.Auth(_policy._password);
 					} catch (Exception authEx) {
-						if (authEx.Message != "Client sent AUTH, but no password is set")
+						if (authEx.Message != "ERR Client sent AUTH, but no password is set")
 							throw authEx;
 					}
 				}
@@ -93,6 +93,7 @@ namespace CSRedis {
 		public string Name { get => Key; set { throw new Exception("RedisClientPoolPolicy 不提供设置 Name 属性值。"); } }
 		public int PoolSize { get; set; } = 50;
 		public TimeSpan SyncGetTimeout { get; set; } = TimeSpan.FromSeconds(10);
+		public TimeSpan IdleTimeout { get; set; } = TimeSpan.Zero;
 		public int AsyncGetCapacity { get; set; } = 100000;
 		public bool IsThrowGetTimeoutException { get; set; } = true;
 		public int CheckAvailableInterval { get; set; } = 5;
@@ -149,6 +150,9 @@ namespace CSRedis {
 							break;
 						case "synctimeout":
 							_syncTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10000", out var syncTimeout) == false || syncTimeout <= 0 ? 10000 : syncTimeout;
+							break;
+						case "idletimeout":
+							IdleTimeout = TimeSpan.FromMilliseconds(int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out var idleTimeout) == false || idleTimeout <= 0 ? 0 : idleTimeout);
 							break;
 					}
 				}

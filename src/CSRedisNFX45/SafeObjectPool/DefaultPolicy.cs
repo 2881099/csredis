@@ -10,6 +10,7 @@ namespace SafeObjectPool {
 		public string Name { get; set; } = typeof(DefaultPolicy<T>).GetType().FullName;
 		public int PoolSize { get; set; } = 1000;
 		public TimeSpan SyncGetTimeout { get; set; } = TimeSpan.FromSeconds(10);
+		public TimeSpan IdleTimeout { get; set; } = TimeSpan.FromSeconds(50);
 		public int AsyncGetCapacity { get; set; } = 10000;
 		public bool IsThrowGetTimeoutException { get; set; } = true;
 		public int CheckAvailableInterval { get; set; } = 5;
@@ -34,7 +35,7 @@ namespace SafeObjectPool {
 		public Task OnGetAsync(Object<T> obj) {
 			//Console.WriteLine("GetAsync: " + obj);
 			OnGetObject?.Invoke(obj);
-			return Task.FromResult(false);
+			return Task.FromResult(true);
 		}
 
 		public void OnGetTimeout() {
