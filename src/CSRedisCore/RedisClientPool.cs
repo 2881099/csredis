@@ -83,7 +83,7 @@ namespace CSRedis {
 	public class RedisClientPoolPolicy : IPolicy<RedisClient> {
 
 		internal RedisClientPool _pool;
-		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 5000;
+		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 10000;
 		internal string _ip = "127.0.0.1", _password = "", _clientname = "";
 		internal bool _ssl = false, _preheat = true;
 		internal string Key => $"{_ip}:{_port}/{_database}";
@@ -148,7 +148,7 @@ namespace CSRedis {
 							_connectTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "5000", out var connectTimeout) == false || connectTimeout <= 0 ? 5000 : connectTimeout;
 							break;
 						case "synctimeout":
-							_syncTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "5000", out var syncTimeout) == false || syncTimeout <= 0 ? 5000 : syncTimeout;
+							_syncTimeout = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10000", out var syncTimeout) == false || syncTimeout <= 0 ? 10000 : syncTimeout;
 							break;
 					}
 				}
