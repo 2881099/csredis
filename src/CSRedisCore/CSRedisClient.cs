@@ -1347,6 +1347,7 @@ namespace CSRedis {
 						isKeepliveReSubscribe = false;
 						//SetSocketOption KeepAlive 经测试无效，仍然侍丢失频道
 						//subscr.conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
+						subscr.conn.Value.ReceiveTimeout = 0;
 						subscr.conn.Value.Subscribe(subscr.chans);
 
 						if (IsUnsubscribed == false) {
@@ -1393,6 +1394,7 @@ namespace CSRedis {
 				if (this.Subscrs != null) {
 					foreach (var subscr in this.Subscrs) {
 						try { subscr.conn.Value.Unsubscribe(); } catch { }
+						try { subscr.conn.Value.ReceiveTimeout = (subscr.conn.Pool as RedisClientPool)._policy._syncTimeout; } catch { }
 						subscr.conn.Pool.Return(subscr.conn, true);
 					}
 				}
@@ -1516,7 +1518,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
 
-						conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
+						//conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
+						conn.Value.ReceiveTimeout = 0;
 						conn.Value.PSubscribe(this.Channels);
 
 						if (IsPUnsubscribed == false) {
@@ -1556,6 +1559,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 				if (this.RedisConnections != null) {
 					foreach (var conn in this.RedisConnections) {
 						try { conn.Value.PUnsubscribe(); } catch { }
+						try { conn.Value.ReceiveTimeout = (conn.Pool as RedisClientPool)._policy._syncTimeout; } catch { }
 						conn.Pool.Return(conn, true);
 					}
 				}
