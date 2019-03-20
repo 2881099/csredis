@@ -1599,7 +1599,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public Task<double> HIncrByFloatAsync(string key, string field, double value = 1) => ExecuteScalarAsync(key, (c, k) => c.Value.HIncrByFloatAsync(k, field, value));
+		public Task<double> HIncrByFloatAsync(string key, string field, double value) => ExecuteScalarAsync(key, (c, k) => c.Value.HIncrByFloatAsync(k, field, value));
 		/// <summary>
 		/// 获取所有哈希表中的字段
 		/// </summary>
@@ -1806,7 +1806,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public Task<double> IncrByFloatAsync(string key, double value = 1) => ExecuteScalarAsync(key, (c, k) => c.Value.IncrByFloatAsync(k, value));
+		public Task<double> IncrByFloatAsync(string key, double value) => ExecuteScalarAsync(key, (c, k) => c.Value.IncrByFloatAsync(k, value));
 		/// <summary>
 		/// 获取多个指定 key 的值(数组)
 		/// </summary>

@@ -2674,7 +2674,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="field">字段</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public double HIncrByFloat(string key, string field, double value = 1) => ExecuteScalar(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
+		public double HIncrByFloat(string key, string field, double value) => ExecuteScalar(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
 		/// <summary>
 		/// 获取所有哈希表中的字段
 		/// </summary>
@@ -2879,7 +2879,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public double IncrByFloat(string key, double value = 1) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
+		public double IncrByFloat(string key, double value) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
 		/// <summary>
 		/// 获取多个指定 key 的值(数组)
 		/// </summary>

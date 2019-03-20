@@ -1110,7 +1110,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<double> HIncrByFloat(string key, string field, double value = 1) => PipeCommand(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
+		public CSRedisClientPipe<double> HIncrByFloat(string key, string field, double value) => PipeCommand(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
 		/// <summary>
 		/// 获取所有哈希表中的字段
 		/// </summary>
@@ -1326,7 +1326,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<double> IncrBy(string key, double value = 1) => PipeCommand(key, (c, k) => c.Value.IncrByFloat(k, value));
+		public CSRedisClientPipe<double> IncrBy(string key, double value) => PipeCommand(key, (c, k) => c.Value.IncrByFloat(k, value));
 		/// <summary>
 		/// 获取多个指定 key 的值(数组)
 		/// </summary>
