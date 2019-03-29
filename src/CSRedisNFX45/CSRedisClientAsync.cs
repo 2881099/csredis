@@ -138,21 +138,21 @@ namespace CSRedis {
 		/// <param name="timeoutSeconds">缓存秒数</param>
 		/// <param name="getDataAsync">获取源数据的函数，输入参数是没有缓存的 fields，返回值应该是 (field, value)[]</param>
 		/// <returns></returns>
-		async public Task<T[]> CacheShellAsync<T>(string key, string[] fields, int timeoutSeconds, Func<string[], Task<(string, T)[]>> getDataAsync) {
+		async public Task<(string key, T value)[]> CacheShellAsync<T>(string key, string[] fields, int timeoutSeconds, Func<string[], Task<(string, T)[]>> getDataAsync) {
 			fields = fields?.Distinct().ToArray();
-			if (fields == null || fields.Length == 0) return new T[0];
-			if (timeoutSeconds <= 0) return (await getDataAsync(fields)).Select(a => a.Item2).ToArray();
+			if (fields == null || fields.Length == 0) return new (string, T)[0];
+			if (timeoutSeconds <= 0) return await getDataAsync(fields);
 
-			var ret = new T[fields.Length];
+			var ret = new (string, T)[fields.Length];
 			var cacheValue = await HMGetAsync(key, fields);
 			var fieldsMGet = new Dictionary<string, int>();
 
-			for (var a = 0; a < cacheValue.Length; a++) {
+			for (var a = 0; a < ret.Length; a++) {
 				if (cacheValue[a] != null) {
 					try {
 						var value = this.DeserializeObject<(T, long)>(cacheValue[a]);
 						if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) {
-							ret[a] = value.Item1;
+							ret[a] = (fields[a], value.Item1);
 							continue;
 						}
 					} catch {
@@ -166,21 +166,23 @@ namespace CSRedis {
 			if (fieldsMGet.Any()) {
 				var getDataIntput = fieldsMGet.Keys.ToArray();
 				var data = await getDataAsync(getDataIntput);
-				var mset = new(string field, object value)[fieldsMGet.Count];
+				var mset = new object[fieldsMGet.Count * 2];
 				var msetIndex = 0;
 				foreach (var d in data) {
 					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
-					ret[fieldsMGet[d.Item1]] = d.Item2;
-					mset[msetIndex++] = (d.Item1, this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					ret[fieldsMGet[d.Item1]] = d;
+					mset[msetIndex++] = d.Item1;
+					mset[msetIndex++] = this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds));
 					fieldsMGet.Remove(d.Item1);
 				}
 				foreach (var fieldNull in fieldsMGet.Keys) {
-					ret[fieldsMGet[fieldNull]] = default(T);
-					mset[msetIndex++] = (fieldNull, this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					ret[fieldsMGet[fieldNull]] = (fieldNull, default(T));
+					mset[msetIndex++] = fieldNull;
+					mset[msetIndex++] = this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds));
 				}
 				if (mset.Any()) await HMSetAsync(key, mset);
 			}
-			return ret.ToArray();
+			return ret;
 		}
 		#endregion
 
@@ -1599,7 +1601,7 @@ namespace CSRedis {
 		/// <param name="field">字段</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public Task<double> HIncrByFloatAsync(string key, string field, double value = 1) => ExecuteScalarAsync(key, (c, k) => c.Value.HIncrByFloatAsync(k, field, value));
+		public Task<double> HIncrByFloatAsync(string key, string field, double value) => ExecuteScalarAsync(key, (c, k) => c.Value.HIncrByFloatAsync(k, field, value));
 		/// <summary>
 		/// 获取所有哈希表中的字段
 		/// </summary>
@@ -1806,7 +1808,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public Task<double> IncrByFloatAsync(string key, double value = 1) => ExecuteScalarAsync(key, (c, k) => c.Value.IncrByFloatAsync(k, value));
+		public Task<double> IncrByFloatAsync(string key, double value) => ExecuteScalarAsync(key, (c, k) => c.Value.IncrByFloatAsync(k, value));
 		/// <summary>
 		/// 获取多个指定 key 的值(数组)
 		/// </summary>

@@ -540,12 +540,12 @@ namespace CSRedis {
 		/// <param name="timeoutSeconds">缓存秒数</param>
 		/// <param name="getData">获取源数据的函数，输入参数是没有缓存的 fields，返回值应该是 (field, value)[]</param>
 		/// <returns></returns>
-		public T[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) {
+		public (string key, T value)[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) {
 			fields = fields?.Distinct().ToArray();
-			if (fields == null || fields.Length == 0) return new T[0];
-			if (timeoutSeconds <= 0) return getData(fields).Select(a => a.Item2).ToArray();
+			if (fields == null || fields.Length == 0) return new (string, T)[0];
+			if (timeoutSeconds <= 0) return getData(fields);
 
-			var ret = new T[fields.Length];
+			var ret = new (string, T)[fields.Length];
 			var cacheValue = HMGet(key, fields);
 			var fieldsMGet = new Dictionary<string, int>();
 
@@ -554,7 +554,7 @@ namespace CSRedis {
 					try {
 						var value = this.DeserializeObject<(T, long)>(cacheValue[a]);
 						if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) {
-							ret[a] = value.Item1;
+							ret[a] = (fields[a], value.Item1);
 							continue;
 						}
 					} catch {
@@ -568,17 +568,19 @@ namespace CSRedis {
 			if (fieldsMGet.Any()) {
 				var getDataIntput = fieldsMGet.Keys.ToArray();
 				var data = getData(getDataIntput);
-				var mset = new(string field, object value)[fieldsMGet.Count];
+				var mset = new object[fieldsMGet.Count * 2];
 				var msetIndex = 0;
 				foreach (var d in data) {
 					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
-					ret[fieldsMGet[d.Item1]] = d.Item2;
-					mset[msetIndex++] = (d.Item1, this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					ret[fieldsMGet[d.Item1]] = d;
+					mset[msetIndex++] = d.Item1;
+					mset[msetIndex++] = this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds));
 					fieldsMGet.Remove(d.Item1);
 				}
 				foreach (var fieldNull in fieldsMGet.Keys) {
-					ret[fieldsMGet[fieldNull]] = default(T);
-					mset[msetIndex++] = (fieldNull, this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					ret[fieldsMGet[fieldNull]] = (fieldNull, default(T));
+					mset[msetIndex++] = fieldNull;
+					mset[msetIndex++] = this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds));
 				}
 				if (mset.Any()) HMSet(key, mset);
 			}

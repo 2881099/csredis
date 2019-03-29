@@ -17,7 +17,7 @@ namespace CSRedis {
 		/// </summary>
 		public ConcurrentDictionary<string, RedisClientPool> Nodes { get; } = new ConcurrentDictionary<string, RedisClientPool>();
 		private int NodesIndexIncrement = -1;
-		private ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
+		public ConcurrentDictionary<int, string> NodesIndex { get; } = new ConcurrentDictionary<int, string>();
 		private ConcurrentDictionary<string, int> NodesKey { get; } = new ConcurrentDictionary<string, int>();
 		internal Func<string, string> NodeRuleRaw;
 		internal Func<string, string> NodeRuleExternal;
@@ -247,20 +247,22 @@ namespace CSRedis {
 					//没有可用的master
 				}
 			}
+			RedisClientPool firstPool = null;
 			this.NodeRuleRaw = key => {
 				if (Nodes.Count <= 1) return NodesIndex[0];
 
-				var slot = GetClusterSlot(string.Concat(Nodes.First().Value.Prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
+				var prefix = firstPool?.Prefix;
+				var slot = GetClusterSlot(string.Concat(prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
 				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
 				if (this.NodeRuleExternal == null) {
-					var idx = GetClusterSlot(key ?? string.Empty) % NodesIndex.Count;
+					if (string.IsNullOrEmpty(prefix) == false) slot = GetClusterSlot(key ?? string.Empty);
+					var idx = slot % NodesIndex.Count;
 					return idx < 0 || idx >= NodesIndex.Count ? NodesIndex[0] : NodesIndex[idx];
 				}
 				return this.NodeRuleExternal(key);
 			};
 			this.NodeRuleExternal = NodeRule;
 
-			RedisClientPool firstPool = null;
 			foreach (var connectionString in connectionStrings) {
 				var connStr = connectionString;
 				if (SentinelManager != null) {
@@ -538,12 +540,12 @@ namespace CSRedis {
 		/// <param name="timeoutSeconds">缓存秒数</param>
 		/// <param name="getData">获取源数据的函数，输入参数是没有缓存的 fields，返回值应该是 (field, value)[]</param>
 		/// <returns></returns>
-		public T[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) {
+		public (string key, T value)[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) {
 			fields = fields?.Distinct().ToArray();
-			if (fields == null || fields.Length == 0) return new T[0];
-			if (timeoutSeconds <= 0) return getData(fields).Select(a => a.Item2).ToArray();
+			if (fields == null || fields.Length == 0) return new (string, T)[0];
+			if (timeoutSeconds <= 0) return getData(fields);
 
-			var ret = new T[fields.Length];
+			var ret = new (string, T)[fields.Length];
 			var cacheValue = HMGet(key, fields);
 			var fieldsMGet = new Dictionary<string, int>();
 
@@ -552,7 +554,7 @@ namespace CSRedis {
 					try {
 						var value = this.DeserializeObject<(T, long)>(cacheValue[a]);
 						if (DateTime.Now.Subtract(_dt1970.AddSeconds(value.Item2)).TotalSeconds <= timeoutSeconds) {
-							ret[a] = value.Item1;
+							ret[a] = (fields[a], value.Item1);
 							continue;
 						}
 					} catch {
@@ -566,17 +568,19 @@ namespace CSRedis {
 			if (fieldsMGet.Any()) {
 				var getDataIntput = fieldsMGet.Keys.ToArray();
 				var data = getData(getDataIntput);
-				var mset = new(string field, object value)[fieldsMGet.Count];
+				var mset = new object[fieldsMGet.Count * 2];
 				var msetIndex = 0;
 				foreach (var d in data) {
 					if (fieldsMGet.ContainsKey(d.Item1) == false) throw new Exception($"使用 CacheShell 请确认 getData 返回值 (string, T)[] 中的 Item1 值: {d.Item1} 存在于 输入参数: {string.Join(",", getDataIntput)}");
-					ret[fieldsMGet[d.Item1]] = d.Item2;
-					mset[msetIndex++] = (d.Item1, this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					ret[fieldsMGet[d.Item1]] = d;
+					mset[msetIndex++] = d.Item1;
+					mset[msetIndex++] = this.SerializeObject((d.Item2, (long)DateTime.Now.Subtract(_dt1970).TotalSeconds));
 					fieldsMGet.Remove(d.Item1);
 				}
 				foreach (var fieldNull in fieldsMGet.Keys) {
-					ret[fieldsMGet[fieldNull]] = default(T);
-					mset[msetIndex++] = (fieldNull, this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds)));
+					ret[fieldsMGet[fieldNull]] = (fieldNull, default(T));
+					mset[msetIndex++] = fieldNull;
+					mset[msetIndex++] = this.SerializeObject((default(T), (long)DateTime.Now.Subtract(_dt1970).TotalSeconds));
 				}
 				if (mset.Any()) HMSet(key, mset);
 			}
@@ -2672,7 +2676,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="field">字段</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public double HIncrByFloat(string key, string field, double value = 1) => ExecuteScalar(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
+		public double HIncrByFloat(string key, string field, double value) => ExecuteScalar(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
 		/// <summary>
 		/// 获取所有哈希表中的字段
 		/// </summary>
@@ -2877,7 +2881,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="value">增量值(默认=1)</param>
 		/// <returns></returns>
-		public double IncrByFloat(string key, double value = 1) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
+		public double IncrByFloat(string key, double value) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
 		/// <summary>
 		/// 获取多个指定 key 的值(数组)
 		/// </summary>

@@ -60,7 +60,7 @@ public abstract partial class RedisHelper {
 	/// <param name="timeoutSeconds">缓存秒数</param>
 	/// <param name="getData">获取源数据的函数，输入参数是没有缓存的 fields，返回值应该是 (field, value)[]</param>
 	/// <returns></returns>
-	public static T[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) => Instance.CacheShell(key, fields, timeoutSeconds, getData);
+	public static (string key, T value)[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) => Instance.CacheShell(key, fields, timeoutSeconds, getData);
 	#endregion
 
 	/// <summary>

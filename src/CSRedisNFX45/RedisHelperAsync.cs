@@ -37,7 +37,7 @@ partial class RedisHelper {
 	/// <param name="timeoutSeconds">缓存秒数</param>
 	/// <param name="getDataAsync">获取源数据的函数，输入参数是没有缓存的 fields，返回值应该是 (field, value)[]</param>
 	/// <returns></returns>
-	public static Task<T[]> CacheShellAsync<T>(string key, string[] fields, int timeoutSeconds, Func<string[], Task<(string, T)[]>> getDataAsync) => Instance.CacheShellAsync(key, fields, timeoutSeconds, getDataAsync);
+	public static Task<(string key, T value)[]> CacheShellAsync<T>(string key, string[] fields, int timeoutSeconds, Func<string[], Task<(string, T)[]>> getDataAsync) => Instance.CacheShellAsync(key, fields, timeoutSeconds, getDataAsync);
 	#endregion
 
 	#region 连接命令
