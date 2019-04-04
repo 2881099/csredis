@@ -3464,8 +3464,9 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			name = $"CSRedisClientLock:{name}";
 			var startTime = DateTime.Now;
 			while (DateTime.Now.Subtract(startTime).TotalSeconds < timeoutSeconds) {
-				if (this.Set(name, 1, timeoutSeconds, RedisExistence.Nx) == true) {
-					return new CSRedisClientLock { Name = name, _client = this };
+				var value = Guid.NewGuid().ToString();
+				if (this.Set(name, value, timeoutSeconds, RedisExistence.Nx) == true) {
+					return new CSRedisClientLock { Name = name, Value = value, _client = this };
 				}
 				Thread.CurrentThread.Join(3);
 			}
@@ -3476,12 +3477,18 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 	public class CSRedisClientLock : IDisposable {
 
 		internal string Name { get; set; }
+		internal string Value { get; set; }
 		internal CSRedisClient _client;
 
 		/// <summary>
 		/// 释放分布式锁
 		/// </summary>
-		public void Unlock() => _client.Del(this.Name);
+		public void Unlock() => _client.Eval(@"local gva = redis.call('GET', KEYS[1])
+if gva == ARGV[1] then
+  redis.call('DEL', KEYS[1])
+  return 1
+end
+return 0", Name, Value);
 
 		public void Dispose() {
 			this.Unlock();
