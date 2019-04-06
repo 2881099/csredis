@@ -3459,14 +3459,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// </summary>
 		/// <param name="name">锁名称</param>
 		/// <param name="timeoutSeconds">超时（秒）</param>
+		/// <param name="autoDelay">自动延长锁超时时间，看门狗线程的超时时间为timeoutSeconds/2 ， 在看门狗线程超时时间时自动延长锁的时间为timeoutSeconds。除非程序意外退出，否则永不超时。</param>
 		/// <returns></returns>
-		public CSRedisClientLock Lock(string name, int timeoutSeconds) {
+		public CSRedisClientLock Lock(string name, int timeoutSeconds, bool autoDelay = false) {
 			name = $"CSRedisClientLock:{name}";
 			var startTime = DateTime.Now;
 			while (DateTime.Now.Subtract(startTime).TotalSeconds < timeoutSeconds) {
 				var value = Guid.NewGuid().ToString();
 				if (this.Set(name, value, timeoutSeconds, RedisExistence.Nx) == true) {
-					return new CSRedisClientLock { Name = name, Value = value, _client = this };
+					return new CSRedisClientLock(this, name, value, timeoutSeconds, autoDelay);
 				}
 				Thread.CurrentThread.Join(3);
 			}
@@ -3476,23 +3477,55 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 
 	public class CSRedisClientLock : IDisposable {
 
-		internal string Name { get; set; }
-		internal string Value { get; set; }
-		internal CSRedisClient _client;
+		CSRedisClient _client;
+		string _name;
+		string _value;
+		int _timeoutSeconds;
+		Timer _autoDelayTimer;
+
+		internal CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, bool autoDelay) {
+			_client = rds;
+			_name = name;
+			_value = value;
+			_timeoutSeconds = timeoutSeconds;
+			if (autoDelay) {
+				var intervalSeconds = _timeoutSeconds * 1000 / 2;
+				_autoDelayTimer = new Timer(state2 => Delay(intervalSeconds), null, intervalSeconds, intervalSeconds);
+			}
+		}
+
+		/// <summary>
+		/// 延长锁时间，锁在占用期内操作时返回true，若因锁超时被其他使用者占用则返回false
+		/// </summary>
+		/// <param name="seconds">延长的秒数</param>
+		/// <returns>成功/失败</returns>
+		public bool Delay(int seconds) {
+			var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
+if gva == ARGV[1] then
+  local ttlva = redis.call('TTL', KEYS[1])
+  redis.call('EXPIRE', KEYS[1], ARGV[2] + ttlva)
+  return 1
+end
+return 0", _name, _value, seconds)?.ToString() == "1";
+			if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+			return ret;
+		}
 
 		/// <summary>
 		/// 释放分布式锁
 		/// </summary>
-		public void Unlock() => _client.Eval(@"local gva = redis.call('GET', KEYS[1])
+		/// <returns>成功/失败</returns>
+		public bool Unlock() {
+			_autoDelayTimer?.Dispose();
+			return _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
   redis.call('DEL', KEYS[1])
   return 1
 end
-return 0", Name, Value);
-
-		public void Dispose() {
-			this.Unlock();
+return 0", _name, _value)?.ToString() == "1";
 		}
+
+		public void Dispose() => this.Unlock();
 	}
 
 	public enum KeyType { None, String, List, Set, ZSet, Hash }
