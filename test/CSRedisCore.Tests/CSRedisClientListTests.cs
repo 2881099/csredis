@@ -75,6 +75,7 @@ namespace CSRedisCore.Tests {
 			}).Start();
 			Assert.Equal("testv2", rds.BRPop(5, "TestBRPop1", "TestBRPop2"));
 		}
+		[Fact]
 		public void BRPopLPush() {
 			
 		}

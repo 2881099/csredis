@@ -3461,7 +3461,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="timeoutSeconds">超时（秒）</param>
 		/// <param name="autoDelay">自动延长锁超时时间，看门狗线程的超时时间为timeoutSeconds/2 ， 在看门狗线程超时时间时自动延长锁的时间为timeoutSeconds。除非程序意外退出，否则永不超时。</param>
 		/// <returns></returns>
-		public CSRedisClientLock Lock(string name, int timeoutSeconds, bool autoDelay = false) {
+		public CSRedisClientLock Lock(string name, int timeoutSeconds, bool autoDelay = true) {
 			name = $"CSRedisClientLock:{name}";
 			var startTime = DateTime.Now;
 			while (DateTime.Now.Subtract(startTime).TotalSeconds < timeoutSeconds) {

@@ -152,6 +152,7 @@ namespace CSRedisCore.Tests {
 			Assert.True(rds.HMSet("TestHVals5", "class2array1", new[] { base.Class, base.Class }, "class2array2", new[] { base.Class, base.Class }));
 			Assert.Equal(2, rds.HVals<TestClass[]>("TestHVals5").Length);
 		}
+		[Fact]
 		public void HScan() { }
 	}
 }

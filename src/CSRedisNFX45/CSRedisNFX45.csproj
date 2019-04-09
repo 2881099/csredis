@@ -96,6 +96,7 @@
     <Compile Include="Internal\MonitorListener.cs" />
     <Compile Include="Internal\RedisCommand.cs" />
     <Compile Include="Internal\RedisConnector.cs" />
+    <Compile Include="Internal\RedisConnectorAutoPipelineOptions.cs" />
     <Compile Include="Internal\RedisListener.cs" />
     <Compile Include="Internal\RedisPipeline.cs" />
     <Compile Include="Internal\RedisTransaction.cs" />

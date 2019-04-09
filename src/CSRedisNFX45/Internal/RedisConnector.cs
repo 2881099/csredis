@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace CSRedis.Internal
 {
-    class RedisConnector
+	class RedisConnector
     {
         readonly int _concurrency;
         readonly int _bufferSize;
@@ -54,7 +54,8 @@ namespace CSRedis.Internal
             _redisSocket = socket;
             _io = new RedisIO();
             _asyncConnector = new Lazy<AsyncConnector>(AsyncConnectorFactory);
-        }
+			//_autoPipeline = new AutoPipelineOption(_io);
+		}
 
         public bool Connect(int timeout)
         {
@@ -71,6 +72,9 @@ namespace CSRedis.Internal
             return Async.ConnectAsync();
         }
 
+		//public IAutoPipelineOption AutoPipeline => _autoPipeline;
+		//AutoPipelineOption _autoPipeline;
+
         public T Call<T>(RedisCommand<T> command)
         {
             ConnectIfNotConnected();
@@ -80,7 +84,10 @@ namespace CSRedis.Internal
                 if (IsPipelined)
                     return _io.Pipeline.Write(command);
 
-                _io.Writer.Write(command, _io.Stream);
+				//if (_autoPipeline.IsEnabled)
+				//	return _autoPipeline.EnqueueSync(command);
+
+				_io.Writer.Write(command, _io.Stream);
                 return command.Parse(_io.Reader);
             }
             catch (IOException)
@@ -94,7 +101,10 @@ namespace CSRedis.Internal
 
         public Task<T> CallAsync<T>(RedisCommand<T> command)
         {
-            return Async.CallAsync(command);
+			//if (_autoPipeline.IsEnabled)
+			//	return _autoPipeline.EnqueueAsync(command);
+
+			return Async.CallAsync(command);
         }
 
         public void Write(RedisCommand command)

@@ -105,6 +105,7 @@ namespace CSRedisCore.Tests {
 			Assert.Null(rds.ObjectRefCount("TestObjectRefCount_bytes11"));
 			Assert.Equal(1, rds.ObjectRefCount("TestObjectRefCount_string1"));
 		}
+		[Fact]
 		public void ObjectIdleTime() { }
 
 		[Fact]
@@ -205,7 +206,9 @@ namespace CSRedisCore.Tests {
 			Assert.True(rds.Restore("TestRestore_class2", rds.Dump("TestRestore_class1")));
 			Assert.Equal(rds.Get<TestClass>("TestRestore_class2").ToString(), rds.Get<TestClass>("TestRestore_class1").ToString());
 		}
+		[Fact]
 		public void Sort() { }
+		[Fact]
 		public void SortAndStore() { }
 
 		[Fact]
@@ -225,6 +228,7 @@ namespace CSRedisCore.Tests {
 			Assert.Equal(CSRedis.KeyType.None, rds.Type("TestType_string111111111123"));
 			Assert.Equal(CSRedis.KeyType.String, rds.Type("TestType_string1"));
 		}
+		[Fact]
 		public void Scan() { }
 	}
 }
