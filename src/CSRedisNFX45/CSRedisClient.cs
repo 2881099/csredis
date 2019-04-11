@@ -3491,24 +3491,24 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			_value = value;
 			_timeoutSeconds = timeoutSeconds;
 			if (autoDelay) {
-				var intervalSeconds = _timeoutSeconds * 1000 / 2;
-				_autoDelayTimer = new Timer(state2 => Delay(intervalSeconds), null, intervalSeconds, intervalSeconds);
+				var milliseconds = _timeoutSeconds * 1000 / 2;
+				_autoDelayTimer = new Timer(state2 => Delay(milliseconds), null, milliseconds, milliseconds);
 			}
 		}
 
 		/// <summary>
 		/// 延长锁时间，锁在占用期内操作时返回true，若因锁超时被其他使用者占用则返回false
 		/// </summary>
-		/// <param name="seconds">延长的秒数</param>
+		/// <param name="milliseconds">延长的毫秒数</param>
 		/// <returns>成功/失败</returns>
-		public bool Delay(int seconds) {
+		public bool Delay(int milliseconds) {
 			var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
-  local ttlva = redis.call('TTL', KEYS[1])
-  redis.call('EXPIRE', KEYS[1], ARGV[2] + ttlva)
+  local ttlva = redis.call('PTTL', KEYS[1])
+  redis.call('PEXPIRE', KEYS[1], ARGV[2] + ttlva)
   return 1
 end
-return 0", _name, _value, seconds)?.ToString() == "1";
+return 0", _name, _value, milliseconds)?.ToString() == "1";
 			if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
 			return ret;
 		}
