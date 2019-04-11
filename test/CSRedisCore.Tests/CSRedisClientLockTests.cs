@@ -22,5 +22,12 @@ namespace CSRedisCore.Tests {
 				});
 			Task.WaitAll(tasks);
 		}
+
+		[Fact]
+		public void Lock2() {
+			using (rds.Lock("testlock2", 100)) {
+				Thread.CurrentThread.Join(5000);
+			}
+		}
 	}
 }
