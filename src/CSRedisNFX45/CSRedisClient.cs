@@ -300,6 +300,8 @@ namespace CSRedis {
 							if (dt[2].StartsWith("master") || dt[2].EndsWith("master")) {
 								if (dt[7] == "connected") {
 									var endpoint = dt[1];
+									var at40 = endpoint.IndexOf('@');
+									if (at40 != -1) endpoint = endpoint.Remove(at40);
 									var slots = dt[8].Split('-');
 									if (ushort.TryParse(slots[0], out var tryslotStart) &&
 										ushort.TryParse(slots[1], out var tryslotEnd)) {
