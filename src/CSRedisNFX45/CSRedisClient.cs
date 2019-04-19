@@ -430,6 +430,11 @@ namespace CSRedis {
 			return false;
 		}
 		RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool) {
+			if (redirect.endpoint.StartsWith("127.0.0.1"))
+				redirect.endpoint = $"{pool._policy._ip}:{redirect.endpoint.Substring(10)}";
+			else if (redirect.endpoint.StartsWith("localhost", StringComparison.CurrentCultureIgnoreCase))
+				redirect.endpoint = $"{pool._policy._ip}:{redirect.endpoint.Substring(10)}";
+
 			var nodeKey = $"{redirect.endpoint}/{pool._policy._database}";
 			if (Nodes.TryGetValue(nodeKey, out var movedPool) == false) {
 				lock (NodesLock) {
