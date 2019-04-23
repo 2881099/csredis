@@ -157,19 +157,8 @@ namespace CSRedis {
 					}
 				}
 
-				if (_preheat) {
-					var initConns = new List<Object<RedisClient>>();
-					for (var a = 0; a < PoolSize; a++)
-						try {
-							var conn = _pool.Get();
-							initConns.Add(conn);
-							if (!conn.Value.IsConnected) conn.Value.Connect(_connectTimeout);
-							conn.Value.Ping();
-						} catch {
-							break; //预热失败一次就退出
-						}
-					foreach (var conn in initConns) _pool.Return(conn);
-				}
+				if (_preheat)
+					PrevReheatConnectionPool(_pool);
 			}
 		}
 
@@ -241,6 +230,38 @@ namespace CSRedis {
 		public void OnAvailable() {
 		}
 		public void OnUnavailable() {
+		}
+
+		internal static void PrevReheatConnectionPool(ObjectPool<RedisClient> pool) {
+			var initTestOk = true;
+			var initStartTime = DateTime.Now;
+			var initConns = new ConcurrentBag<Object<RedisClient>>();
+
+			try {
+				var conn = pool.Get();
+				initConns.Add(conn);
+				pool.Policy.OnCheckAvailable(conn);
+			} catch {
+				initTestOk = false; //预热一次失败，后面将不进行
+			}
+			for (var a = 1; initTestOk && a < pool.Policy.PoolSize; a += 10) {
+				if (initStartTime.Subtract(DateTime.Now).TotalSeconds > 3) break; //预热耗时超过3秒，退出
+				var b = Math.Min(pool.Policy.PoolSize - a, 10); //每10个预热
+				var initTasks = new Task[b];
+				for (var c = 0; c < b; c++) {
+					initTasks[c] = Task.Run(() => {
+						try {
+							var conn = pool.Get();
+							initConns.Add(conn);
+							pool.Policy.OnCheckAvailable(conn);
+						} catch {
+							initTestOk = false;  //有失败，下一组退出预热
+						}
+					});
+				}
+				Task.WaitAll(initTasks);
+			}
+			while (initConns.TryTake(out var conn)) pool.Return(conn);
 		}
 	}
 }
