@@ -253,11 +253,22 @@ namespace CSRedis {
 
 				var prefix = firstPool?.Prefix;
 				var slot = GetClusterSlot(string.Concat(prefix, key)); //redis-cluster 模式，选取第一个 connectionString prefix 前辍求 slot
-				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) return slotKey; //按上一次 MOVED 记录查找节点
+				if (SlotCache.TryGetValue(slot, out var slotIndex) && NodesIndex.TryGetValue(slotIndex, out var slotKey)) {
+					if (Nodes.TryGetValue(slotKey, out var b) && b.IsAvailable == false) {
+						var availableNode = Nodes.Where(a => a.Value.IsAvailable).FirstOrDefault();
+						if (string.IsNullOrEmpty(availableNode.Key) == false) return availableNode.Key; //随便连向一个可用的节点
+					}
+					return slotKey; //按上一次 MOVED 记录查找节点
+				}
 				if (this.NodeRuleExternal == null) {
 					if (string.IsNullOrEmpty(prefix) == false) slot = GetClusterSlot(key ?? string.Empty);
 					var idx = slot % NodesIndex.Count;
-					return idx < 0 || idx >= NodesIndex.Count ? NodesIndex[0] : NodesIndex[idx];
+					slotKey = idx < 0 || idx >= NodesIndex.Count ? NodesIndex[0] : NodesIndex[idx];
+					if (Nodes.TryGetValue(slotKey, out var b) && b.IsAvailable == false) {
+						var availableNode = Nodes.Where(a => a.Value.IsAvailable).FirstOrDefault();
+						if (string.IsNullOrEmpty(availableNode.Key) == false) return availableNode.Key; //随便连向一个可用的节点
+					}
+					return slotKey;
 				}
 				return this.NodeRuleExternal(key);
 			};
@@ -404,7 +415,9 @@ namespace CSRedis {
 							}
 
 							obj.ResetValue();
-							obj.Value.Ping(); //此时再报错，说明真的网络问题，抛出异常
+
+							if (SlotCache.Any() == false) //不是群集
+								obj.Value.Ping(); //此时再报错，说明真的网络问题，抛出异常
 						}
 					}
 				}

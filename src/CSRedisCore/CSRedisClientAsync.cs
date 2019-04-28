@@ -47,7 +47,9 @@ namespace CSRedis {
 							}
 
 							obj.ResetValue();
-							await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
+
+							if (SlotCache.Any() == false) //不是群集
+								await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
 						}
 					}
 				}
