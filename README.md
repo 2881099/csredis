@@ -113,7 +113,7 @@ RedisHelper.Get("test1");
 ```csharp
 var connectionString = "127.0.0.1:6379,password=123,poolsize=10";
 var redis = new CSRedisClient[14]; //定义成单例
-for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionString + ",defualtDatabase=" + a);
+for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionString + ",defaultDatabase=" + a);
 
 //访问数据库1的数据
 redis[1].Get("test1");
