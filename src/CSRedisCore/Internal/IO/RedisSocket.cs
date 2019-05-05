@@ -79,8 +79,11 @@ namespace CSRedis.Internal.IO
             return sslStream;
         }
 
-        public void Dispose()
+		bool isDisposed = false;
+		public void Dispose()
         {
+			if (isDisposed) return;
+			isDisposed = true;
 			try { _socket.Shutdown(SocketShutdown.Both); } catch { }
 			try { _socket.Close(); } catch { }
 			try { _socket.Dispose(); } catch { }
@@ -94,7 +97,8 @@ namespace CSRedis.Internal.IO
 				try { _socket.Dispose(); } catch { }
 			}
 
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			isDisposed = false;
+			_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _remote = endpoint;
         }
 
