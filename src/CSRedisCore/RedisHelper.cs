@@ -220,6 +220,13 @@ public abstract partial class RedisHelper {
 	/// <param name="onMessage">接收消息委托</param>
 	/// <returns></returns>
 	public static CSRedisClient.SubscribeListObject SubscribeList(string listKey, Action<string> onMessage) => Instance.SubscribeList(listKey, onMessage);
+	/// <summary>
+	/// 使用lpush + blpop订阅端（多端争抢模式），只有一端收到消息
+	/// </summary>
+	/// <param name="listKeys">支持多个 key（不含prefix前辍）</param>
+	/// <param name="onMessage">接收消息委托，参数1：key；参数2：消息体</param>
+	/// <returns></returns>
+	public static CSRedisClient.SubscribeListObject SubscribeList(string[] listKeys, Action<string, string> onMessage) => Instance.SubscribeList(listKeys, onMessage);
 	#endregion
 
 	#region HyperLogLog

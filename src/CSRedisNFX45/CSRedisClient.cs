@@ -1613,7 +1613,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			//订阅其他端转发的消息
 			subobj.SubscribeLists.Add(this.SubscribeList($"{listKey}_{clientId}", onMessage));
 			//订阅主消息，接收消息后分发
-			subobj.SubscribeLists.Add(this.SubscribeList(listKey, msg => {
+			subobj.SubscribeLists.Add(this.SubscribeList(new[] { listKey }, (key, msg) => {
 				try {
 					this.HSetNx($"{listKey}_SubscribeListBroadcast", clientId, 1);
 					if (msg == null) return;
@@ -1665,15 +1665,25 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="listKey">list key（不含prefix前辍）</param>
 		/// <param name="onMessage">接收消息委托</param>
 		/// <returns></returns>
-		public SubscribeListObject SubscribeList(string listKey, Action<string> onMessage) => SubscribeList(listKey, onMessage, false);
-		private SubscribeListObject SubscribeList(string listKey, Action<string> onMessage, bool ignoreEmpty) {
+		public SubscribeListObject SubscribeList(string listKey, Action<string> onMessage) => SubscribeList(new[] { listKey }, (k, v) => onMessage(v), false);
+		/// <summary>
+		/// 使用lpush + blpop订阅端（多端争抢模式），只有一端收到消息
+		/// </summary>
+		/// <param name="listKeys">支持多个 key（不含prefix前辍）</param>
+		/// <param name="onMessage">接收消息委托，参数1：key；参数2：消息体</param>
+		/// <returns></returns>
+		public SubscribeListObject SubscribeList(string[] listKeys, Action<string, string> onMessage) => SubscribeList(listKeys, onMessage, false);
+		private SubscribeListObject SubscribeList(string[] listKeys, Action<string, string> onMessage, bool ignoreEmpty) {
+			if (listKeys == null || listKeys.Any() == false) throw new ArgumentException("参数 listKey 不可为空");
+			var listKeysStr = string.Join(", ", listKeys);
+			var isMultiKey = listKeys.Length > 1;
 			var subobj = new SubscribeListObject();
 
 			var bgcolor = Console.BackgroundColor;
 			var forecolor = Console.ForegroundColor;
 			Console.BackgroundColor = ConsoleColor.DarkGreen;
 			Console.ForegroundColor = ConsoleColor.White;
-			Console.Write($"正在订阅列表(listKey:{listKey})");
+			Console.Write($"正在订阅列表(listKey:{listKeysStr})");
 			Console.BackgroundColor = bgcolor;
 			Console.ForegroundColor = forecolor;
 			Console.WriteLine();
@@ -1681,9 +1691,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 			new Thread(() => {
 				while (subobj.IsUnsubscribed == false) {
 					try {
-						var msg = this.BLPop(5, listKey);
-						if (!ignoreEmpty || (ignoreEmpty && !string.IsNullOrEmpty(msg))) {
-							onMessage?.Invoke(msg);
+						if (isMultiKey) {
+							var msg = this.BLPopWithKey(5, listKeys);
+							if (msg != null)
+								if (!ignoreEmpty || (ignoreEmpty && !string.IsNullOrEmpty(msg.Value.value)))
+									onMessage?.Invoke(msg.Value.key, msg.Value.value);
+						} else {
+							var msg = this.BLPop(5, listKeys);
+							if (!ignoreEmpty || (ignoreEmpty && !string.IsNullOrEmpty(msg)))
+								onMessage?.Invoke(listKeys[0], msg);
 						}
 					} catch (ObjectDisposedException) {
 					} catch (Exception ex) {
@@ -1691,7 +1707,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 						forecolor = Console.ForegroundColor;
 						Console.BackgroundColor = ConsoleColor.DarkRed;
 						Console.ForegroundColor = ConsoleColor.White;
-						Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}");
+						Console.Write($"列表订阅出错(listKey:{listKeysStr})：{ex.Message}");
 						Console.BackgroundColor = bgcolor;
 						Console.ForegroundColor = forecolor;
 						Console.WriteLine();
