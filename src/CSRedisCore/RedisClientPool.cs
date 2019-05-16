@@ -85,7 +85,7 @@ namespace CSRedis {
 		internal RedisClientPool _pool;
 		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 10000;
 		internal string _ip = "127.0.0.1", _password = "", _clientname = "";
-		internal bool _ssl = false, _preheat = true;
+		internal bool _ssl = false, _preheat = true, _testCluster = true;
 		internal string Key => $"{_ip}:{_port}/{_database}";
 		internal string Prefix { get; set; }
 		public event EventHandler Connected;
@@ -153,6 +153,9 @@ namespace CSRedis {
 							break;
 						case "idletimeout":
 							IdleTimeout = TimeSpan.FromMilliseconds(int.TryParse(kv.Length > 1 ? kv[1].Trim() : "0", out var idleTimeout) == false || idleTimeout <= 0 ? 0 : idleTimeout);
+							break;
+						case "testcluster":
+							_testCluster = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : true;
 							break;
 					}
 				}
