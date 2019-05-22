@@ -205,7 +205,7 @@ namespace CSRedis
     public class RedisMasterRole : RedisRole
     {
         readonly long _replicationOffset;
-        readonly Tuple<string, int, int>[] _slaves;
+        readonly Tuple<string, int, long>[] _slaves;
 
         /// <summary>
         /// Get the master replication offset
@@ -215,9 +215,9 @@ namespace CSRedis
         /// <summary>
         /// Get the slaves associated with the current master
         /// </summary>
-        public Tuple<string, int, int>[] Slaves { get { return _slaves; } }
+        public Tuple<string, int, long>[] Slaves { get { return _slaves; } }
 
-        internal RedisMasterRole(string role, long replicationOffset, Tuple<string, int, int>[] slaves)
+        internal RedisMasterRole(string role, long replicationOffset, Tuple<string, int, long>[] slaves)
             : base(role)
         {
             _replicationOffset = replicationOffset;

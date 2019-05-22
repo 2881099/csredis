@@ -38,15 +38,15 @@ namespace CSRedis.Internal.Commands
             reader.ExpectSize(3, num);
             long offset = reader.ReadInt();
             reader.ExpectType(RedisMessage.MultiBulk);
-            var slaves = new Tuple<string, int, int>[reader.ReadInt(false)];
+            var slaves = new Tuple<string, int, long>[reader.ReadInt(false)];
             for (int i = 0; i < slaves.Length; i++)
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 reader.ExpectSize(3);
                 string ip = reader.ReadBulkString();
                 int port = Int32.Parse(reader.ReadBulkString());
-                int slave_offset = Int32.Parse(reader.ReadBulkString());
-                slaves[i] = new Tuple<string, int, int>(ip, port, slave_offset);
+                long.TryParse(reader.ReadBulkString(), out var slave_offset);
+                slaves[i] = new Tuple<string, int, long>(ip, port, slave_offset);
             }
             return new RedisMasterRole(role, offset, slaves);
         }

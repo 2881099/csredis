@@ -28,8 +28,8 @@ namespace CSRedis.Internal.Commands
                 reader.ExpectType(RedisMessage.MultiBulk);
                 reader.ExpectSize(2);
 
-                int timestamp = Int32.Parse(reader.ReadBulkString());
-                int microseconds = Int32.Parse(reader.ReadBulkString());
+                var timestamp = Int32.Parse(reader.ReadBulkString());
+                var microseconds = long.Parse(reader.ReadBulkString());
 
                 return FromTimestamp(timestamp, microseconds);
             }
