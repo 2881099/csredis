@@ -395,6 +395,10 @@ namespace CSRedis {
 						redirect = ParseClusterRedirect(ex3); //官方集群跳转
 						if (redirect == null || jump <= 0) {
 							ex = ex3;
+							if (SentinelManager != null && ex.Message.Contains("READONLY")) { //哨兵轮询
+								if (pool.SetUnavailable(ex) == true)
+									BackgroundGetSentinelMasterValue();
+							}
 							throw ex;
 						}
 						break;
@@ -410,9 +414,8 @@ namespace CSRedis {
 							throw ex; //非网络错误，跳出重试逻辑，抛出异常
 						} catch {
 							if (SentinelManager != null) { //哨兵轮询
-								if (pool.SetUnavailable(ex) == true) {
+								if (pool.SetUnavailable(ex) == true)
 									BackgroundGetSentinelMasterValue();
-								}
 								throw new Exception("Redis Sentinel Master is switching.");
 							}
 
