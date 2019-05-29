@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSRedisCore", "src\CSRedisCore\CSRedisCore.csproj", "{4034A269-B0A7-4E65-8195-E71ABA468D83}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSRedisCore.Tests", "test\CSRedisCore.Tests\CSRedisCore.Tests.csproj", "{70B1F8DC-C245-421E-866D-3F4149692F69}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Help", "Help", "{A5960636-4D92-46C1-8902-7668FA64B69D}"
@@ -12,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Help", "Help", "{A5960636-4
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSRedisNFX45", "src\CSRedisNFX45\CSRedisNFX45.csproj", "{09CFABC8-2FE2-421C-B850-C0C905FA6A83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSRedisCore", "src\CSRedisCore.csproj", "{E72D0C8D-66B4-4466-B700-730EAED30285}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,18 +18,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4034A269-B0A7-4E65-8195-E71ABA468D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4034A269-B0A7-4E65-8195-E71ABA468D83}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4034A269-B0A7-4E65-8195-E71ABA468D83}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4034A269-B0A7-4E65-8195-E71ABA468D83}.Release|Any CPU.Build.0 = Release|Any CPU
 		{70B1F8DC-C245-421E-866D-3F4149692F69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{70B1F8DC-C245-421E-866D-3F4149692F69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70B1F8DC-C245-421E-866D-3F4149692F69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70B1F8DC-C245-421E-866D-3F4149692F69}.Release|Any CPU.Build.0 = Release|Any CPU
-		{09CFABC8-2FE2-421C-B850-C0C905FA6A83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{09CFABC8-2FE2-421C-B850-C0C905FA6A83}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{09CFABC8-2FE2-421C-B850-C0C905FA6A83}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{09CFABC8-2FE2-421C-B850-C0C905FA6A83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E72D0C8D-66B4-4466-B700-730EAED30285}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E72D0C8D-66B4-4466-B700-730EAED30285}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E72D0C8D-66B4-4466-B700-730EAED30285}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E72D0C8D-66B4-4466-B700-730EAED30285}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
