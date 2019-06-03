@@ -85,7 +85,8 @@ namespace CSRedis {
 		internal RedisClientPool _pool;
 		internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 10000;
 		internal string _ip = "127.0.0.1", _password = "", _clientname = "";
-		internal bool _ssl = false, _preheat = true, _testCluster = true;
+		internal bool _ssl = false, _testCluster = true;
+		internal int _preheat = -1;
 		internal string Key => $"{_ip}:{_port}/{_database}";
 		internal string Prefix { get; set; }
 		public event EventHandler Connected;
@@ -137,7 +138,8 @@ namespace CSRedis {
 							_writebuffer = int.TryParse(kv.Length > 1 ? kv[1].Trim() : "10240", out _writebuffer) ? _writebuffer : 10240;
 							break;
 						case "preheat":
-							_preheat = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
+							var kvtrim = kv.Length > 1 ? kv[1].ToLower().Trim() : null;
+							_preheat = kvtrim == "true" ? -1 : (int.TryParse(kvtrim, out _preheat) ? _preheat : 0);
 							break;
 						case "name":
 							_clientname = kv.Length > 1 ? kv[1] : "";
@@ -160,8 +162,9 @@ namespace CSRedis {
 					}
 				}
 
-				if (_preheat)
-					PrevReheatConnectionPool(_pool);
+				if (_preheat < 0) _preheat = PoolSize;
+				if (_preheat > 0)
+					PrevReheatConnectionPool(_pool, _preheat);
 			}
 		}
 
@@ -235,7 +238,9 @@ namespace CSRedis {
 		public void OnUnavailable() {
 		}
 
-		internal static void PrevReheatConnectionPool(ObjectPool<RedisClient> pool) {
+		public static void PrevReheatConnectionPool(ObjectPool<RedisClient> pool, int minPoolSize) {
+			if (minPoolSize <= 0) minPoolSize = Math.Min(5, pool.Policy.PoolSize);
+			if (minPoolSize > pool.Policy.PoolSize) minPoolSize = pool.Policy.PoolSize;
 			var initTestOk = true;
 			var initStartTime = DateTime.Now;
 			var initConns = new ConcurrentBag<Object<RedisClient>>();
@@ -247,9 +252,9 @@ namespace CSRedis {
 			} catch {
 				initTestOk = false; //预热一次失败，后面将不进行
 			}
-			for (var a = 1; initTestOk && a < pool.Policy.PoolSize; a += 10) {
+			for (var a = 1; initTestOk && a < minPoolSize; a += 10) {
 				if (initStartTime.Subtract(DateTime.Now).TotalSeconds > 3) break; //预热耗时超过3秒，退出
-				var b = Math.Min(pool.Policy.PoolSize - a, 10); //每10个预热
+				var b = Math.Min(minPoolSize - a, 10); //每10个预热
 				var initTasks = new Task[b];
 				for (var c = 0; c < b; c++) {
 					initTasks[c] = Task.Run(() => {
