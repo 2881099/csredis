@@ -308,17 +308,20 @@ namespace CSRedis {
 						foreach (var cnode in cnodes) {
 							if (string.IsNullOrEmpty(cnode)) continue;
 							var dt = cnode.Trim().Split(' ');
-							if (dt.Length == 9) {
+							if (dt.Length >= 9) {
 								if (dt[2].StartsWith("master") || dt[2].EndsWith("master")) {
 									if (dt[7] == "connected") {
 										var endpoint = dt[1];
 										var at40 = endpoint.IndexOf('@');
 										if (at40 != -1) endpoint = endpoint.Remove(at40);
-										var slots = dt[8].Split('-');
-										if (ushort.TryParse(slots[0], out var tryslotStart) &&
-											ushort.TryParse(slots[1], out var tryslotEnd)) {
-											for (var slot = tryslotStart; slot <= tryslotEnd; slot++) {
-												GetRedirectPool((true, false, slot, endpoint), firstPool);
+
+										for (var slotIndex = 8; slotIndex < dt.Length; slotIndex++) {
+											var slots = dt[slotIndex].Split('-');
+											if (ushort.TryParse(slots[0], out var tryslotStart) &&
+												ushort.TryParse(slots[1], out var tryslotEnd)) {
+												for (var slot = tryslotStart; slot <= tryslotEnd; slot++) {
+													GetRedirectPool((true, false, slot, endpoint), firstPool);
+												}
 											}
 										}
 									}
