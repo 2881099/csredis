@@ -92,6 +92,24 @@ namespace CSRedis
         #endregion
 
         #region Keys
+		/// <summary>
+        /// [redis-server 3.2.1] 修改指定key(s) 最后访问时间 若key不存在，不做操作
+        /// </summary>
+        /// <param name="keys">Keys</param>
+        /// <returns></returns>
+        public Task<long> TouchAsync(params string[] keys)
+        {
+            return WriteAsync(RedisCommands.Touch(keys));
+        }
+		/// <summary>
+        /// [redis-server 4.0.0] Delete a key, 该命令和DEL十分相似：删除指定的key(s),若key不存在则该key被跳过。但是，相比DEL会产生阻塞，该命令会在另一个线程中回收内存，因此它是非阻塞的。 这也是该命令名字的由来：仅将keys从keyspace元数据中删除，真正的删除会在后续异步操作。
+        /// </summary>
+        /// <param name="keys">Keys to delete</param>
+        /// <returns>Number of keys removed</returns>
+        public Task<long> UnLinkAsync(params string[] keys)
+        {
+            return WriteAsync(RedisCommands.UnLink(keys));
+        }
         /// <summary>
         /// Delete a key
         /// </summary>
@@ -412,6 +430,17 @@ namespace CSRedis
 		#endregion
 
 		#region Hashes
+		/// <summary>
+        /// [redis-server 3.2.0] 返回hash指定field的value的字符串长度，如果hash或者field不存在，返回0.
+        /// </summary>
+        /// <param name="key">Hash key</param>
+        /// <param name="field">Field</param>
+        /// <returns></returns>
+        public Task<long> HStrLenAsync(string key, string field)
+        {
+            return WriteAsync(RedisCommands.HStrLen(key, field));
+        }
+
 		/// <summary>
 		/// Delete one or more hash fields
 		/// </summary>
@@ -1011,6 +1040,24 @@ namespace CSRedis
         #endregion
 
         #region Sorted Sets
+		public Task<Tuple<string, double>[]> ZPopMaxAsync(string key, long count)
+        {
+            return WriteAsync(RedisCommands.ZPopMax(key, count));
+        }
+		public Task<Tuple<byte[], double>[]> ZPopMaxBytesAsync(string key, long count)
+        {
+            return WriteAsync(RedisCommands.ZPopMaxBytes(key, count));
+        }
+		public Task<Tuple<string, double>[]> ZPopMinAsync(string key, long count)
+        {
+            return WriteAsync(RedisCommands.ZPopMin(key, count));
+        }
+		public Task<Tuple<byte[], double>[]> ZPopMinBytesAsync(string key, long count)
+        {
+            return WriteAsync(RedisCommands.ZPopMinBytes(key, count));
+        }
+
+
         /// <summary>
         /// Add one or more members to a sorted set, or update its score if it already exists
         /// </summary>

@@ -35,6 +35,14 @@ namespace CSRedis
         #endregion
 
         #region Keys
+		public static RedisInt Touch(params string[] keys)
+        {
+            return new RedisInt("TOUCH", keys);
+        }
+		public static RedisInt UnLink(params string[] keys)
+        {
+            return new RedisInt("UNLINK", keys);
+        }
         public static RedisInt Del(params string[] keys)
         {
             return new RedisInt("DEL", keys);
@@ -211,6 +219,11 @@ namespace CSRedis
         #endregion
 
         #region Hashes
+		public static RedisInt HStrLen(string key, string field)
+        {
+			object[] args = RedisArgs.Concat(key, field);
+            return new RedisInt("HSTRLEN", args);
+        }
         public static RedisInt HDel(string key, params string[] fields)
         {
 			object[] args = RedisArgs.Concat(key, fields);
@@ -624,6 +637,23 @@ namespace CSRedis
         #endregion
 
         #region Sorted Sets
+		public static RedisArray.WeakPairs<string, double> ZPopMax(string key, long count)
+        {
+            return new RedisArray.WeakPairs<string, double>("ZPOPMAX", key, count);
+        }
+		public static RedisArray.StrongPairs<byte[], double> ZPopMaxBytes(string key, long count)
+        {
+            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZPOPMAX", key, count);
+        }
+		public static RedisArray.WeakPairs<string, double> ZPopMin(string key, long count)
+        {
+            return new RedisArray.WeakPairs<string, double>("ZPOPMIN", key, count);
+        }
+		public static RedisArray.StrongPairs<byte[], double> ZPopMinBytes(string key, long count)
+        {
+            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZPOPMIN", key, count);
+        }
+
         public static RedisInt ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] scoreMembers)
         {
             object[] args = RedisArgs.Concat(key, RedisArgs.GetTupleArgs(scoreMembers));

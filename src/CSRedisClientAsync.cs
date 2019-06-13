@@ -756,6 +756,35 @@ namespace CSRedis {
 
 		#region Sorted Set
 		/// <summary>
+        /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="count">数量</param>
+        /// <returns></returns>
+        async public Task<(string member, double score)[]> ZPopMaxAsync(string key, long count) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMaxAsync(k, count))).Select(a => (a.Item1, a.Item2)).ToArray();
+		/// <summary>
+        /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="count">数量</param>
+        /// <returns></returns>
+        async public Task<(T member, double score)[]> ZPopMaxAsync<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMaxBytesAsync(k, count)));
+		/// <summary>
+        /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="count">数量</param>
+        /// <returns></returns>
+        async public Task<(string member, double score)[]> ZPopMinAsync(string key, long count) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMinAsync(k, count))).Select(a => (a.Item1, a.Item2)).ToArray();
+		/// <summary>
+        /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="count">数量</param>
+        /// <returns></returns>
+        async public Task<(T member, double score)[]> ZPopMinAsync<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMinBytesAsync(k, count)));
+
+		/// <summary>
 		/// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
@@ -1549,6 +1578,13 @@ namespace CSRedis {
 
 		#region Hash
 		/// <summary>
+        /// [redis-server 3.2.0] 返回hash指定field的value的字符串长度，如果hash或者field不存在，返回0.
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="field">字段</param>
+        /// <returns></returns>
+        public Task<long> HStrLenAsync(string key, string field) => ExecuteScalarAsync(key, (c, k) => c.Value.HStrLenAsync(k, field));
+		/// <summary>
 		/// 删除一个或多个哈希表字段
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
@@ -1911,6 +1947,18 @@ namespace CSRedis {
 		#endregion
 
 		#region Key
+		/// <summary>
+		/// [redis-server 3.2.1] 修改指定key(s) 最后访问时间 若key不存在，不做操作
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <returns></returns>
+		public Task<long> TouchAsync(params string[] key) => ExecuteNonQueryAsync(key, (c, k) => c.Value.TouchAsync(k));
+		/// <summary>
+		/// [redis-server 4.0.0] Delete a key, 该命令和DEL十分相似：删除指定的key(s),若key不存在则该key被跳过。但是，相比DEL会产生阻塞，该命令会在另一个线程中回收内存，因此它是非阻塞的。 这也是该命令名字的由来：仅将keys从keyspace元数据中删除，真正的删除会在后续异步操作。
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <returns></returns>
+		public Task<long> UnLinkAsync(params string[] key) => ExecuteNonQueryAsync(key, (c, k) => c.Value.UnLinkAsync(k));
 		/// <summary>
 		/// 用于在 key 存在时删除 key
 		/// </summary>

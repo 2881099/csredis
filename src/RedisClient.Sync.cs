@@ -96,6 +96,24 @@ namespace CSRedis
         #endregion
 
         #region Keys
+		/// <summary>
+        /// [redis-server 3.2.1] 修改指定key(s) 最后访问时间 若key不存在，不做操作
+        /// </summary>
+        /// <param name="keys">Keys</param>
+        /// <returns></returns>
+        public long Touch(params string[] keys)
+        {
+            return Write(RedisCommands.Touch(keys));
+        }
+		/// <summary>
+        /// [redis-server 4.0.0] Delete a key, 该命令和DEL十分相似：删除指定的key(s),若key不存在则该key被跳过。但是，相比DEL会产生阻塞，该命令会在另一个线程中回收内存，因此它是非阻塞的。 这也是该命令名字的由来：仅将keys从keyspace元数据中删除，真正的删除会在后续异步操作。
+        /// </summary>
+        /// <param name="keys">Keys to delete</param>
+        /// <returns>Number of keys removed</returns>
+        public long UnLink(params string[] keys)
+        {
+            return Write(RedisCommands.UnLink(keys));
+        }
         /// <summary>
         /// Delete a key
         /// </summary>
@@ -418,6 +436,17 @@ namespace CSRedis
         #endregion
 
         #region Hashes
+		/// <summary>
+        /// [redis-server 3.2.0] 返回hash指定field的value的字符串长度，如果hash或者field不存在，返回0.
+        /// </summary>
+        /// <param name="key">Hash key</param>
+        /// <param name="field">Field</param>
+        /// <returns></returns>
+        public long HStrLen(string key, string field)
+        {
+            return Write(RedisCommands.HStrLen(key, field));
+        }
+
         /// <summary>
         /// Delete one or more hash fields
         /// </summary>
@@ -1169,6 +1198,23 @@ namespace CSRedis
         #endregion
 
         #region Sorted Sets
+		public Tuple<string, double>[] ZPopMax(string key, long count)
+        {
+            return Write(RedisCommands.ZPopMax(key, count));
+        }
+		public Tuple<byte[], double>[] ZPopMaxBytes(string key, long count)
+        {
+            return Write(RedisCommands.ZPopMaxBytes(key, count));
+        }
+		public Tuple<string, double>[] ZPopMin(string key, long count)
+        {
+            return Write(RedisCommands.ZPopMin(key, count));
+        }
+		public Tuple<byte[], double>[] ZPopMinBytes(string key, long count)
+        {
+            return Write(RedisCommands.ZPopMinBytes(key, count));
+        }
+
         /// <summary>
         /// Add one or more members to a sorted set, or update its score if it already exists
         /// </summary>
