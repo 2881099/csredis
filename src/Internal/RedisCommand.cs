@@ -1392,15 +1392,10 @@ namespace CSRedis
 			object[] args = RedisArgs.Concat(key, group, id);
             return new RedisInt("XACK", args);
         }
-		public static RedisString XAdd(string key, string id, params (string, string)[] fieldValues)
+		public static RedisString XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues)
         {
-			object[] args = RedisArgs.Concat(key, id, fieldValues.Select(a => new[] { a.Item1, a.Item2 }).SelectMany(a => a).ToArray());
-            return new RedisString("XADD", args);
-        }
-		public static RedisString XAddMaxLen(string key, long maxLen, string id, params (string, string)[] fieldValues)
-        {
-			var maxLenArg = maxLen > 0 ? maxLen.ToString() : $"~ {Math.Abs(maxLen)}";
-			object[] args = RedisArgs.Concat(key, "MAXLEN", maxLenArg, id, fieldValues.Select(a => new[] { a.Item1, a.Item2 }).SelectMany(a => a).ToArray());
+			var maxLenArg = maxLen == 0 ? null : $"MAXLEN {(maxLen > 0 ? maxLen.ToString() : $"~ {Math.Abs(maxLen)}")}";
+			object[] args = RedisArgs.Concat(key, maxLenArg, id, fieldValues.Select(a => new[] { a.Item1, a.Item2 }).SelectMany(a => a).ToArray());
             return new RedisString("XADD", args);
         }
 
@@ -1422,11 +1417,11 @@ namespace CSRedis
 				"XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID"
 				);
 		}
-		public static RedisString XClaimJustId(string key, string group, string consumer, long minIdleTime, params string[] id) {
-			return new RedisString("XCLAIM", key, group, consumer, minIdleTime, id);
+		public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, params string[] id) {
+			return new RedisArray.Strings("XCLAIM", key, group, consumer, minIdleTime, id);
 		}
-		public static RedisString XClaimJustId(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) {
-			return new RedisString("XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID");
+		public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) {
+			return new RedisArray.Strings("XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID");
 		}
 
 		public static RedisInt XDel(string key, params string[] id) {

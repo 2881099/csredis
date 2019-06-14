@@ -2629,5 +2629,42 @@ namespace CSRedis
 			return ret.Select(a => (a.Item1, a.Item2, a.Item4 == null ? default(double) : a.Item4[0], a.Item4 == null ? default(double) : a.Item4[1], a.Item3)).ToArray();
 		}
 		#endregion
+
+		#region Streams 5.0
+		public long XAck(string key, string group, string id) => Write(RedisCommands.XAck(key, group, id));
+
+		public string XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues) => Write(RedisCommands.XAdd(key, maxLen, id, fieldValues));
+
+		public (string id, (string field, string value)[])[] XClaim(string key, string group, string consumer, long minIdleTime, params string[] id) => 
+			Write(RedisCommands.XClaim(key, group, consumer, minIdleTime, id)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2)).ToArray())).ToArray();
+		public (string id, (string field, string value)[])[] XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) =>
+			Write(RedisCommands.XClaim(key, group, consumer, minIdleTime, id, idle, retryCount, force)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2)).ToArray())).ToArray();
+
+		public string[] XClaimJustId(string key, string group, string consumer, long minIdleTime, params string[] id) =>
+			Write(RedisCommands.XClaimJustId(key, group, consumer, minIdleTime, id));
+		public string[] XClaimJustId(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) =>
+			Write(RedisCommands.XClaimJustId(key, group, consumer, minIdleTime, id, idle, retryCount, force));
+
+		public long XDel(string key, params string[] id) => Write(RedisCommands.XDel(key, id));
+
+		public string XGroupCreate(string key, string group, string id = "$") => Write(RedisCommands.XGroup.Create(key, group, id));
+		public string XGroupSetId(string key, string group, string id = "$") => Write(RedisCommands.XGroup.SetId(key, group, id));
+		public bool XGroupDestroy(string key, string group) => Write(RedisCommands.XGroup.Destroy(key, group));
+		public bool XGroupDelConsumer(string key, string group, string consumer) => Write(RedisCommands.XGroup.DelConsumer(key, group, consumer));
+
+		public long XLen(string key) => Write(RedisCommands.XLen(key));
+
+		public (string id, (string field, string value)[])[] XRange(string key, string start, string end, long count = 1) =>
+			Write(RedisCommands.XRange(key, start, end, count)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2)).ToArray())).ToArray();
+		public (string id, (string field, string value)[])[] XRevRange(string key, string end, string start, long count = 1) =>
+			Write(RedisCommands.XRevRange(key, end, start, count)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2)).ToArray())).ToArray();
+
+		public (string stream, (string id, (string field, string value)[])[])[] XRead(long count, long block, params (string key, string id)[] streams) =>
+			Write(RedisCommands.XRead(count, block, streams)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2.Select(c => (c.Item1, c.Item2)).ToArray())).ToArray())).ToArray();
+		public (string stream, (string id, (string field, string value)[])[])[] XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams) =>
+			Write(RedisCommands.XReadGroup(group, consumer, count, block, streams)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2.Select(c => (c.Item1, c.Item2)).ToArray())).ToArray())).ToArray();
+
+		public long XTrim(string key, long maxLen) => Write(RedisCommands.XTrim(key, maxLen));
+		#endregion
 	}
 }
