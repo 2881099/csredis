@@ -12,13 +12,13 @@ CSRedis于2016年开始支持.NETCore一直迭代至今（解决上述Bug），�
 
 2、CSRedisClient 增加反序列对象获取，如：Get<byte[]>、HGet<byte[]>，所以获取方法都重载了<T>，默认获取仍然是string；
 
-3、SafeObjectPool 的引入使用；
+3、增加 geo 命令支持（需要 redis-server 3.2 以上支持）；
 
-4、增加 geo 命令支持（需要 redis-server 3.2 以上支持）；
+4、增加官方集群 redis-trib.rb 支持；
 
-5、增加官方集群 redis-trib.rb 支持；
+5、增加哨兵模式支持；
 
-6、增加哨兵模式支持；
+6、增加 stream 命令支持（需要 redis-server 5.0 以上支持）；
 
 | Package Name |  NuGet | Downloads | |
 |--------------|  ------- |  ---- | -- |
