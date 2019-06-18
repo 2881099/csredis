@@ -242,7 +242,7 @@ namespace CSRedis {
 				};
 				SentinelMasterName = connectionStrings.First().Split(',').FirstOrDefault() ?? "mymaster";
 				try {
-					SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
+					SentinelMasterValue = SentinelManager.Connect(SentinelMasterName, tmppoolPolicy._connectTimeout);
 				} catch {
 					//没有可用的master
 				}
@@ -359,7 +359,7 @@ namespace CSRedis {
 					while (true) {
 						Thread.CurrentThread.Join(1000);
 						try {
-							SentinelMasterValue = SentinelManager.Connect(SentinelMasterName);
+							SentinelMasterValue = SentinelManager.Connect(SentinelMasterName, pool._policy._connectTimeout);
 							pool._policy.SetHost(SentinelMasterValue);
 							if (pool.CheckAvailable()) {
 
