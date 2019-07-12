@@ -16,9 +16,10 @@ public abstract partial class RedisHelper {
     /// <summary>
     /// 随机秒（防止所有key同一时间过期，雪崩）
     /// </summary>
+    /// <param name="minTimeoutSeconds">最小秒数</param>
     /// <param name="maxTimeoutSeconds">最大秒数</param>
     /// <returns></returns>
-    public static int RandomExpired(int maxTimeoutSeconds) => rnd.Value.Next(1, maxTimeoutSeconds);
+    public static int RandomExpired(int minTimeoutSeconds, int maxTimeoutSeconds) => rnd.Value.Next(minTimeoutSeconds, maxTimeoutSeconds);
 
     private static CSRedisClient _instance;
 	/// <summary>
