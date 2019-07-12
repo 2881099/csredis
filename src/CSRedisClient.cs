@@ -520,7 +520,7 @@ namespace CSRedis {
 		/// <param name="getData">获取源数据的函数</param>
 		/// <returns></returns>
 		public T CacheShell<T>(string key, int timeoutSeconds, Func<T> getData) {
-			if (timeoutSeconds <= 0) return getData();
+			if (timeoutSeconds == 0) return getData();
 			var cacheValue = Get(key);
 			if (cacheValue != null) {
 				try {
@@ -544,7 +544,7 @@ namespace CSRedis {
 		/// <param name="getData">获取源数据的函数</param>
 		/// <returns></returns>
 		public T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData) {
-			if (timeoutSeconds <= 0) return getData();
+			if (timeoutSeconds == 0) return getData();
 			var cacheValue = HGet(key, field);
 			if (cacheValue != null) {
 				try {
@@ -571,7 +571,7 @@ namespace CSRedis {
 		public (string key, T value)[] CacheShell<T>(string key, string[] fields, int timeoutSeconds, Func<string[], (string, T)[]> getData) {
 			fields = fields?.Distinct().ToArray();
 			if (fields == null || fields.Length == 0) return new (string, T)[0];
-			if (timeoutSeconds <= 0) return getData(fields);
+			if (timeoutSeconds == 0) return getData(fields);
 
 			var ret = new (string, T)[fields.Length];
 			var cacheValue = HMGet(key, fields);

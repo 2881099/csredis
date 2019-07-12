@@ -8,7 +8,19 @@ using System.Threading;
 
 public abstract partial class RedisHelper {
 
-	private static CSRedisClient _instance;
+    /// <summary>
+    /// 永不过期
+    /// </summary>
+	public static readonly int NeverExpired = -1;
+    internal static ThreadLocal<Random> rnd = new ThreadLocal<Random>();
+    /// <summary>
+    /// 随机秒（防止所有key同一时间过期，雪崩）
+    /// </summary>
+    /// <param name="maxTimeoutSeconds">最大秒数</param>
+    /// <returns></returns>
+    public static int RandomExpired(int maxTimeoutSeconds) => rnd.Value.Next(1, maxTimeoutSeconds);
+
+    private static CSRedisClient _instance;
 	/// <summary>
 	/// CSRedisClient 静态实例，使用前请初始化
 	/// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))

@@ -95,7 +95,7 @@ namespace CSRedis {
 		/// <param name="getDataAsync">获取源数据的函数</param>
 		/// <returns></returns>
 		async public Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync) {
-			if (timeoutSeconds <= 0) return await getDataAsync();
+			if (timeoutSeconds == 0) return await getDataAsync();
 			var cacheValue = await GetAsync(key);
 			if (cacheValue != null) {
 				try {
@@ -119,7 +119,7 @@ namespace CSRedis {
 		/// <param name="getDataAsync">获取源数据的函数</param>
 		/// <returns></returns>
 		async public Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync) {
-			if (timeoutSeconds <= 0) return await getDataAsync();
+			if (timeoutSeconds == 0) return await getDataAsync();
 			var cacheValue = await HGetAsync(key, field);
 			if (cacheValue != null) {
 				try {
@@ -146,7 +146,7 @@ namespace CSRedis {
 		async public Task<(string key, T value)[]> CacheShellAsync<T>(string key, string[] fields, int timeoutSeconds, Func<string[], Task<(string, T)[]>> getDataAsync) {
 			fields = fields?.Distinct().ToArray();
 			if (fields == null || fields.Length == 0) return new (string, T)[0];
-			if (timeoutSeconds <= 0) return await getDataAsync(fields);
+			if (timeoutSeconds == 0) return await getDataAsync(fields);
 
 			var ret = new (string, T)[fields.Length];
 			var cacheValue = await HMGetAsync(key, fields);

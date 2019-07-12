@@ -6,7 +6,7 @@ using System.Text;
 using Xunit;
 
 namespace CSRedisCore.Tests {
-	public class CSRedisClientGeoTests : TestBase {
+	public class CSRedisClientGeoTests_ : TestBase {
 
 		/*
 		 * 
