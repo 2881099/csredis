@@ -1348,7 +1348,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="count">移除并返回的个数</param>
 		/// <returns></returns>
-		public Task<string[]> SPopAsync(string key, long count) => ExecuteScalarAsync(key, (c, k) => c.Value.SPopAsync(k, count));
+		public Task<string[]> SPopAsync(string key, long count = 1) => ExecuteScalarAsync(key, (c, k) => c.Value.SPopAsync(k, count));
 		/// <summary>
 		/// 移除并返回集合中的一个或多个随机元素(3.2版本后支持count参数)
 		/// </summary>
@@ -1356,7 +1356,7 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <param name="count">移除并返回的个数</param>
 		/// <returns></returns>
-		async public Task<T[]> SPopAsync<T>(string key, long count) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SPopBytesAsync(k, count)));
+		async public Task<T[]> SPopAsync<T>(string key, long count = 1) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SPopBytesAsync(k, count)));
 		/// <summary>
 		/// 返回集合中的一个随机元素
 		/// </summary>
