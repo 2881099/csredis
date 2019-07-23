@@ -801,7 +801,14 @@ namespace CSRedis
 		string SPop(string key);
 		byte[] SPopBytes(string key);
 
-
+		/// <summary>
+        /// Remove and return one or more random member from a set
+        /// </summary>
+        /// <param name="key">Set key</param>
+        /// <param name="count">Number of elements to remove and return</param>
+        /// <returns>The removed elements</returns>
+        string[] SPop(string key, long count);        
+        byte[][] SPopBytes(string key, long count);    
 
 		/// <summary>
 		/// Get a random member from a set

@@ -578,6 +578,14 @@ namespace CSRedis
         {
             return new RedisBytes("SPOP", key);
         }
+        public static RedisArray.Strings SPop(string key, long count)
+        {
+            return new RedisArray.Strings("SPOP", key, count);
+        }
+        public static RedisArray.Bytes SPopBytes(string key, long count)
+        {
+            return new RedisArray.Bytes("SPOP", key, count);
+        }
         public static RedisString SRandMember(string key)
         {
             return new RedisString("SRANDMEMBER", key);
