@@ -854,6 +854,15 @@ namespace CSRedis
 		Task<byte[]> SPopBytesAsync(string key);
 
 
+        /// <summary>
+        /// Remove and return one or more random members from a set
+        /// </summary>
+        /// <param name="key">Set key</param>
+        /// <param name="count">Number of elements to remove and return</param>
+        /// <returns></returns>
+        Task<string[]> SPopAsync(string key, long count);        
+        Task<byte[][]> SPopBytesAsync(string key, long count);
+
 
 		/// <summary>
 		/// Get a random member from a set

@@ -957,6 +957,21 @@ namespace CSRedis
         }
 
         /// <summary>
+        /// Remove and return one or more random members from a set
+        /// </summary>
+        /// <param name="key">Set key</param>
+        /// <param name="count">Number of elements to remove and return</param>
+        /// <returns></returns>
+        public Task<string[]> SPopAsync(string key, long count)
+        {
+            return WriteAsync(RedisCommands.SPop(key, count));
+        }
+        public Task<byte[][]> SPopBytesAsync(string key, long count)
+        {
+            return WriteAsync(RedisCommands.SPopBytes(key, count));
+        }
+
+        /// <summary>
         /// Get a random member from a set
         /// </summary>
         /// <param name="key">Set key</param>

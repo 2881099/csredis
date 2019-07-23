@@ -17,6 +17,12 @@ namespace CSRedisCore.Tests {
 		public void SMembers() { }
 		public void SMove() { }
 		public void SPop() { }
+		[Fact]
+		public void SPopWithCount() {
+			Assert.Equal(3, rds.SAdd("TestSPopWithCount", "string1", "string2", "string3"));
+			Assert.Equal(2, rds.SPop("TestSPopWithCount", 2).Length);
+			Assert.Equal(1, rds.SCard("TestSPopWithCount"));
+		}
 		public void SRandMember() { }
 		public void SRandMembers() { }
 		public void SRem() { }

@@ -1343,6 +1343,21 @@ namespace CSRedis {
 		/// <returns></returns>
 		async public Task<T> SPopAsync<T>(string key) => this.DeserializeRedisValueInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SPopBytesAsync(k)));
 		/// <summary>
+		/// 移除并返回集合中的一个或多个随机元素(3.2版本后支持count参数)
+		/// </summary>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="count">移除并返回的个数</param>
+		/// <returns></returns>
+		public Task<string[]> SPopAsync(string key, long count) => ExecuteScalarAsync(key, (c, k) => c.Value.SPopAsync(k, count));
+		/// <summary>
+		/// 移除并返回集合中的一个或多个随机元素(3.2版本后支持count参数)
+		/// </summary>
+		/// <typeparam name="T">byte[] 或其他类型</typeparam>
+		/// <param name="key">不含prefix前辍</param>
+		/// <param name="count">移除并返回的个数</param>
+		/// <returns></returns>
+		async public Task<T[]> SPopAsync<T>(string key, long count) => this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.SPopBytesAsync(k, count)));
+		/// <summary>
 		/// 返回集合中的一个随机元素
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
