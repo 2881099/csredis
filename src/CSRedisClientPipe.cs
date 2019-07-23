@@ -40,15 +40,20 @@ namespace CSRedis {
 			Exception ex = null;
 			try {
 				foreach (var conn in Conns.Values) {
-					object[] tmp = tmp = conn.conn.Value.EndPipe();
-					for (var a = 0; a < tmp.Length; a++) {
-						var retIdx = conn.indexes[a];
-						ret[retIdx] = tmp[a];
-					}
-				}
-			} catch (Exception ex2) {
-				ex = ex2;
-				throw ex;
+                    try
+                    {
+                        object[] tmp = tmp = conn.conn.Value.EndPipe();
+                        for (var a = 0; a < tmp.Length; a++)
+                        {
+                            var retIdx = conn.indexes[a];
+                            ret[retIdx] = tmp[a];
+                        }
+                    }
+                    catch (Exception ex2)
+                    {
+                        ex = ex2;
+                    }
+                }
 			} finally {
 				foreach (var conn in Conns.Values)
 					(conn.conn.Pool as RedisClientPool).Return(conn.conn, ex);

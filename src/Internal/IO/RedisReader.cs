@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
 
 namespace CSRedis.Internal.IO
@@ -109,9 +110,31 @@ namespace CSRedis.Internal.IO
         {
             RedisMessage type = ReadType();
             if ((int)type == -1)
-                throw new EndOfStreamException("Unexpected end of stream; expected type '" + expectedType + "'");
+            {
+                using (var ms = new MemoryStream())
+                {
+                    var ns = _stream as NetworkStream;
+                    if (ns != null)
+                    {
+                        try
+                        {
+                            var data = new byte[1024];
+                            while (ns.DataAvailable && ns.CanRead)
+                            {
+                                var numBytesRead = ns.Read(data, 0, data.Length);
+                                if (numBytesRead <= 0) break;
+                                ms.Write(data, 0, numBytesRead);
+                            }
+                        }
+                        catch { }
+                    }
+
+                    try { _stream.Close(); } catch { }
+                    throw new EndOfStreamException($"Unexpected end of stream; expected type '{expectedType}'; data = {Encoding.UTF8.GetString(ms.ToArray())}");
+                }
+            }
             if (type != expectedType)
-                throw new RedisProtocolException(String.Format("Unexpected response type: {0} (expecting {1})", type, expectedType));
+                throw new RedisProtocolException($"Unexpected response type: {type} (expecting {expectedType})");
         }
 
         public void ExpectMultiBulk(long expectedSize)
