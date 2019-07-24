@@ -2361,21 +2361,21 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
 		public T SPop<T>(string key) => this.DeserializeRedisValueInternal<T>(ExecuteScalar(key, (c, k) => c.Value.SPopBytes(k)));
-		/// <summary>
-		/// 移除并返回集合中的一个随机元素(3.2版本后支持count参数)
-		/// </summary>
-		/// <param name="key">不含prefix前辍</param>
-		/// <param name="count">移除并返回的个数</param>
-		/// <returns></returns>
-		public string[] SPop(string key, long count = 1) => ExecuteScalar(key, (c, k) => c.Value.SPop(k, count));
-		/// <summary>
-		/// 移除并返回集合中的一个随机元素(3.2版本后支持count参数)
-		/// </summary>
-		/// <typeparam name="T">byte[] 或其他类型</typeparam>
-		/// <param name="key">不含prefix前辍</param>
-		/// <param name="count">移除并返回的个数</param>
-		/// <returns></returns>
-		public T[] SPop<T>(string key, long count = 1) => this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.SPopBytes(k, count)));
+        /// <summary>
+        /// [redis-server 3.2] 移除并返回集合中的一个或多个随机元素
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="count">移除并返回的个数</param>
+        /// <returns></returns>
+        public string[] SPop(string key, long count) => ExecuteScalar(key, (c, k) => c.Value.SPop(k, count));
+        /// <summary>
+        /// [redis-server 3.2] 移除并返回集合中的一个或多个随机元素
+        /// </summary>
+        /// <typeparam name="T">byte[] 或其他类型</typeparam>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="count">移除并返回的个数</param>
+        /// <returns></returns>
+        public T[] SPop<T>(string key, long count) => this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.SPopBytes(k, count)));
 		/// <summary>
 		/// 返回集合中的一个随机元素
 		/// </summary>

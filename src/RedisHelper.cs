@@ -797,21 +797,21 @@ public abstract partial class RedisHelper {
 	/// <param name="key">不含prefix前辍</param>
 	/// <returns></returns>
 	public static T SPop<T>(string key) => Instance.SPop<T>(key);
-	/// <summary>
-	/// 移除并返回集合中的一个或多个随机元素
-	/// </summary>
-	/// <param name="key">不含prefix前辍</param>
-	/// <param name="count">移除并返回的个数</param>
-	/// <returns></returns>
-	public static string[] SPop(string key, long count = 1) => Instance.SPop(key, count);
-	/// <summary>
-	/// 移除并返回集合中的一个或多个随机元素
-	/// </summary>
-	/// <typeparam name="T">byte[] 或其他类型</typeparam>
-	/// <param name="key">不含prefix前辍</param>
-	/// <param name="count">移除并返回的个数</param>
-	/// <returns></returns>
-	public static T[] SPop<T>(string key, long count = 1) => Instance.SPop<T>(key, count);
+    /// <summary>
+    /// [redis-server 3.2] 移除并返回集合中的一个或多个随机元素
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">移除并返回的个数</param>
+    /// <returns></returns>
+    public static string[] SPop(string key, long count) => Instance.SPop(key, count);
+    /// <summary>
+    /// [redis-server 3.2] 移除并返回集合中的一个或多个随机元素
+    /// </summary>
+    /// <typeparam name="T">byte[] 或其他类型</typeparam>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">移除并返回的个数</param>
+    /// <returns></returns>
+    public static T[] SPop<T>(string key, long count) => Instance.SPop<T>(key, count);
 	/// <summary>
 	/// 返回集合中的一个随机元素
 	/// </summary>
