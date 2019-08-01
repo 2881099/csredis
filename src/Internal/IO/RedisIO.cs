@@ -18,7 +18,7 @@ namespace CSRedis.Internal.IO
         public Encoding Encoding { get; set; }
         public RedisPipeline Pipeline { get { return GetOrThrow(_pipeline); } }
         public Stream Stream { get { return GetOrThrow(_stream); } }
-        public bool IsPipelined { get { return Pipeline == null ? false : Pipeline.Active; } }
+        public bool IsPipelined { get { return _pipeline == null ? false : _pipeline.Active; } }
 
         public RedisIO()
         {
