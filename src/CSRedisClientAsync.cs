@@ -14,7 +14,6 @@ namespace CSRedis {
 			Object<RedisClient> obj = null;
 			Exception ex = null;
 			var redirect = ParseClusterRedirect(null);
-			var isSentinelRetry = false;
 			try {
 				obj = await pool.GetAsync();
 				while (true) { //因网络出错重试，默认1次
@@ -34,33 +33,33 @@ namespace CSRedis {
 						break;
 					} catch (Exception ex2) {
 						ex = ex2;
-						if (SentinelManager == null) {
-							if (++errtimes > pool._policy._tryit) throw ex; //重试次数完成
-							Trace.WriteLine($"csredis tryit ({errtimes}) ...");
-						}
-
-						try {
-							await obj.Value.PingAsync();
-							throw ex; //非网络错误，跳出重试逻辑，抛出异常
-						} catch {
-							if (SentinelManager != null) { //哨兵轮询
-								if (pool.SetUnavailable(ex) == true)
-									BackgroundGetSentinelMasterValue();
-								throw new Exception("Redis Sentinel Master is switching.");
-							}
-
+                        try {
+                            await obj.Value.PingAsync();
+                            throw ex; //非网络错误，跳出重试逻辑，抛出异常
+                        } catch {
 							obj.ResetValue();
 
 							if (SlotCache.Any() == false) //不是群集
-								await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
-						}
-					}
+                                await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
+                        }
+                        if (++errtimes > pool._policy._tryit) {
+                            if (SentinelManager != null) { //哨兵轮询
+                                if (pool.SetUnavailable(ex) == true)
+                                    BackgroundGetSentinelMasterValue();
+                                throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
+                            }
+                            throw ex; //重试次数完成
+                        } else {
+                            ex = null;
+                            Trace.WriteLine($"csredis tryit ({errtimes}) ...");
+                        }
+                    }
 				}
 			} finally {
 				pool.Return(obj, ex);
 			}
-			if (isSentinelRetry)
-				return await GetAndExecuteAsync<T>(pool, handerAsync, jump - 1, errtimes);
+            if (redirect == null)
+                return await GetAndExecuteAsync<T>(pool, handerAsync, jump - 1, errtimes);
 
 			var redirectHanderAsync = redirect.Value.isMoved ? handerAsync : async redirectObj => {
 				await redirectObj.Value.CallAsync("ASKING");
