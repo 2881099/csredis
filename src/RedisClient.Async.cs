@@ -1138,7 +1138,7 @@ namespace CSRedis
         /// <param name="increment">Increment by value</param>
         /// <param name="member">Sorted set member to increment</param>
         /// <returns>New score of member</returns>
-        public Task<double> ZIncrByAsync(string key, double increment, string member)
+        public Task<double> ZIncrByAsync(string key, double increment, object member)
         {
             return WriteAsync(RedisCommands.ZIncrBy(key, increment, member));
         }

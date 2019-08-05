@@ -201,10 +201,10 @@ partial class RedisHelper<TMark> {
 	/// 有序集合中对指定成员的分数加上增量 increment
 	/// </summary>
 	/// <param name="key">不含prefix前辍</param>
-	/// <param name="memeber">成员</param>
+	/// <param name="member">成员</param>
 	/// <param name="increment">增量值(默认=1)</param>
 	/// <returns></returns>
-	public static Task<double> ZIncrByAsync(string key, string memeber, double increment = 1) => Instance.ZIncrByAsync(key, memeber, increment);
+	public static Task<double> ZIncrByAsync(string key, string member, double increment = 1) => Instance.ZIncrByAsync(key, member, increment);
 
 	/// <summary>
 	/// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中

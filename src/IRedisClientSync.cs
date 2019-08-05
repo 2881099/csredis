@@ -943,7 +943,7 @@ namespace CSRedis
 		/// <param name="increment">Increment by value</param>
 		/// <param name="member">Sorted set member to increment</param>
 		/// <returns>New score of member</returns>
-		double ZIncrBy(string key, double increment, string member);
+		double ZIncrBy(string key, double increment, object member);
 
 
 

@@ -22,7 +22,7 @@ namespace CSRedis {
 		/// </summary>
 		public int Counter => Parsers.Count;
 
-		public CSRedisClientPipe(CSRedisClient csredis) {
+		internal CSRedisClientPipe(CSRedisClient csredis) {
 			rds = csredis;
 		}
 		private CSRedisClientPipe(CSRedisClient csredis, ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> conns, Queue<Func<object, object>> parsers) {
@@ -66,10 +66,17 @@ namespace CSRedis {
 			return ret;
 		}
 
+        bool _isDisposed;
+        ~CSRedisClientPipe()
+        {
+            if (_isDisposed) return;
+            this.Dispose();
+        }
 		/// <summary>
 		/// 提交批命令
 		/// </summary>
 		public void Dispose() {
+            _isDisposed = true;
 			this.EndPipe();
 		}
 
@@ -236,10 +243,10 @@ namespace CSRedis {
 		/// 有序集合中对指定成员的分数加上增量 increment
 		/// </summary>
 		/// <param name="key">不含prefix前辍</param>
-		/// <param name="memeber">成员</param>
+		/// <param name="member">成员</param>
 		/// <param name="increment">增量值(默认=1)</param>
 		/// <returns></returns>
-		public CSRedisClientPipe<double> ZIncrBy(string key, string memeber, double increment = 1) => PipeCommand(key, (c, k) => c.Value.ZIncrBy(k, increment, memeber));
+		public CSRedisClientPipe<double> ZIncrBy(string key, string member, double increment = 1) => PipeCommand(key, (c, k) => c.Value.ZIncrBy(k, increment, member));
 
 		/// <summary>
 		/// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中

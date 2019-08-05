@@ -687,7 +687,7 @@ namespace CSRedis
         {
             return new RedisInt("ZCOUNT", key, min, max);
         }
-        public static RedisFloat ZIncrBy(string key, double increment, string member)
+        public static RedisFloat ZIncrBy(string key, double increment, object member)
         {
             return new RedisFloat("ZINCRBY", key, increment, member);
         }
