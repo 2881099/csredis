@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-partial class RedisHelper {
+partial class RedisHelper<TMark> {
 
 	#region 缓存壳
 	/// <summary>

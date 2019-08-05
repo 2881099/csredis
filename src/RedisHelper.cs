@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
-public abstract partial class RedisHelper {
+public abstract class RedisHelper : RedisHelper<RedisHelper> { }
+
+public abstract partial class RedisHelper<TMark> {
 
     /// <summary>
     /// 永不过期
