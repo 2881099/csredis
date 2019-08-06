@@ -138,31 +138,40 @@ namespace CSRedis
                     if (master == null)
                         continue;
 
-					if (_redisClient != null)
-						_redisClient.Dispose();
-					_redisClient = new RedisClient(master.Item1, master.Item2);
+                    if (_redisClient != null)
+                        _redisClient.Dispose();
+                    _redisClient = new RedisClient(master.Item1, master.Item2);
                     _redisClient.Connected += OnConnectionConnected;
 
-					try {
-						if (!_redisClient.Connect(timeout))
-							continue;
+                    try
+                    {
+                        if (!_redisClient.Connect(timeout))
+                            continue;
 
 
-						var role = _redisClient.Role();
-						if (role.RoleName != "master")
-							continue;
+                        var role = _redisClient.Role();
+                        if (role.RoleName != "master")
+                            continue;
 
-						foreach (var remoteSentinel in sentinel.Sentinels(name))
-							Add(remoteSentinel.Ip, remoteSentinel.Port);
+                        //测试 write
+                        var testid = Guid.NewGuid().ToString("N");
+                        _redisClient.StartPipe();
+                        _redisClient.Set(testid, 1);
+                        _redisClient.Del(testid);
+                        _redisClient.EndPipe();
 
-					} catch (Exception ex) {
+                        foreach (var remoteSentinel in sentinel.Sentinels(name))
+                            Add(remoteSentinel.Ip, remoteSentinel.Port);
 
-						Trace.WriteLine(ex.Message);
-						Console.WriteLine(ex.Message);
-						continue;
-					}
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine(ex.Message);
+                        Console.WriteLine(ex.Message);
+                        continue;
+                    }
 
-					return master.Item1 + ':' + master.Item2;
+                    return master.Item1 + ':' + master.Item2;
                 }
 
             }
