@@ -18,6 +18,7 @@ namespace CSRedis
         string _masterName;
         int _connectTimeout;
         RedisClient _redisClient;
+        bool _readOnly;
 
         /// <summary>
         /// Occurs when the master connection has sucessfully connected
@@ -28,8 +29,9 @@ namespace CSRedis
         /// Create a new RedisSentinenlManager
         /// </summary>
         /// <param name="sentinels">Sentinel addresses (host:ip)</param>
-        public RedisSentinelManager(params string[] sentinels)
+        public RedisSentinelManager(bool readOnly, params string[] sentinels)
         {
+            _readOnly = readOnly;
             _sentinels = new LinkedList<Tuple<string, int>>();
             foreach (var host in sentinels)
             {
@@ -150,15 +152,24 @@ namespace CSRedis
 
 
                         var role = _redisClient.Role();
-                        if (role.RoleName != "master")
-                            continue;
 
-                        //测试 write
-                        var testid = Guid.NewGuid().ToString("N");
-                        _redisClient.StartPipe();
-                        _redisClient.Set(testid, 1);
-                        _redisClient.Del(testid);
-                        _redisClient.EndPipe();
+                        if (_readOnly)
+                        {
+                            if (role.RoleName != "slave")
+                                continue;
+                        }
+                        else
+                        {
+                            if (role.RoleName != "master")
+                                continue;
+
+                            //测试 write
+                            var testid = Guid.NewGuid().ToString("N");
+                            _redisClient.StartPipe();
+                            _redisClient.Set(testid, 1);
+                            _redisClient.Del(testid);
+                            _redisClient.EndPipe();
+                        }
 
                         foreach (var remoteSentinel in sentinel.Sentinels(name))
                             Add(remoteSentinel.Ip, remoteSentinel.Port);
