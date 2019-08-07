@@ -423,22 +423,22 @@ namespace CSRedis {
                             isPong = true;
                         } catch {
 							obj.ResetValue();
+                        }
 
-                            if (isPong == false || ++errtimes > pool._policy._tryit)
-                            {
-                                if (SentinelManager != null)
-                                { //哨兵轮询
-                                    if (pool.SetUnavailable(ex) == true)
-                                        BackgroundGetSentinelMasterValue();
-                                    throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
-                                }
-                                throw ex; //重试次数完成
+                        if (isPong == false || ++errtimes > pool._policy._tryit)
+                        {
+                            if (SentinelManager != null)
+                            { //哨兵轮询
+                                if (pool.SetUnavailable(ex) == true)
+                                    BackgroundGetSentinelMasterValue();
+                                throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
                             }
-                            else
-                            {
-                                ex = null;
-                                Trace.WriteLine($"csredis tryit ({errtimes}) ...");
-                            }
+                            throw ex; //重试次数完成
+                        }
+                        else
+                        {
+                            ex = null;
+                            Trace.WriteLine($"csredis tryit ({errtimes}) ...");
                         }
                     }
 				}
