@@ -33,25 +33,28 @@ namespace CSRedis {
 						break;
 					} catch (Exception ex2) {
 						ex = ex2;
+                        var isPong = false;
                         try {
                             await obj.Value.PingAsync();
-                            throw ex; //非网络错误，跳出重试逻辑，抛出异常
+                            isPong = true;
                         } catch {
 							obj.ResetValue();
 
-							if (SlotCache.Any() == false) //不是群集
-                                await obj.Value.PingAsync(); //此时再报错，说明真的网络问题，抛出异常
-                        }
-                        if (++errtimes > pool._policy._tryit) {
-                            if (SentinelManager != null) { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
-                                    BackgroundGetSentinelMasterValue();
-                                throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
+                            if (isPong == false || ++errtimes > pool._policy._tryit)
+                            {
+                                if (SentinelManager != null)
+                                { //哨兵轮询
+                                    if (pool.SetUnavailable(ex) == true)
+                                        BackgroundGetSentinelMasterValue();
+                                    throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
+                                }
+                                throw ex; //重试次数完成
                             }
-                            throw ex; //重试次数完成
-                        } else {
-                            ex = null;
-                            Trace.WriteLine($"csredis tryit ({errtimes}) ...");
+                            else
+                            {
+                                ex = null;
+                                Trace.WriteLine($"csredis tryit ({errtimes}) ...");
+                            }
                         }
                     }
 				}
