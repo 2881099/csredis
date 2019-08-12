@@ -127,7 +127,9 @@ redis[1].Get("test1");
 ```csharp
 public static class Rds1 : RedisHelper<Rds1> {}
 public static class Rds2 : RedisHelper<Rds1> {}
-//...
+
+Rds1.Initialization(new CSRedisClient("...."));
+Rds2.Initialization(new CSRedisClient("...."));
 ```
 
 # 2、订阅与发布
