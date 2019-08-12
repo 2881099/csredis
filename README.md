@@ -16,7 +16,7 @@ CSRedis于2016年开始支持.NETCore一直迭代至今（解决上述Bug），�
 
 4、增加官方集群 redis-trib.rb 支持；
 
-5、增加哨兵模式支持；
+5、增加哨兵模式，和读写分离；
 
 6、增加 stream 命令支持（需要 redis-server 5.0 以上支持）；
 
@@ -62,6 +62,8 @@ var csredis = new CSRedis.CSRedisClient(
 ```
 
 连接字符串中的 mymaster 是哨兵监听的名称，其他配置参数与普通模式一致
+
+只读模式：new CSRedisClient("mymaster,password=123", new []{哨兵}, false)
 
 # 官方集群
 
@@ -118,6 +120,14 @@ for (var a = 0; a< redis.Length; a++) redis[a] = new CSRedisClient(connectionStr
 
 //访问数据库1的数据
 redis[1].Get("test1");
+```
+
+> 操作多个库时，一个 RedisHelper 不够用怎么办？
+
+```csharp
+public static class Rds1 : RedisHelper<Rds1> {}
+public static class Rds2 : RedisHelper<Rds1> {}
+//...
 ```
 
 # 2、订阅与发布
