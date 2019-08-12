@@ -143,6 +143,10 @@ namespace CSRedis
         {
             return Write(RedisCommands.Exists(key));
         }
+        public long Exists(string[] keys)
+        {
+            return Write(RedisCommands.Exists(keys));
+        }
 
         /// <summary>
         /// Set a key's time to live in seconds

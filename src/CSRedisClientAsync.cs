@@ -2110,13 +2110,19 @@ namespace CSRedis {
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
 		public Task<bool> ExistsAsync(string key) => ExecuteScalarAsync(key, (c, k) => c.Value.ExistsAsync(k));
-		/// <summary>
-		/// 为给定 key 设置过期时间
+        /// <summary>
+		/// [redis-server 3.0] 检查给定多个 key 是否存在
 		/// </summary>
-		/// <param name="key">不含prefix前辍</param>
-		/// <param name="seconds">过期秒数</param>
+		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
-		public Task<bool> ExpireAsync(string key, int seconds) => ExecuteScalarAsync(key, (c, k) => c.Value.ExpireAsync(k, seconds));
+		public Task<long> ExistsAsync(string[] keys) => NodesNotSupportAsync(keys, 0, (c, k) => c.Value.ExistsAsync(k));
+        /// <summary>
+        /// 为给定 key 设置过期时间
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="seconds">过期秒数</param>
+        /// <returns></returns>
+        public Task<bool> ExpireAsync(string key, int seconds) => ExecuteScalarAsync(key, (c, k) => c.Value.ExpireAsync(k, seconds));
 		/// <summary>
 		/// 为给定 key 设置过期时间
 		/// </summary>

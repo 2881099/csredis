@@ -3236,13 +3236,19 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 		/// <param name="key">不含prefix前辍</param>
 		/// <returns></returns>
 		public bool Exists(string key) => ExecuteScalar(key, (c, k) => c.Value.Exists(k));
-		/// <summary>
-		/// 为给定 key 设置过期时间
+        /// <summary>
+		/// [redis-server 3.0] 检查给定多个 key 是否存在
 		/// </summary>
-		/// <param name="key">不含prefix前辍</param>
-		/// <param name="seconds">过期秒数</param>
+		/// <param name="keys">不含prefix前辍</param>
 		/// <returns></returns>
-		public bool Expire(string key, int seconds) => ExecuteScalar(key, (c, k) => c.Value.Expire(k, seconds));
+		public long Exists(string[] keys) => NodesNotSupport(keys, 0, (c, k) => c.Value.Exists(k));
+        /// <summary>
+        /// 为给定 key 设置过期时间
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="seconds">过期秒数</param>
+        /// <returns></returns>
+        public bool Expire(string key, int seconds) => ExecuteScalar(key, (c, k) => c.Value.Expire(k, seconds));
 		/// <summary>
 		/// 为给定 key 设置过期时间
 		/// </summary>

@@ -1262,13 +1262,19 @@ partial class RedisHelper<TMark> {
 	/// <param name="key">不含prefix前辍</param>
 	/// <returns></returns>
 	public static Task<bool> ExistsAsync(string key) => Instance.ExistsAsync(key);
-	/// <summary>
-	/// 为给定 key 设置过期时间
-	/// </summary>
-	/// <param name="key">不含prefix前辍</param>
-	/// <param name="seconds">过期秒数</param>
-	/// <returns></returns>
-	public static Task<bool> ExpireAsync(string key, int seconds) => Instance.ExpireAsync(key, seconds);
+    /// <summary>
+    /// [redis-server 3.0] 检查给定多个 key 是否存在
+    /// </summary>
+    /// <param name="keys">不含prefix前辍</param>
+    /// <returns></returns>
+    public static Task<long> ExistsAsync(string[] keys) => Instance.ExistsAsync(keys);
+    /// <summary>
+    /// 为给定 key 设置过期时间
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="seconds">过期秒数</param>
+    /// <returns></returns>
+    public static Task<bool> ExpireAsync(string key, int seconds) => Instance.ExpireAsync(key, seconds);
 	/// <summary>
 	/// 为给定 key 设置过期时间
 	/// </summary>

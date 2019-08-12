@@ -139,6 +139,10 @@ namespace CSRedis
         {
             return WriteAsync(RedisCommands.Exists(key));
         }
+        public Task<long> ExistsAsync(string[] keys)
+        {
+            return WriteAsync(RedisCommands.Exists(keys));
+        }
 
         /// <summary>
         /// Set a key's time to live in seconds

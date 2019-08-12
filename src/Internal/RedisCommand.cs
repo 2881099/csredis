@@ -56,6 +56,10 @@ namespace CSRedis
         {
             return new RedisBool("EXISTS", key);
         }
+        public static RedisInt Exists(string[] keys)
+        {
+            return new RedisInt("EXISTS", keys);
+        }
         public static RedisBool Expire(string key, TimeSpan expiration)
         {
             return new RedisBool("EXPIRE", key, (int)expiration.TotalSeconds);

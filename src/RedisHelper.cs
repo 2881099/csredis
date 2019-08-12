@@ -1452,13 +1452,19 @@ public abstract partial class RedisHelper<TMark> {
 	/// <param name="key">不含prefix前辍</param>
 	/// <returns></returns>
 	public static bool Exists(string key) => Instance.Exists(key);
-	/// <summary>
-	/// 为给定 key 设置过期时间
-	/// </summary>
-	/// <param name="key">不含prefix前辍</param>
-	/// <param name="seconds">过期秒数</param>
-	/// <returns></returns>
-	public static bool Expire(string key, int seconds) => Instance.Expire(key, seconds);
+    /// <summary>
+    /// [redis-server 3.0] 检查给定多个 key 是否存在
+    /// </summary>
+    /// <param name="keys">不含prefix前辍</param>
+    /// <returns></returns>
+    public static long Exists(string[] keys) => Instance.Exists(keys);
+    /// <summary>
+    /// 为给定 key 设置过期时间
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="seconds">过期秒数</param>
+    /// <returns></returns>
+    public static bool Expire(string key, int seconds) => Instance.Expire(key, seconds);
 	/// <summary>
 	/// 为给定 key 设置过期时间
 	/// </summary>

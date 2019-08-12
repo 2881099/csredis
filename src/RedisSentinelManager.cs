@@ -77,12 +77,22 @@ namespace CSRedis
             _masterName = masterName;
             _connectTimeout = timeout;
 
-            string masterEndPoint = SetMaster(masterName, timeout);
-            if (masterEndPoint == null)
-                throw new IOException("Could not connect to sentinel or master");
+            if (_readOnly == false)
+            {
+                string masterEndPoint = SetMaster(masterName, timeout);
+                if (masterEndPoint == null)
+                    throw new IOException("Could not connect to sentinel or master");
+
+                _redisClient.ReconnectAttempts = 0;
+                return masterEndPoint;
+            }
+
+            string slaveEndPoint = SetSlave(masterName, timeout);
+            if (slaveEndPoint == null)
+                throw new IOException("Could not connect to sentinel or slave");
 
             _redisClient.ReconnectAttempts = 0;
-            return masterEndPoint;
+            return slaveEndPoint;
         }
 
         /// <summary>
@@ -149,27 +159,17 @@ namespace CSRedis
                     {
                         if (!_redisClient.Connect(timeout))
                             continue;
-
-
+                        
                         var role = _redisClient.Role();
+                        if (role.RoleName != "master")
+                            continue;
 
-                        if (_readOnly)
-                        {
-                            if (role.RoleName != "slave")
-                                continue;
-                        }
-                        else
-                        {
-                            if (role.RoleName != "master")
-                                continue;
-
-                            //测试 write
-                            var testid = Guid.NewGuid().ToString("N");
-                            _redisClient.StartPipe();
-                            _redisClient.Set(testid, 1);
-                            _redisClient.Del(testid);
-                            _redisClient.EndPipe();
-                        }
+                        //测试 write
+                        var testid = Guid.NewGuid().ToString("N");
+                        _redisClient.StartPipe();
+                        _redisClient.Set(testid, 1);
+                        _redisClient.Del(testid);
+                        _redisClient.EndPipe();
 
                         foreach (var remoteSentinel in sentinel.Sentinels(name))
                             Add(remoteSentinel.Ip, remoteSentinel.Port);
@@ -183,6 +183,64 @@ namespace CSRedis
                     }
 
                     return master.Item1 + ':' + master.Item2;
+                }
+
+            }
+            return null;
+        }
+
+        string SetSlave(string name, int timeout)
+        {
+            for (int i = 0; i < _sentinels.Count; i++)
+            {
+                if (i > 0)
+                    Next();
+
+                using (var sentinel = Current())
+                {
+                    try
+                    {
+                        if (!sentinel.Connect(timeout))
+                            continue;
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
+                    var slaves = sentinel.Slaves(name);
+                    if (slaves == null)
+                        continue;
+
+                    foreach (var slave in slaves)
+                    {
+                        if (_redisClient != null)
+                            _redisClient.Dispose();
+                        _redisClient = new RedisClient(slave.Ip, slave.Port);
+                        _redisClient.Connected += OnConnectionConnected;
+
+                        try
+                        {
+                            if (!_redisClient.Connect(timeout))
+                                continue;
+
+                            var role = _redisClient.Role();
+                            if (role.RoleName != "slave")
+                                continue;
+
+                            foreach (var remoteSentinel in sentinel.Sentinels(name))
+                                Add(remoteSentinel.Ip, remoteSentinel.Port);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.WriteLine(ex.Message);
+                            Console.WriteLine(ex.Message);
+                            continue;
+                        }
+
+                        return slave.Ip + ':' + slave.Port;
+                    }
                 }
 
             }
