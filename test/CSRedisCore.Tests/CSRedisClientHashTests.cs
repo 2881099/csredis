@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CSRedisCore.Tests {
@@ -42,6 +43,23 @@ namespace CSRedisCore.Tests {
 			Assert.Equal(base.String, rds.HGetAll("TestHGetAll")["string1"]);
 			Assert.Equal(Encoding.UTF8.GetString(base.Bytes), rds.HGetAll("TestHGetAll")["bytes1"]);
 			Assert.Equal(base.Class.ToString(), rds.HGetAll("TestHGetAll")["class1"]);
+
+            Task.Run(async () =>
+            {
+                var test = await rds.HGetAllAsync("TestHGetAll");
+
+                rds.Set("TestHGetAll2", "1");
+                try
+                {
+                    var test2 = await rds.HGetAllAsync("TestHGetAll2");
+                }catch(Exception ex)
+                {
+
+                }
+
+                for(var a = 0; a< 1000; a++)
+                    test = await rds.HGetAllAsync("TestHGetAll");
+            }).Wait();
 		}
 
 		[Fact]

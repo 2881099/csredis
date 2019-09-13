@@ -140,11 +140,11 @@ namespace CSRedis.Internal.IO
 
 		void OnSocketConnected(SocketAsyncEventArgs args)
 		{
-			if (Connected != null)
+            _asyncConnectionStarted = false;
+            if (Connected != null)
 				Connected(this, new EventArgs());
 
 			this.SetConnectionTaskSourceResult(_redisSocket.Connected, null, false);
-			_asyncConnectionStarted = false;
 		}
 
 		void OnSocketSent(SocketAsyncEventArgs args, Exception ex = null)
