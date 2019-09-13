@@ -12,6 +12,7 @@
 		<PackageTags>csredis redis-trib cluster redis c# 缓存壳 集群 哨兵 分区 负载</PackageTags>
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIconUrl>https://github.com/2881099/csredis/blob/master/logo.png?raw=true</PackageIconUrl>
 		<Title>$(AssemblyName)</Title>
 		<IsPackable>true</IsPackable>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
