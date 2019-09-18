@@ -125,8 +125,8 @@ redis[1].Get("test1");
 > 操作多个库时，一个 RedisHelper 不够用怎么办？
 
 ```csharp
-public static class Rds1 : RedisHelper<Rds1> {}
-public static class Rds2 : RedisHelper<Rds1> {}
+public abstract class Rds1 : RedisHelper<Rds1> {}
+public abstract class Rds2 : RedisHelper<Rds2> {}
 
 Rds1.Initialization(new CSRedisClient("...."));
 Rds2.Initialization(new CSRedisClient("...."));
