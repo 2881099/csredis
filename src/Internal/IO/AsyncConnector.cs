@@ -133,7 +133,7 @@ namespace CSRedis.Internal.IO
 				case SocketAsyncOperation.Send:
 					OnSocketSent(e);
 					break;
-				default:
+                default:
 					throw new InvalidOperationException();
 			}
 		}
@@ -150,11 +150,22 @@ namespace CSRedis.Internal.IO
 		void OnSocketSent(SocketAsyncEventArgs args, Exception ex = null)
 		{
 			_asyncTransferPool.Release(args);
-
+            
 			IRedisAsyncCommandToken token;
 			if (_asyncReadQueue.TryDequeue(out token))
 			{
-				try
+                if (args.SocketError != SocketError.Success)
+                {
+                    token.SetException(new Exception($"SocketAsyncEventArgs Error: SocketError is {args.SocketError}"));
+                    return;
+                }
+                if (args.BytesTransferred <= 0)
+                {
+                    token.SetException(new Exception($"SocketAsyncEventArgs Error: BytesTransferred LessThan 0"));
+                    return;
+                }
+
+                try
 				{
 					if (ex != null)
 						token.SetException(ex);
@@ -177,113 +188,113 @@ namespace CSRedis.Internal.IO
 			}
 		}
 
-		//void OnSocketReceive(SocketAsyncEventArgs e, MemoryStream ms = null) {
-		//	if (e.SocketError == SocketError.Success) {
-		//		// 检查远程主机是否关闭连接
-		//		if (e.BytesTransferred > 0) {
-		//			var s = (Socket)e.UserToken;
+        //void OnSocketReceive(SocketAsyncEventArgs e, MemoryStream ms = null) {
+        //	if (e.SocketError == SocketError.Success) {
+        //		// 检查远程主机是否关闭连接
+        //		if (e.BytesTransferred > 0) {
+        //			var s = (Socket)e.UserToken;
 
-		//			if (s.Available == 0) {
-		//				byte[] data = new byte[e.BytesTransferred];
-		//				Array.Copy(e.Buffer, e.Offset, data, 0, data.Length);//从e.Buffer块中复制数据出来，保证它可重用
+        //			if (s.Available == 0) {
+        //				byte[] data = new byte[e.BytesTransferred];
+        //				Array.Copy(e.Buffer, e.Offset, data, 0, data.Length);//从e.Buffer块中复制数据出来，保证它可重用
 
-		//				Exception ex = null;
-		//				object result = null;
-		//				bool isended = false;
-		//				try {
-		//					if (ms == null) {
-		//						if (data[0] == '+') {
-		//							for (var a = 1; a < data.Length; a++)
-		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
-		//									result = a == 1 ? "" : _io.Encoding.GetString(data, 1, a - 1);
-		//									isended = true;
-		//									break;
-		//								}
-		//						}
-		//						if (data[0] == '-') {
-		//							for (var a = 1; a < data.Length; a++)
-		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n')
-		//									throw new CSRedis.RedisException(a == 1 ? "" : _io.Encoding.GetString(data, 1, a - 1));
-		//						}
-		//						if (data[0] == ':') {
-		//							for (var a = 2; a < data.Length; a++)
-		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
-		//									result = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
-		//									isended = true;
-		//									break;
-		//								}
-		//						}
-		//						if (data[0] == '$') {
-		//							long startIndex = 0;
-		//							long len = -999;
-		//							for (var a = 2; a < data.Length; a++)
-		//								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
-		//									if (len > 0) {
-		//										byte[] dest = new byte[len];
-		//										Array.Copy(data, startIndex, dest, 0, len);
-		//										result = dest;
-		//										break;
-		//									}
-		//									len = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
-		//									startIndex = a + 1;
-		//									if (len < 0) {
-		//										result = null;
-		//										isended = true;
-		//										break;
-		//									}
-		//									if (len == 0) {
-		//										result = "";
-		//										isended = true;
-		//										break;
-		//									}
-		//								}
-		//						}
-		//						//if (data[0] == '*') {
-		//						//	long startIndex = 0;
-		//						//	long len = -999;
-		//						//	for (var a = 2; a < data.Length; a++)
-		//						//		if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
-		//						//			if (len > 0) {
-		//						//				byte[] dest = new byte[len];
-		//						//				Array.Copy(data, startIndex, dest, 0, len);
-		//						//				result = dest;
-		//						//				break;
-		//						//			}
-		//						//			len = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
-		//						//			startIndex = a + 1;
-		//						//			if (len < 0) {
-		//						//				result = null;
-		//						//				isended = true;
-		//						//				break;
-		//						//			}
-		//						//			if (len == 0) {
-		//						//				result = "";
-		//						//				isended = true;
-		//						//				break;
-		//						//			}
-		//						//		}
-		//						//}
-		//					}
-		//				} catch (Exception ex2) {
-		//					ex = ex2;
-		//				} finally {
+        //				Exception ex = null;
+        //				object result = null;
+        //				bool isended = false;
+        //				try {
+        //					if (ms == null) {
+        //						if (data[0] == '+') {
+        //							for (var a = 1; a < data.Length; a++)
+        //								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+        //									result = a == 1 ? "" : _io.Encoding.GetString(data, 1, a - 1);
+        //									isended = true;
+        //									break;
+        //								}
+        //						}
+        //						if (data[0] == '-') {
+        //							for (var a = 1; a < data.Length; a++)
+        //								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n')
+        //									throw new CSRedis.RedisException(a == 1 ? "" : _io.Encoding.GetString(data, 1, a - 1));
+        //						}
+        //						if (data[0] == ':') {
+        //							for (var a = 2; a < data.Length; a++)
+        //								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+        //									result = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
+        //									isended = true;
+        //									break;
+        //								}
+        //						}
+        //						if (data[0] == '$') {
+        //							long startIndex = 0;
+        //							long len = -999;
+        //							for (var a = 2; a < data.Length; a++)
+        //								if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+        //									if (len > 0) {
+        //										byte[] dest = new byte[len];
+        //										Array.Copy(data, startIndex, dest, 0, len);
+        //										result = dest;
+        //										break;
+        //									}
+        //									len = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
+        //									startIndex = a + 1;
+        //									if (len < 0) {
+        //										result = null;
+        //										isended = true;
+        //										break;
+        //									}
+        //									if (len == 0) {
+        //										result = "";
+        //										isended = true;
+        //										break;
+        //									}
+        //								}
+        //						}
+        //						//if (data[0] == '*') {
+        //						//	long startIndex = 0;
+        //						//	long len = -999;
+        //						//	for (var a = 2; a < data.Length; a++)
+        //						//		if (data[a] == '\r' && a < data.Length - 1 && data[a + 1] == '\n') {
+        //						//			if (len > 0) {
+        //						//				byte[] dest = new byte[len];
+        //						//				Array.Copy(data, startIndex, dest, 0, len);
+        //						//				result = dest;
+        //						//				break;
+        //						//			}
+        //						//			len = long.Parse(_io.Encoding.GetString(data, 1, a - 1));
+        //						//			startIndex = a + 1;
+        //						//			if (len < 0) {
+        //						//				result = null;
+        //						//				isended = true;
+        //						//				break;
+        //						//			}
+        //						//			if (len == 0) {
+        //						//				result = "";
+        //						//				isended = true;
+        //						//				break;
+        //						//			}
+        //						//		}
+        //						//}
+        //					}
+        //				} catch (Exception ex2) {
+        //					ex = ex2;
+        //				} finally {
 
-		//				}
-		//			}
+        //				}
+        //			}
 
-		//			//ms.Write(data, 0, data.Length);
+        //			//ms.Write(data, 0, data.Length);
 
 
-		//			//为接收下一段数据，投递接收请求，这个函数有可能同步完成，这时返回false，并且不会引发SocketAsyncEventArgs.Completed事件
-		//			if (!s.ReceiveAsync(e)) {
-		//				//同步接收时处理接收完成事件
-		//				OnSocketReceive(e, ms);
-		//			}
-		//		}
-		//	}
-		//}
+        //			//为接收下一段数据，投递接收请求，这个函数有可能同步完成，这时返回false，并且不会引发SocketAsyncEventArgs.Completed事件
+        //			if (!s.ReceiveAsync(e)) {
+        //				//同步接收时处理接收完成事件
+        //				OnSocketReceive(e, ms);
+        //			}
+        //		}
+        //	}
+        //}
 
-		public void Dispose()
+        public void Dispose()
 		{
 			while (_asyncReadQueue.TryDequeue(out var token))
 				try { token.SetException(new Exception("Error: Disposing...")); } catch { }

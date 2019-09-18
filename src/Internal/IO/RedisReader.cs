@@ -113,7 +113,7 @@ namespace CSRedis.Internal.IO
             {
                 using (var ms = new MemoryStream())
                 {
-                    var ns = _stream as NetworkStream;
+                    var ns = _io.NetworkStream as NetworkStream;
                     if (ns != null)
                     {
                         try
@@ -130,7 +130,7 @@ namespace CSRedis.Internal.IO
                     }
 
                     try { _stream.Close(); } catch { }
-                    throw new EndOfStreamException($"Unexpected end of stream; expected type '{expectedType}'; data = {Encoding.UTF8.GetString(ms.ToArray())}");
+                    throw new EndOfStreamException($"Unexpected end of stream; expected type '{expectedType}'; data = '{Encoding.UTF8.GetString(ms.ToArray())}'");
                 }
             }
             if (type != expectedType)
