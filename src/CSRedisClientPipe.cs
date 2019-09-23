@@ -66,14 +66,14 @@ namespace CSRedis {
 			return ret;
 		}
 
-        bool _isDisposed;
-        ~CSRedisClientPipe() => this.Dispose();
+        //bool _isDisposed;
+        //~CSRedisClientPipe() => this.Dispose();
 		/// <summary>
 		/// 提交批命令
 		/// </summary>
 		public void Dispose() {
-            if (_isDisposed) return;
-            _isDisposed = true;
+            //if (_isDisposed) return;
+            //_isDisposed = true;
 			this.EndPipe();
 		}
 
@@ -109,7 +109,7 @@ namespace CSRedis {
 				throw ex;
 			}
 			if (typeof(TReturn) == typeof(TObject)) return this as CSRedisClientPipe<TReturn>;// return (CSRedisClientPipe<TReturn>)Convert.ChangeType(this, typeof(CSRedisClientPipe<TReturn>));
-            this._isDisposed = true;
+            //this._isDisposed = true;
 			return new CSRedisClientPipe<TReturn>(rds, this.Conns, this.Parsers);
 		}
 
