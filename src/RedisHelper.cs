@@ -91,6 +91,8 @@ public abstract partial class RedisHelper<TMark> {
 	/// <returns></returns>
 	public static CSRedisClientPipe<string> StartPipe() => Instance.StartPipe();
 
+    public static CSRedisClientPipeTransaction<string> StartPipeTransaction() => Instance.StartPipeTransaction();
+
 	#region 服务器命令
 	/// <summary>
 	/// 在所有分区节点上，执行服务器命令

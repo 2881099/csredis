@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 namespace CSRedis {
 
 	public partial class CSRedisClientPipe<TObject> : IDisposable {
-		private CSRedisClient rds;
-		private ConcurrentDictionary<string, RedisClientPool> Nodes => rds.Nodes;
-		private bool IsMultiNode => rds.IsMultiNode;
-		private Func<string, string> NodeRuleRaw => rds.NodeRuleRaw;
-		private ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> Conns = new ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)>();
-		private Queue<Func<object, object>> Parsers = new Queue<Func<object, object>>();
-		private static object ConnsLock = new object();
+        protected CSRedisClient rds;
+        protected ConcurrentDictionary<string, RedisClientPool> Nodes => rds.Nodes;
+        protected bool IsMultiNode => rds.IsMultiNode;
+		protected Func<string, string> NodeRuleRaw => rds.NodeRuleRaw;
+        protected ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> Conns = new ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)>();
+        protected Queue<Func<object, object>> Parsers = new Queue<Func<object, object>>();
+        protected static object ConnsLock = new object();
 		/// <summary>
 		/// 执行命令数量
 		/// </summary>
@@ -25,7 +25,7 @@ namespace CSRedis {
 		internal CSRedisClientPipe(CSRedisClient csredis) {
 			rds = csredis;
 		}
-		private CSRedisClientPipe(CSRedisClient csredis, ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> conns, Queue<Func<object, object>> parsers) {
+		protected CSRedisClientPipe(CSRedisClient csredis, ConcurrentDictionary<string, (List<int> indexes, Object<RedisClient> conn)> conns, Queue<Func<object, object>> parsers) {
 			this.rds = csredis;
 			this.Conns = conns;
 			this.Parsers = parsers;
@@ -35,7 +35,7 @@ namespace CSRedis {
 		/// 提交批命令
 		/// </summary>
 		/// <returns></returns>
-		public object[] EndPipe() {
+		public virtual object[] EndPipe() {
 			var ret = new object[Parsers.Count];
 			Exception ex = null;
 			try {
@@ -71,14 +71,14 @@ namespace CSRedis {
 		/// <summary>
 		/// 提交批命令
 		/// </summary>
-		public void Dispose() {
+		public virtual void Dispose() {
             //if (_isDisposed) return;
             //_isDisposed = true;
 			this.EndPipe();
 		}
 
 		private CSRedisClientPipe<TReturn> PipeCommand<TReturn>(string key, Func<Object<RedisClient>, string, TReturn> handle) => PipeCommand<TReturn>(key, handle, null);
-		private CSRedisClientPipe<TReturn> PipeCommand<TReturn>(string key, Func<Object<RedisClient>, string, TReturn> handle, Func<object, object> parser) {
+		protected virtual CSRedisClientPipe<TReturn> PipeCommand<TReturn>(string key, Func<Object<RedisClient>, string, TReturn> handle, Func<object, object> parser) {
 			if (string.IsNullOrEmpty(key)) throw new Exception("key 不可为空或null");
 			var nodeKey = NodeRuleRaw == null || Nodes.Count == 1 ? Nodes.Keys.First() : NodeRuleRaw(key);
 			if (Nodes.TryGetValue(nodeKey, out var pool) == false) Nodes.TryGetValue(nodeKey = Nodes.Keys.First(), out pool);

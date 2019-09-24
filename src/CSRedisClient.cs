@@ -775,6 +775,8 @@ namespace CSRedis {
 			return new CSRedisClientPipe<string>(this);
 		}
 
+        public CSRedisClientPipeTransaction<string> StartPipeTransaction()=>new CSRedisClientPipeTransaction<string>(this);
+
 		#region 服务器命令
 		/// <summary>
 		/// 在所有分区节点上，执行服务器命令
