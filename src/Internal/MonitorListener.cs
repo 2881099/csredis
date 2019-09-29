@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CSRedis.Internal
 {
-    class MonitorListener : RedisListner<object>
+    internal class MonitorListener : RedisListener<object>
     {
         public event EventHandler<RedisMonitorEventArgs> MonitorReceived;
 
@@ -30,7 +30,7 @@ namespace CSRedis.Internal
             return Connection.IsConnected;
         }
 
-        void OnMonitorReceived(object message)
+        private void OnMonitorReceived(object message)
         {
             if (MonitorReceived != null)
                 MonitorReceived(this, new RedisMonitorEventArgs(message));

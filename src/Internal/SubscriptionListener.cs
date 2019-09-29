@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CSRedis.Internal
 {
-    class SubscriptionListener : RedisListner<RedisSubscriptionResponse>
+    class SubscriptionListener : RedisListener<RedisSubscriptionResponse>
     {
         long _count;
 
