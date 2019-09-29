@@ -8,14 +8,14 @@ using System.Text;
 
 namespace CSRedis.Internal
 {
-    abstract class RedisListner<TResponse>
+    internal abstract class RedisListener<TResponse>
     {
-        readonly RedisConnector _connection;
+        private readonly RedisConnector _connection;
 
         public bool Listening { get; private set; }
         protected RedisConnector Connection { get { return _connection; } }
 
-        public RedisListner(RedisConnector connection)
+        protected RedisListener(RedisConnector connection)
         {
             _connection = connection;
         }
@@ -27,12 +27,12 @@ namespace CSRedis.Internal
             {
                 try
                 {
-					TResponse value = _connection.Read(func);
-					OnParsed(value);
+                    TResponse value = _connection.Read(func);
+                    OnParsed(value);
                 }
                 catch (IOException)
                 {
-					if (_connection.IsConnected)
+                    if (_connection.IsConnected)
                         throw;
                     break;
                 }
@@ -51,6 +51,7 @@ namespace CSRedis.Internal
         }
 
         protected abstract void OnParsed(TResponse value);
+
         protected abstract bool Continue();
     }
 }
