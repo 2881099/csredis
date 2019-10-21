@@ -1298,7 +1298,7 @@ namespace CSRedis {
 			List<(string[] keys, Object<RedisClient> conn)> subscrs = new List<(string[] keys, Object<RedisClient> conn)>();
 			foreach (var r in rules) {
 				var pool = Nodes.TryGetValue(r.Key, out var p) ? p : Nodes.First().Value;
-				Task.Run(async () => subscrs.Add((r.Value.ToArray(), await pool.GetAsync()))).Wait();
+                subscrs.Add((r.Value.ToArray(), pool.Get()));
 			}
 
 			var so = new SubscribeObject(this, chans, subscrs.ToArray(), onmessages);
@@ -1476,9 +1476,8 @@ namespace CSRedis {
 			var chans = channelPatterns.Distinct().ToArray();
 
 			List<Object<RedisClient>> redisConnections = new List<Object<RedisClient>>();
-			foreach (var pool in Nodes) {
-				Task.Run(async () => redisConnections.Add(await pool.Value.GetAsync())).Wait();
-			}
+			foreach (var pool in Nodes)
+                redisConnections.Add(pool.Value.Get());
 
 			var so = new PSubscribeObject(this, chans, redisConnections.ToArray(), pmessage);
 			return so;

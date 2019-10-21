@@ -57,7 +57,7 @@ namespace CSRedis.Internal.IO
 		public Task<bool> ConnectAsync() {
 			if (_redisSocket.Connected) {
 				this.SetConnectionTaskSourceResult(true, null, false);
-				return Task.FromResult(true);
+				return TaskEx.FromResult(true);
 			}
 
 			var tcs = new TaskCompletionSource<bool>();

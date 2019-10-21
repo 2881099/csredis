@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if net40
+#else
 partial class RedisHelper<TMark> {
 
 	#region 缓存壳
@@ -1695,3 +1697,4 @@ partial class RedisHelper<TMark> {
 		Instance.GeoRadiusByMemberWithDistAndCoordAsync<T>(key, member, radius, unit, count, sorting);
 	#endregion
 }
+#endif

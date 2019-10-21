@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+#if net40
+#else
 namespace CSRedis
 {
     public partial class RedisClient
@@ -2431,3 +2433,4 @@ namespace CSRedis
 		#endregion
 	}
 }
+#endif

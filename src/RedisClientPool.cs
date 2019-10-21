@@ -37,13 +37,6 @@ namespace CSRedis {
 			_policy.ConnectionString = connectionString;
 		}
 
-		[Obsolete("方法已更名 pool.Get")]
-		public Object<RedisClient> GetConnection() => this.Get();
-		[Obsolete("方法已更名 pool.GetAsync")]
-		public Task<Object<RedisClient>> GetConnectionAsync() => this.GetAsync();
-		[Obsolete("方法已更名 pool.Return")]
-		public void ReleaseConnection(Object<RedisClient> conn, bool isReset = false) => this.Return(conn, isReset);
-
 		public void Return(Object<RedisClient> obj, Exception exception, bool isRecreate = false) {
 			if (exception != null) {
 				try {
@@ -210,7 +203,8 @@ namespace CSRedis {
 				}
 			}
 		}
-
+#if net40
+#else
 		async public Task OnGetAsync(Object<RedisClient> obj) {
 			if (_pool.Encoding != obj.Value.Encoding) obj.Value.Encoding = _pool.Encoding;
 			if (_pool.IsAvailable) {
@@ -224,6 +218,7 @@ namespace CSRedis {
 				}
 			}
 		}
+#endif
 
 		public void OnGetTimeout() {
 			
@@ -257,7 +252,7 @@ namespace CSRedis {
 				var b = Math.Min(minPoolSize - a, 10); //每10个预热
 				var initTasks = new Task[b];
 				for (var c = 0; c < b; c++) {
-					initTasks[c] = Task.Run(() => {
+					initTasks[c] = TaskEx.Run(() => {
 						try {
 							var conn = pool.Get();
 							initConns.Add(conn);

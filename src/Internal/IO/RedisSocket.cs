@@ -75,7 +75,11 @@ namespace CSRedis.Internal.IO
 			if (!_ssl) return netStream;
 
             var sslStream = new SslStream(netStream, true);
-			sslStream.AuthenticateAsClientAsync(GetHostForAuthentication()).Wait();
+#if net40
+            sslStream.AuthenticateAsClient(GetHostForAuthentication());
+#else
+            sslStream.AuthenticateAsClientAsync(GetHostForAuthentication()).Wait();
+#endif
             return sslStream;
         }
 

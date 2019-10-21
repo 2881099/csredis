@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if net40
+#else
 namespace CSRedis {
 	public partial class CSRedisClient {
 
@@ -2595,3 +2597,4 @@ namespace CSRedis {
 		#endregion
 	}
 }
+#endif

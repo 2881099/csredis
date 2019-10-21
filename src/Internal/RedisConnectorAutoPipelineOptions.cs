@@ -70,6 +70,8 @@ namespace CSRedis {
 			if (cmd.SyncException != null) throw cmd.SyncException;
 			return cmd.SyncReturnValue;
 		}
+#if net40
+#else
 		async internal Task<T> EnqueueAsync<T>(RedisCommand<T> command) {
 			var qs = Interlocked.Increment(ref _asyncqs);
 			var cmd = new PipelineCommandToken<T>(true, command);
@@ -80,12 +82,13 @@ namespace CSRedis {
 				return await cmd.TaskSource.Task;
 			}
 			if (qs == 1) {
-				await Task.Delay(TimeWait);
+				await TaskEx.Delay(TimeWait);
 				FlushAndSend();
 				return await cmd.TaskSource.Task;
 			}
 			return await cmd.TaskSource.Task;
 		}
+#endif
 
 		bool _flushAndSending = false;
 		object _flushAndSendingLock = new object();

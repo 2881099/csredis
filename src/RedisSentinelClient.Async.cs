@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if net40
+#else
 namespace CSRedis
 {
     public partial class RedisSentinelClient
@@ -163,3 +165,4 @@ namespace CSRedis
         #endregion
     }
 }
+#endif

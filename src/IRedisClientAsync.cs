@@ -11,14 +11,13 @@ namespace CSRedis
     /// </summary>
     public interface IRedisClientAsync : IRedisClient
     {
+#if net40
+#else
         /// <summary>
         /// Open connection to redis server
         /// </summary>
         /// <returns>True on success</returns>
         Task<bool> ConnectAsync();
-
-
-
 
         /// <summary>
         /// Call arbitrary redis command
@@ -27,13 +26,6 @@ namespace CSRedis
         /// <param name="args"></param>
         /// <returns></returns>
         Task<object> CallAsync(string command, params string[] args);
-
-
-
-
-
-
-
 
         #region Connection
         /// <summary>
@@ -2128,6 +2120,7 @@ namespace CSRedis
 		Task<(byte[] member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusBytesAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
 		Task<(string member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
 		Task<(byte[] member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusBytesByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-		#endregion
-	}
+        #endregion
+#endif
+    }
 }

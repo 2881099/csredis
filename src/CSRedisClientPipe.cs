@@ -85,7 +85,7 @@ namespace CSRedis {
 
 			try {
 				if (Conns.TryGetValue(pool.Key, out var conn) == false) {
-					conn = (new List<int>(), pool.GetAsync().Result);
+					conn = (new List<int>(), pool.Get());
 					bool isStartPipe = false;
 					lock (ConnsLock) {
 						if (Conns.TryAdd(pool.Key, conn) == false) {
