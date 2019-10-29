@@ -91,8 +91,9 @@ namespace CSRedis {
 		public int AsyncGetCapacity { get; set; } = 100000;
 		public bool IsThrowGetTimeoutException { get; set; } = true;
 		public int CheckAvailableInterval { get; set; } = 5;
-		
-		internal void SetHost(string host) {
+        public bool IsDisposeOnProcessExit { get; set; } = true;
+
+        internal void SetHost(string host) {
 			var spt = (host ?? "").Split(':');
 			_ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
 			if (spt.Length < 2 || int.TryParse(spt[1].Trim(), out _port) == false) _port = 6379;
@@ -152,6 +153,9 @@ namespace CSRedis {
 						case "testcluster":
 							_testCluster = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : true;
 							break;
+                        case "processexit":
+                            IsDisposeOnProcessExit = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
+                            break;
 					}
 				}
 
