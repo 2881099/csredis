@@ -91,7 +91,6 @@ namespace CSRedis {
 		public int AsyncGetCapacity { get; set; } = 100000;
 		public bool IsThrowGetTimeoutException { get; set; } = true;
 		public int CheckAvailableInterval { get; set; } = 5;
-        public bool IsDisposeOnProcessExit { get; set; } = true;
 
         internal void SetHost(string host) {
 			var spt = (host ?? "").Split(':');
@@ -153,9 +152,6 @@ namespace CSRedis {
 						case "testcluster":
 							_testCluster = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : true;
 							break;
-                        case "processexit":
-                            IsDisposeOnProcessExit = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : false;
-                            break;
 					}
 				}
 

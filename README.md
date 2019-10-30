@@ -47,7 +47,6 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 | idleTimeout       | 0     | 连接池内元素空闲时间(毫秒)，适用连接远程redis-server |
 | preheat           | true  | 预热连接，接收数值如 preheat=5 预热5个连接 |
 | ssl               | false | 是否开启加密传输 |
-| processExit       | true  | 注册 AppDomain.CurrentDomain.ProcessExit、Console.CancelKeyPress 自动释放，设置为 false 后请记得手工调用 Dispose |
 | testcluster       | true  | 是否尝试集群模式，阿里云、腾讯云集群需要设置此选项为 false |
 | writeBuffer       | 10240 | 异步方法写入缓冲区大小(字节) |
 | tryit             | 0     | 执行命令出错，尝试重试的次数 |
