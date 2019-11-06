@@ -8,7 +8,7 @@ namespace CSRedis
     /// <summary>
     /// Common properties of the RedisClient
     /// </summary>
-    public interface IRedisClient :IDisposable
+    public interface IRedisClient : IDisposable
     {
         /// <summary>
         /// Occurs when a subscription message is received

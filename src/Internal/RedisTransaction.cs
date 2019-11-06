@@ -66,7 +66,7 @@ namespace CSRedis.Internal
                 object[] response = _connector.EndPipe();
                 for (int i = 1; i < response.Length - 1; i++)
                     OnTransactionQueued(_pipeCommands[i - 1].Item1, _pipeCommands[i - 1].Item2, response[i - 1].ToString());
-                
+
                 object transaction_response = response[response.Length - 1];
                 if (!(transaction_response is object[]))
                     throw new RedisProtocolException("Unexpected response");

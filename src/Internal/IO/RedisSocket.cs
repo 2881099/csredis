@@ -44,7 +44,7 @@ namespace CSRedis.Internal.IO
 
         public void Connect(EndPoint endpoint)
         {
-			Connect(endpoint, 5000);// -1);
+            Connect(endpoint, 5000);// -1);
         }
 
         public void Connect(EndPoint endpoint, int timeout)
@@ -52,7 +52,8 @@ namespace CSRedis.Internal.IO
             InitSocket(endpoint);
 
             IAsyncResult result = _socket.BeginConnect(endpoint, null, null);
-            if (!result.AsyncWaitHandle.WaitOne(timeout, true)) {
+            if (!result.AsyncWaitHandle.WaitOne(timeout, true))
+            {
                 throw new RedisSocketException("Connect to server timeout");
             }
         }
@@ -60,7 +61,7 @@ namespace CSRedis.Internal.IO
         public bool ConnectAsync(SocketAsyncEventArgs args)
         {
             InitSocket(args.RemoteEndPoint);
-			return _socket.ConnectAsync(args);
+            return _socket.ConnectAsync(args);
         }
 
         public bool SendAsync(SocketAsyncEventArgs args)
@@ -72,7 +73,7 @@ namespace CSRedis.Internal.IO
         {
             Stream netStream = new NetworkStream(_socket);
 
-			if (!_ssl) return netStream;
+            if (!_ssl) return netStream;
 
             var sslStream = new SslStream(netStream, true);
 #if net40
@@ -83,26 +84,27 @@ namespace CSRedis.Internal.IO
             return sslStream;
         }
 
-		bool isDisposed = false;
-		public void Dispose()
+        bool isDisposed = false;
+        public void Dispose()
         {
-			if (isDisposed) return;
-			isDisposed = true;
-			try { _socket.Shutdown(SocketShutdown.Both); } catch { }
-			try { _socket.Close(); } catch { }
-			try { _socket.Dispose(); } catch { }
-		}
+            if (isDisposed) return;
+            isDisposed = true;
+            try { _socket.Shutdown(SocketShutdown.Both); } catch { }
+            try { _socket.Close(); } catch { }
+            try { _socket.Dispose(); } catch { }
+        }
 
         void InitSocket(EndPoint endpoint)
         {
-			if (_socket != null) {
-				try { _socket.Shutdown(SocketShutdown.Both); } catch { }
-				try { _socket.Close(); } catch { }
-				try { _socket.Dispose(); } catch { }
-			}
+            if (_socket != null)
+            {
+                try { _socket.Shutdown(SocketShutdown.Both); } catch { }
+                try { _socket.Close(); } catch { }
+                try { _socket.Dispose(); } catch { }
+            }
 
-			isDisposed = false;
-			_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            isDisposed = false;
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _remote = endpoint;
         }
 

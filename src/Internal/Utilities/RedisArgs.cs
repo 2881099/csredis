@@ -24,19 +24,19 @@ namespace CSRedis.Internal.Utilities
                 for (int j = 0; j < arrays[i].Length; j++)
                 {
                     object obj = arrays[i][j];
-					output[pos++] = obj;// obj == null ? String.Empty : (obj is byte[] ? obj : String.Format(CultureInfo.InvariantCulture, "{0}", obj));
+                    output[pos++] = obj;// obj == null ? String.Empty : (obj is byte[] ? obj : String.Format(CultureInfo.InvariantCulture, "{0}", obj));
                 }
             }
             return output;
         }
 
-		/// <summary>
-		/// Joine string with arrays
-		/// </summary>
-		/// <param name="str">Leading string element</param>
-		/// <param name="arrays">Array to join</param>
-		/// <returns>Array of str and ToString() elements of arrays</returns>
-		public static object[] Concat(string str, params object[] arrays)
+        /// <summary>
+        /// Joine string with arrays
+        /// </summary>
+        /// <param name="str">Leading string element</param>
+        /// <param name="arrays">Array to join</param>
+        /// <returns>Array of str and ToString() elements of arrays</returns>
+        public static object[] Concat(string str, params object[] arrays)
         {
             return Concat(new[] { str }, arrays);
         }

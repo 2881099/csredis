@@ -32,9 +32,9 @@ namespace CSRedis.Internal.Utilities
                 = new Lazy<Func<Dictionary<string, string>, T>>(CompileDeserializer);
         }
 
-		public static Dictionary<string, string> Serialize(T obj)
+        public static Dictionary<string, string> Serialize(T obj)
         {
-			if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
+            if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
                 return _serializer.Value(obj);
             else
                 return _propertySerializer.Value(obj);
@@ -42,7 +42,7 @@ namespace CSRedis.Internal.Utilities
 
         public static T Deserialize(Dictionary<string, string> fields)
         {
-			if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
+            if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
                 return _deserializer.Value(fields);
             else
                 return _propertyDeserializer.Value(fields);
@@ -147,11 +147,11 @@ namespace CSRedis.Internal.Utilities
             var d_init = Expression.MemberInit(Expression.New(d_t)); // object ctor
             var d_add = d_t.GetMethod("Add"); // add method
 
-			var fc_t = typeof(IFormatterConverter);// typeof(LocalVariableInfo);
+            var fc_t = typeof(IFormatterConverter);// typeof(LocalVariableInfo);
             var fc = Expression.Variable(fc_t, "fc");
-			var fc_init = Expression.MemberInit(Expression.New(typeof(System.Runtime.Serialization.FormatterConverter))); //Expression.MemberInit(Expression.New(fc_t));
+            var fc_init = Expression.MemberInit(Expression.New(typeof(System.Runtime.Serialization.FormatterConverter))); //Expression.MemberInit(Expression.New(fc_t));
 
-			var info_t = typeof(SerializationInfo);
+            var info_t = typeof(SerializationInfo);
             var info = Expression.Variable(info_t, "info");
             var info_ctor = info_t.GetConstructor(new[] { typeof(Type), fc_t });
             var info_init = Expression.MemberInit(Expression.New(info_ctor, Expression.Constant(o_t), fc));
@@ -202,11 +202,11 @@ namespace CSRedis.Internal.Utilities
             var d = Expression.Parameter(d_t, "d");
             var d_mi_get_enumerator = d_t.GetMethod("GetEnumerator");
 
-			var fc_t = typeof(IFormatterConverter);// typeof(LocalVariableInfo);
-			var fc = Expression.Variable(fc_t, "fc");
+            var fc_t = typeof(IFormatterConverter);// typeof(LocalVariableInfo);
+            var fc = Expression.Variable(fc_t, "fc");
             var fc_init = Expression.MemberInit(Expression.New(typeof(System.Runtime.Serialization.FormatterConverter))); //Expression.MemberInit(Expression.New(fc_t));
 
-			var info_t = typeof(SerializationInfo);
+            var info_t = typeof(SerializationInfo);
             var info = Expression.Variable(info_t, "info");
             var info_ctor = info_t.GetConstructor(new[] { typeof(Type), fc_t });
             var info_init = Expression.MemberInit(Expression.New(info_ctor, Expression.Constant(o_t), fc));

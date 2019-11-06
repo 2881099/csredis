@@ -159,7 +159,7 @@ namespace CSRedis
                     {
                         if (!_redisClient.Connect(timeout))
                             continue;
-                        
+
                         var role = _redisClient.Role();
                         if (role.RoleName != "master")
                             continue;

@@ -36,11 +36,11 @@ namespace CSRedis
         #endregion
 
         #region Keys
-		public static RedisInt Touch(params string[] keys)
+        public static RedisInt Touch(params string[] keys)
         {
             return new RedisInt("TOUCH", keys);
         }
-		public static RedisInt UnLink(params string[] keys)
+        public static RedisInt UnLink(params string[] keys)
         {
             return new RedisInt("UNLINK", keys);
         }
@@ -156,7 +156,7 @@ namespace CSRedis
                 args.Add(dir.ToString().ToUpperInvariant());
             if (isAlpha.HasValue && isAlpha.Value)
                 args.Add("ALPHA");
-            return new RedisArray.Generic<Dictionary<string,string>>(new RedisHash("SORT", args.ToArray()));
+            return new RedisArray.Generic<Dictionary<string, string>>(new RedisHash("SORT", args.ToArray()));
         }
         public static RedisArray.Strings Sort(string key, long? offset = null, long? count = null, string by = null, RedisSortDir? dir = null, bool? isAlpha = null, params string[] get)
         {
@@ -210,7 +210,7 @@ namespace CSRedis
             return new RedisScanCommand<string>(
                 new RedisArray.Strings("SCAN", args.ToArray()));
         }
-		public static RedisScanCommand<byte[]> ScanBytes(long cursor, string pattern = null, long? count = null)
+        public static RedisScanCommand<byte[]> ScanBytes(long cursor, string pattern = null, long? count = null)
         {
             var args = new List<object>();
             args.Add(cursor);
@@ -224,14 +224,14 @@ namespace CSRedis
         #endregion
 
         #region Hashes
-		public static RedisInt HStrLen(string key, string field)
+        public static RedisInt HStrLen(string key, string field)
         {
-			object[] args = RedisArgs.Concat(key, field);
+            object[] args = RedisArgs.Concat(key, field);
             return new RedisInt("HSTRLEN", args);
         }
         public static RedisInt HDel(string key, params string[] fields)
         {
-			object[] args = RedisArgs.Concat(key, fields);
+            object[] args = RedisArgs.Concat(key, fields);
             return new RedisInt("HDEL", args);
         }
         public static RedisBool HExists(string key, string field)
@@ -242,7 +242,7 @@ namespace CSRedis
         {
             return new RedisString("HGET", key, field);
         }
-		public static RedisBytes HGetBytes(string key, string field)
+        public static RedisBytes HGetBytes(string key, string field)
         {
             return new RedisBytes("HGET", key, field);
         }
@@ -255,7 +255,7 @@ namespace CSRedis
         {
             return new RedisHash("HGETALL", key);
         }
-		public static RedisHashBytes HGetAllBytes(string key)
+        public static RedisHashBytes HGetAllBytes(string key)
         {
             return new RedisHashBytes("HGETALL", key);
         }
@@ -277,12 +277,12 @@ namespace CSRedis
         }
         public static RedisArray.Strings HMGet(string key, params string[] fields)
         {
-			object[] args = RedisArgs.Concat(key, fields);
+            object[] args = RedisArgs.Concat(key, fields);
             return new RedisArray.Strings("HMGET", args);
         }
-		public static RedisArray.Bytes HMGetBytes(string key, params string[] fields)
+        public static RedisArray.Bytes HMGetBytes(string key, params string[] fields)
         {
-			object[] args = RedisArgs.Concat(key, fields);
+            object[] args = RedisArgs.Concat(key, fields);
             return new RedisArray.Bytes("HMGET", args);
         }
         public static RedisStatus HMSet(string key, Dictionary<string, object> dict)
@@ -320,7 +320,7 @@ namespace CSRedis
         {
             return new RedisArray.Strings("HVALS", key);
         }
-		public static RedisArray.Bytes HValsBytes(string key)
+        public static RedisArray.Bytes HValsBytes(string key)
         {
             return new RedisArray.Bytes("HVALS", key);
         }
@@ -335,10 +335,10 @@ namespace CSRedis
                 args.AddRange(new object[] { "COUNT", count });
             return new RedisScanCommand<Tuple<string, string>>(
                 new RedisArray.WeakPairs<string, string>("HSCAN", args.ToArray()));
-                //new RedisArray.Generic<Tuple<string, string>>(
-                    //new RedisTuple.Generic<string, string>.Bulk("HSCAN", args.ToArray())));
+            //new RedisArray.Generic<Tuple<string, string>>(
+            //new RedisTuple.Generic<string, string>.Bulk("HSCAN", args.ToArray())));
         }
-		public static RedisScanCommand<Tuple<string, byte[]>> HScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        public static RedisScanCommand<Tuple<string, byte[]>> HScanBytes(string key, long cursor, string pattern = null, long? count = null)
         {
             var args = new List<object>();
             args.Add(key);
@@ -349,80 +349,81 @@ namespace CSRedis
                 args.AddRange(new object[] { "COUNT", count });
             return new RedisScanCommand<Tuple<string, byte[]>>(
                 new RedisArray.StrongPairs<string, byte[]>(new RedisString(null), new RedisBytes(null), "HSCAN", args.ToArray()));
-                //new RedisArray.Generic<Tuple<string, string>>(
-                    //new RedisTuple.Generic<string, string>.Bulk("HSCAN", args.ToArray())));
+            //new RedisArray.Generic<Tuple<string, string>>(
+            //new RedisTuple.Generic<string, string>.Bulk("HSCAN", args.ToArray())));
         }
         #endregion
 
         #region Lists
         public static RedisTuple BLPopWithKey(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisTuple("BLPOP", args);
         }
-		public static RedisTuple.Generic<string, byte[]> BLPopBytesWithKey(int timeout, params string[] keys)
+        public static RedisTuple.Generic<string, byte[]> BLPopBytesWithKey(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisTuple.Generic<string, byte[]>.Single(new RedisString(null), new RedisBytes(null), "BLPOP", args);
         }
         public static RedisTuple BLPopWithKey(TimeSpan timeout, params string[] keys)
         {
             return BLPopWithKey((int)timeout.TotalSeconds, keys);
         }
-		public static RedisTuple.Generic<string, byte[]> BLPopBytesWithKey(TimeSpan timeout, params string[] keys)
+        public static RedisTuple.Generic<string, byte[]> BLPopBytesWithKey(TimeSpan timeout, params string[] keys)
         {
-			return BLPopBytesWithKey((int)timeout.TotalSeconds, keys);
-		}
+            return BLPopBytesWithKey((int)timeout.TotalSeconds, keys);
+        }
         public static RedisArray.IndexOf<string> BLPop(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisArray.IndexOf<string>(new RedisString("BLPOP", args), 1);
         }
-		public static RedisArray.IndexOf<byte[]> BLPopBytes(int timeout, params string[] keys)
+        public static RedisArray.IndexOf<byte[]> BLPopBytes(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisArray.IndexOf<byte[]>(new RedisBytes("BLPOP", args), 1);
         }
         public static RedisArray.IndexOf<string> BLPop(TimeSpan timeout, params string[] keys)
         {
             return BLPop((int)timeout.TotalSeconds, keys);
         }
-		public static RedisArray.IndexOf<byte[]> BLPopBytes(TimeSpan timeout, params string[] keys)
+        public static RedisArray.IndexOf<byte[]> BLPopBytes(TimeSpan timeout, params string[] keys)
         {
             return BLPopBytes((int)timeout.TotalSeconds, keys);
         }
         public static RedisTuple BRPopWithKey(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisTuple("BRPOP", args);
         }
-		public static RedisTuple.Generic<string, byte[]> BRPopBytesWithKey(int timeout, params string[] keys) {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
-			return new RedisTuple.Generic<string, byte[]>.Single(new RedisString(null), new RedisBytes(null), "BRPOP", args);
-		}
-		public static RedisTuple BRPopWithKey(TimeSpan timeout, params string[] keys)
+        public static RedisTuple.Generic<string, byte[]> BRPopBytesWithKey(int timeout, params string[] keys)
+        {
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            return new RedisTuple.Generic<string, byte[]>.Single(new RedisString(null), new RedisBytes(null), "BRPOP", args);
+        }
+        public static RedisTuple BRPopWithKey(TimeSpan timeout, params string[] keys)
         {
             return BRPopWithKey((int)timeout.TotalSeconds, keys);
         }
-		public static RedisTuple.Generic<string, byte[]> BRPopBytesWithKey(TimeSpan timeout, params string[] keys)
+        public static RedisTuple.Generic<string, byte[]> BRPopBytesWithKey(TimeSpan timeout, params string[] keys)
         {
             return BRPopBytesWithKey((int)timeout.TotalSeconds, keys);
         }
         public static RedisArray.IndexOf<string> BRPop(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisArray.IndexOf<string>(new RedisString("BRPOP", args), 1);
         }
-		public static RedisArray.IndexOf<byte[]> BRPopBytes(int timeout, params string[] keys)
+        public static RedisArray.IndexOf<byte[]> BRPopBytes(int timeout, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(keys, new object[] { timeout });
+            object[] args = RedisArgs.Concat(keys, new object[] { timeout });
             return new RedisArray.IndexOf<byte[]>(new RedisBytes("BRPOP", args), 1);
         }
         public static RedisArray.IndexOf<string> BRPop(TimeSpan timeout, params string[] keys)
         {
             return BRPop((int)timeout.TotalSeconds, keys);
         }
-		public static RedisArray.IndexOf<byte[]> BRPopBytes(TimeSpan timeout, params string[] keys)
+        public static RedisArray.IndexOf<byte[]> BRPopBytes(TimeSpan timeout, params string[] keys)
         {
             return BRPopBytes((int)timeout.TotalSeconds, keys);
         }
@@ -430,7 +431,7 @@ namespace CSRedis
         {
             return new RedisString.Nullable("BRPOPLPUSH", source, destination, timeout);
         }
-		public static RedisBytes BRPopBytesLPush(string source, string destination, int timeout)
+        public static RedisBytes BRPopBytesLPush(string source, string destination, int timeout)
         {
             return new RedisBytes("BRPOPLPUSH", source, destination, timeout);
         }
@@ -438,7 +439,7 @@ namespace CSRedis
         {
             return BRPopLPush(source, destination, (int)timeout.TotalSeconds);
         }
-		public static RedisBytes BRPopBytesLPush(string source, string destination, TimeSpan timeout)
+        public static RedisBytes BRPopBytesLPush(string source, string destination, TimeSpan timeout)
         {
             return BRPopBytesLPush(source, destination, (int)timeout.TotalSeconds);
         }
@@ -446,7 +447,7 @@ namespace CSRedis
         {
             return new RedisString("LINDEX", key, index);
         }
-		public static RedisBytes LIndexBytes(string key, long index)
+        public static RedisBytes LIndexBytes(string key, long index)
         {
             return new RedisBytes("LINDEX", key, index);
         }
@@ -462,13 +463,13 @@ namespace CSRedis
         {
             return new RedisString("LPOP", key);
         }
-		public static RedisBytes LPopBytes(string key)
+        public static RedisBytes LPopBytes(string key)
         {
             return new RedisBytes("LPOP", key);
         }
         public static RedisInt LPush(string key, params object[] values)
         {
-			object[] args = RedisArgs.Concat(new[] { key }, values);
+            object[] args = RedisArgs.Concat(new[] { key }, values);
             return new RedisInt("LPUSH", args);
         }
         public static RedisInt LPushX(string key, object value)
@@ -479,7 +480,7 @@ namespace CSRedis
         {
             return new RedisArray.Strings("LRANGE", key, start, stop);
         }
-		public static RedisArray.Bytes LRangeBytes(string key, long start, long stop)
+        public static RedisArray.Bytes LRangeBytes(string key, long start, long stop)
         {
             return new RedisArray.Bytes("LRANGE", key, start, stop);
         }
@@ -499,7 +500,7 @@ namespace CSRedis
         {
             return new RedisString("RPOP", key);
         }
-		public static RedisBytes RPopBytes(string key)
+        public static RedisBytes RPopBytes(string key)
         {
             return new RedisBytes("RPOP", key);
         }
@@ -507,18 +508,18 @@ namespace CSRedis
         {
             return new RedisString("RPOPLPUSH", source, destination);
         }
-		public static RedisBytes RPopBytesLPush(string source, string destination)
+        public static RedisBytes RPopBytesLPush(string source, string destination)
         {
             return new RedisBytes("RPOPLPUSH", source, destination);
         }
         public static RedisInt RPush(string key, params object[] values)
         {
-			object[] args = RedisArgs.Concat(key, values);
+            object[] args = RedisArgs.Concat(key, values);
             return new RedisInt("RPUSH", args);
         }
         public static RedisInt RPushX(string key, object value)
         {
-			return new RedisInt("RPUSHX", key, value);
+            return new RedisInt("RPUSHX", key, value);
         }
         #endregion
 
@@ -536,7 +537,7 @@ namespace CSRedis
         {
             return new RedisArray.Strings("SDIFF", keys);
         }
-		public static RedisArray.Bytes SDiffBytes(params string[] keys)
+        public static RedisArray.Bytes SDiffBytes(params string[] keys)
         {
             return new RedisArray.Bytes("SDIFF", keys);
         }
@@ -549,7 +550,7 @@ namespace CSRedis
         {
             return new RedisArray.Strings("SINTER", keys);
         }
-		public static RedisArray.Bytes SInterBytes(params string[] keys)
+        public static RedisArray.Bytes SInterBytes(params string[] keys)
         {
             return new RedisArray.Bytes("SINTER", keys);
         }
@@ -558,7 +559,7 @@ namespace CSRedis
             object[] args = RedisArgs.Concat(destination, keys);
             return new RedisInt("SINTERSTORE", args);
         }
-        public static RedisBool SIsMember(string key, object member) 
+        public static RedisBool SIsMember(string key, object member)
         {
             return new RedisBool("SISMEMBER", key, member);
         }
@@ -566,7 +567,7 @@ namespace CSRedis
         {
             return new RedisArray.Strings("SMEMBERS", key);
         }
-		public static RedisArray.Bytes SMembersBytes(string key)
+        public static RedisArray.Bytes SMembersBytes(string key)
         {
             return new RedisArray.Bytes("SMEMBERS", key);
         }
@@ -578,7 +579,7 @@ namespace CSRedis
         {
             return new RedisString("SPOP", key);
         }
-		public static RedisBytes SPopBytes(string key)
+        public static RedisBytes SPopBytes(string key)
         {
             return new RedisBytes("SPOP", key);
         }
@@ -594,18 +595,19 @@ namespace CSRedis
         {
             return new RedisString("SRANDMEMBER", key);
         }
-		public static RedisBytes SRandMemberBytes(string key) {
-			return new RedisBytes("SRANDMEMBER", key);
-		}
-		public static RedisArray.Strings SRandMembers(string key, long count)
+        public static RedisBytes SRandMemberBytes(string key)
+        {
+            return new RedisBytes("SRANDMEMBER", key);
+        }
+        public static RedisArray.Strings SRandMembers(string key, long count)
         {
             return new RedisArray.Strings("SRANDMEMBER", key, count);
         }
-		public static RedisArray.Bytes SRandMembersBytes(string key, long count)
+        public static RedisArray.Bytes SRandMembersBytes(string key, long count)
         {
             return new RedisArray.Bytes("SRANDMEMBER", key, count);
         }
-        public static RedisInt SRem(string key, params object[] members) 
+        public static RedisInt SRem(string key, params object[] members)
         {
             object[] args = RedisArgs.Concat(key, members);
             return new RedisInt("SREM", args);
@@ -614,13 +616,13 @@ namespace CSRedis
         {
             return new RedisArray.Strings("SUNION", keys);
         }
-		public static RedisArray.Bytes SUnionBytes(params string[] keys)
+        public static RedisArray.Bytes SUnionBytes(params string[] keys)
         {
             return new RedisArray.Bytes("SUNION", keys);
         }
         public static RedisInt SUnionStore(string destination, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(destination, keys);
+            object[] args = RedisArgs.Concat(destination, keys);
             return new RedisInt("SUNIONSTORE", args);
         }
         public static RedisScanCommand<string> SScan(string key, long cursor, string pattern = null, long? count = null)
@@ -635,7 +637,7 @@ namespace CSRedis
             return new RedisScanCommand<string>(
                 new RedisArray.Strings("SSCAN", args.ToArray()));
         }
-		public static RedisScanCommand<byte[]> SScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        public static RedisScanCommand<byte[]> SScanBytes(string key, long cursor, string pattern = null, long? count = null)
         {
             var args = new List<object>();
             args.Add(key);
@@ -650,19 +652,19 @@ namespace CSRedis
         #endregion
 
         #region Sorted Sets
-		public static RedisArray.WeakPairs<string, double> ZPopMax(string key, long count)
+        public static RedisArray.WeakPairs<string, double> ZPopMax(string key, long count)
         {
             return new RedisArray.WeakPairs<string, double>("ZPOPMAX", key, count);
         }
-		public static RedisArray.StrongPairs<byte[], double> ZPopMaxBytes(string key, long count)
+        public static RedisArray.StrongPairs<byte[], double> ZPopMaxBytes(string key, long count)
         {
             return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZPOPMAX", key, count);
         }
-		public static RedisArray.WeakPairs<string, double> ZPopMin(string key, long count)
+        public static RedisArray.WeakPairs<string, double> ZPopMin(string key, long count)
         {
             return new RedisArray.WeakPairs<string, double>("ZPOPMIN", key, count);
         }
-		public static RedisArray.StrongPairs<byte[], double> ZPopMinBytes(string key, long count)
+        public static RedisArray.StrongPairs<byte[], double> ZPopMinBytes(string key, long count)
         {
             return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZPOPMIN", key, count);
         }
@@ -721,7 +723,7 @@ namespace CSRedis
                 : new[] { key, start.ToString(), stop.ToString() };
             return new RedisArray.Strings("ZRANGE", args);
         }
-		public static RedisArray.Bytes ZRangeBytes(string key, long start, long stop, bool withScores = false)
+        public static RedisArray.Bytes ZRangeBytes(string key, long start, long stop, bool withScores = false)
         {
             string[] args = withScores
                 ? new[] { key, start.ToString(), stop.ToString(), "WITHSCORES" }
@@ -732,7 +734,7 @@ namespace CSRedis
         {
             return new RedisArray.WeakPairs<string, double>("ZRANGE", key, start, stop, "WITHSCORES");
         }
-		public static RedisArray.StrongPairs<byte[], double> ZRangeBytesWithScores(string key, long start, long stop)
+        public static RedisArray.StrongPairs<byte[], double> ZRangeBytesWithScores(string key, long start, long stop)
         {
             return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZRANGE", key, start, stop, "WITHSCORES");
         }
@@ -742,7 +744,7 @@ namespace CSRedis
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRangeByScore(key, min_score, max_score, withScores, offset, count);
         }
-		public static RedisArray.Bytes ZRangeBytesByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRangeBytesByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -754,14 +756,15 @@ namespace CSRedis
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRangeByScoreWithScores(key, min_score, max_score, offset, count);
         }
-		public static RedisArray.StrongPairs<byte[], double> ZRangeBytesByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null) {
-			string min_score = RedisArgs.GetScore(min, exclusiveMin);
-			string max_score = RedisArgs.GetScore(max, exclusiveMax);
-			return ZRangeBytesByScoreWithScores(key, min_score, max_score, offset, count);
-		}
-		public static RedisArray.Strings ZRangeByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], double> ZRangeBytesByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, min, max};
+            string min_score = RedisArgs.GetScore(min, exclusiveMin);
+            string max_score = RedisArgs.GetScore(max, exclusiveMax);
+            return ZRangeBytesByScoreWithScores(key, min_score, max_score, offset, count);
+        }
+        public static RedisArray.Strings ZRangeByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null)
+        {
+            object[] args = new[] { key, min, max };
             if (withScores)
                 args = RedisArgs.Concat(args, new[] { "WITHSCORES" });
             if (offset.HasValue && count.HasValue)
@@ -769,9 +772,9 @@ namespace CSRedis
 
             return new RedisArray.Strings("ZRANGEBYSCORE", args);
         }
-		public static RedisArray.Bytes ZRangeBytesByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRangeBytesByScore(string key, string min, string max, bool withScores = false, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, min, max};
+            object[] args = new[] { key, min, max };
             if (withScores)
                 args = RedisArgs.Concat(args, new[] { "WITHSCORES" });
             if (offset.HasValue && count.HasValue)
@@ -779,42 +782,43 @@ namespace CSRedis
 
             return new RedisArray.Bytes("ZRANGEBYSCORE", args);
         }
-        public static RedisArray.WeakPairs<string, double> ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null) 
+        public static RedisArray.WeakPairs<string, double> ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, min, max, "WITHSCORES" };
+            object[] args = new[] { key, min, max, "WITHSCORES" };
             if (offset.HasValue && count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
 
             return new RedisArray.WeakPairs<string, double>("ZRANGEBYSCORE", args);
         }
-		public static RedisArray.StrongPairs<byte[], double> ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null) {
-			object[] args = new[] { key, min, max, "WITHSCORES" };
-			if (offset.HasValue && count.HasValue)
-				args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
+        public static RedisArray.StrongPairs<byte[], double> ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
+        {
+            object[] args = new[] { key, min, max, "WITHSCORES" };
+            if (offset.HasValue && count.HasValue)
+                args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
 
-			return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZRANGEBYSCORE", args);
-		}
-		public static RedisInt.Nullable ZRank(string key, object member) 
+            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZRANGEBYSCORE", args);
+        }
+        public static RedisInt.Nullable ZRank(string key, object member)
         {
             return new RedisInt.Nullable("ZRANK", key, member);
         }
-        public static RedisInt ZRem(string key, params object[] members) 
+        public static RedisInt ZRem(string key, params object[] members)
         {
-			object[] args = RedisArgs.Concat(new[] { key }, members);
+            object[] args = RedisArgs.Concat(new[] { key }, members);
             return new RedisInt("ZREM", args);
         }
         public static RedisInt ZRemRangeByRank(string key, long start, long stop)
         {
             return new RedisInt("ZREMRANGEBYRANK", key, start, stop);
         }
-        public static RedisInt ZRemRangeByScore(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false)  
+        public static RedisInt ZRemRangeByScore(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
 
             return ZRemRangeByScore(key, min_score, max_score);
         }
-		public static RedisInt ZRemRangeByScore(string key, string min, string max)  
+        public static RedisInt ZRemRangeByScore(string key, string min, string max)
         {
             return new RedisInt("ZREMRANGEBYSCORE", key, min, max);
         }
@@ -825,7 +829,7 @@ namespace CSRedis
                 : new[] { key, start.ToString(), stop.ToString() };
             return new RedisArray.Strings("ZREVRANGE", args);
         }
-		public static RedisArray.Bytes ZRevRangeBytes(string key, long start, long stop, bool withScores = false)
+        public static RedisArray.Bytes ZRevRangeBytes(string key, long start, long stop, bool withScores = false)
         {
             string[] args = withScores
                 ? new[] { key, start.ToString(), stop.ToString(), "WITHSCORES" }
@@ -836,7 +840,7 @@ namespace CSRedis
         {
             return new RedisArray.WeakPairs<string, double>("ZREVRANGE", key, start.ToString(), stop.ToString(), "WITHSCORES");
         }
-		public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesWithScores(string key, long start, long stop)
+        public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesWithScores(string key, long start, long stop)
         {
             return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZREVRANGE", key, start.ToString(), stop.ToString(), "WITHSCORES");
         }
@@ -846,7 +850,7 @@ namespace CSRedis
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRevRangeByScore(key, max_score, min_score, withScores, offset, count);
         }
-		public static RedisArray.Bytes ZRevRangeBytesByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRevRangeBytesByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -854,7 +858,7 @@ namespace CSRedis
         }
         public static RedisArray.Strings ZRevRangeByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, max, min };
+            object[] args = new[] { key, max, min };
             if (withScores)
                 args = RedisArgs.Concat(args, new[] { "WITHSCORES" });
             if (count.HasValue)
@@ -862,9 +866,9 @@ namespace CSRedis
 
             return new RedisArray.Strings("ZREVRANGEBYSCORE", args);
         }
-		public static RedisArray.Bytes ZRevRangeBytesByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRevRangeBytesByScore(string key, string max, string min, bool withScores = false, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, max, min };
+            object[] args = new[] { key, max, min };
             if (withScores)
                 args = RedisArgs.Concat(args, new[] { "WITHSCORES" });
             if (count.HasValue)
@@ -878,7 +882,7 @@ namespace CSRedis
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRevRangeByScoreWithScores(key, max_score, min_score, offset, count);
         }
-		public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -886,15 +890,15 @@ namespace CSRedis
         }
         public static RedisArray.WeakPairs<string, double> ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, max, min, "WITHSCORES" };
+            object[] args = new[] { key, max, min, "WITHSCORES" };
             if (count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", (offset ?? 0).ToString(), count.Value.ToString() });
 
             return new RedisArray.WeakPairs<string, double>("ZREVRANGEBYSCORE", args);
         }
-		public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
         {
-			object[] args = new[] { key, max, min, "WITHSCORES" };
+            object[] args = new[] { key, max, min, "WITHSCORES" };
             if (count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", (offset ?? 0).ToString(), count.Value.ToString() });
 
@@ -938,24 +942,25 @@ namespace CSRedis
                 args.AddRange(new object[] { "COUNT", count });
             return new RedisScanCommand<Tuple<string, double>>(
                 new RedisArray.WeakPairs<string, double>("ZSCAN", args.ToArray()));
-                    //<Tuple<string, double>>(
-                    //new RedisTuple.Generic<string, double>.Bulk("ZSCAN", args.ToArray())));
+            //<Tuple<string, double>>(
+            //new RedisTuple.Generic<string, double>.Bulk("ZSCAN", args.ToArray())));
         }
-		public static RedisScanCommand<Tuple<byte[], double>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null) {
-			var args = new List<object>();
-			args.Add(key);
-			args.Add(cursor);
-			if (pattern != null)
-				args.AddRange(new[] { "MATCH", pattern });
-			if (count != null)
-				args.AddRange(new object[] { "COUNT", count });
-			return new RedisScanCommand<Tuple<byte[], double>>(
-				new RedisArray.StrongPairs<byte[], double>(
-				new RedisBytes(null), new RedisFloat(null), "ZSCAN", args.ToArray()));
-			//<Tuple<string, double>>(
-			//new RedisTuple.Generic<string, double>.Bulk("ZSCAN", args.ToArray())));
-		}
-		public static RedisArray.Strings ZRangeByLex(string key, string min, string max, long? offset = null, long? count = null)
+        public static RedisScanCommand<Tuple<byte[], double>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        {
+            var args = new List<object>();
+            args.Add(key);
+            args.Add(cursor);
+            if (pattern != null)
+                args.AddRange(new[] { "MATCH", pattern });
+            if (count != null)
+                args.AddRange(new object[] { "COUNT", count });
+            return new RedisScanCommand<Tuple<byte[], double>>(
+                new RedisArray.StrongPairs<byte[], double>(
+                new RedisBytes(null), new RedisFloat(null), "ZSCAN", args.ToArray()));
+            //<Tuple<string, double>>(
+            //new RedisTuple.Generic<string, double>.Bulk("ZSCAN", args.ToArray())));
+        }
+        public static RedisArray.Strings ZRangeByLex(string key, string min, string max, long? offset = null, long? count = null)
         {
             List<object> args = new List<object>();
             args.Add(key);
@@ -965,7 +970,7 @@ namespace CSRedis
                 args.AddRange(new object[] { "LIMIT", offset, count });
             return new RedisArray.Strings("ZRANGEBYLEX", args.ToArray());
         }
-		public static RedisArray.Bytes ZRangeBytesByLex(string key, string min, string max, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRangeBytesByLex(string key, string min, string max, long? offset = null, long? count = null)
         {
             List<object> args = new List<object>();
             args.Add(key);
@@ -1004,7 +1009,7 @@ namespace CSRedis
         }
         public static RedisArray.StrongPairs<string, long> PubSubNumSub(params string[] channels)
         {
-			object[] args = RedisArgs.Concat("NUMSUB", channels);
+            object[] args = RedisArgs.Concat("NUMSUB", channels);
             return new RedisArray.StrongPairs<string, long>(
                 new RedisString(null), new RedisInt(null), "PUBSUB", args);
         }
@@ -1029,12 +1034,12 @@ namespace CSRedis
         #region Scripting
         public static RedisObject.Strings Eval(string script, string[] keys, params object[] arguments)
         {
-			object[] args = RedisArgs.Concat(new object[] { script, keys.Length }, keys, arguments);
+            object[] args = RedisArgs.Concat(new object[] { script, keys.Length }, keys, arguments);
             return new RedisObject.Strings("EVAL", args);
         }
         public static RedisObject.Strings EvalSHA(string sha1, string[] keys, params object[] arguments)
         {
-			object[] args = RedisArgs.Concat(new object[] { sha1, keys.Length }, keys, arguments);
+            object[] args = RedisArgs.Concat(new object[] { sha1, keys.Length }, keys, arguments);
             return new RedisObject.Strings("EVALSHA", args);
         }
         public static RedisArray.Generic<bool> ScriptExists(params string[] sha1s)
@@ -1069,7 +1074,7 @@ namespace CSRedis
         }
         public static RedisInt BitOp(RedisBitOp operation, string destKey, params string[] keys)
         {
-			object[] args = RedisArgs.Concat(new[] { operation.ToString().ToUpperInvariant(), destKey }, keys);
+            object[] args = RedisArgs.Concat(new[] { operation.ToString().ToUpperInvariant(), destKey }, keys);
             return new RedisInt("BITOP", args);
         }
         public static RedisInt BitPos(string key, bool bit, long? start = null, long? end = null)
@@ -1100,18 +1105,19 @@ namespace CSRedis
         {
             return new RedisString("GET", key);
         }
-		public static RedisBytes GetBytes (string key) {
-			return new RedisBytes("GET", key);
-		}
-		public static RedisBool GetBit(string key, uint offset)
+        public static RedisBytes GetBytes(string key)
+        {
+            return new RedisBytes("GET", key);
+        }
+        public static RedisBool GetBit(string key, uint offset)
         {
             return new RedisBool("GETBIT", key, offset);
         }
-        public static RedisString GetRange(string key, long start, long end) 
+        public static RedisString GetRange(string key, long start, long end)
         {
             return new RedisString("GETRANGE", key, start, end);
         }
-		public static RedisBytes GetRangeBytes(string key, long start, long end) 
+        public static RedisBytes GetRangeBytes(string key, long start, long end)
         {
             return new RedisBytes("GETRANGE", key, start, end);
         }
@@ -1119,11 +1125,11 @@ namespace CSRedis
         {
             return new RedisString("GETSET", key, value);
         }
-		public static RedisBytes GetSetBytes(string key, object value)
-		{
-			return new RedisBytes("GETSET", key, value);
-		}
-		public static RedisInt Incr(string key)
+        public static RedisBytes GetSetBytes(string key, object value)
+        {
+            return new RedisBytes("GETSET", key, value);
+        }
+        public static RedisInt Incr(string key)
         {
             return new RedisInt("INCR", key);
         }
@@ -1139,7 +1145,7 @@ namespace CSRedis
         {
             return new RedisArray.Strings("MGET", keys);
         }
-		public static RedisArray.Bytes MGetBytes(params string[] keys)
+        public static RedisArray.Bytes MGetBytes(params string[] keys)
         {
             return new RedisArray.Bytes("MGET", keys);
         }
@@ -1169,7 +1175,7 @@ namespace CSRedis
         {
             return new RedisStatus("SET", key, value);
         }
-        public static RedisStatus.Nullable Set(string key, object value, TimeSpan expiration, RedisExistence? condition = null) 
+        public static RedisStatus.Nullable Set(string key, object value, TimeSpan expiration, RedisExistence? condition = null)
         {
             return Set(key, value, (long)expiration.TotalMilliseconds, condition);
         }
@@ -1384,7 +1390,7 @@ namespace CSRedis
         #region HyperLogLog
         public static RedisBool PfAdd(string key, params object[] elements)
         {
-			object[] args = RedisArgs.Concat(key, elements);
+            object[] args = RedisArgs.Concat(key, elements);
             return new RedisBool("PFADD", args);
         }
         public static RedisInt PfCount(params string[] keys)
@@ -1393,148 +1399,164 @@ namespace CSRedis
         }
         public static RedisStatus PfMerge(string destKey, params string[] sourceKeys)
         {
-			object[] args = RedisArgs.Concat(destKey, sourceKeys);
+            object[] args = RedisArgs.Concat(destKey, sourceKeys);
             return new RedisStatus("PFMERGE", args);
         }
-		#endregion
+        #endregion
 
-		#region Streams
-		public static RedisInt XAck(string key, string group, string id)
+        #region Streams
+        public static RedisInt XAck(string key, string group, string id)
         {
-			object[] args = RedisArgs.Concat(key, group, id);
+            object[] args = RedisArgs.Concat(key, group, id);
             return new RedisInt("XACK", args);
         }
-		public static RedisString XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues)
+        public static RedisString XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues)
         {
-			var maxLenArg = maxLen == 0 ? null : $"MAXLEN {(maxLen > 0 ? maxLen.ToString() : $"~ {Math.Abs(maxLen)}")}";
-			object[] args = RedisArgs.Concat(key, maxLenArg, id, fieldValues.Select(a => new[] { a.Item1, a.Item2 }).SelectMany(a => a).ToArray());
+            var maxLenArg = maxLen == 0 ? null : $"MAXLEN {(maxLen > 0 ? maxLen.ToString() : $"~ {Math.Abs(maxLen)}")}";
+            object[] args = RedisArgs.Concat(key, maxLenArg, id, fieldValues.Select(a => new[] { a.Item1, a.Item2 }).SelectMany(a => a).ToArray());
             return new RedisString("XADD", args);
         }
 
-		public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XClaim(string key, string group, string consumer, long minIdleTime, params string[] id) {
-			return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-				new RedisString(null),
-				new RedisArray.Generic<Tuple<string, string>>(
-					new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-				),
-				"XCLAIM", key, group, consumer, minIdleTime, id
-				);
-		}
-		public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) {
-			return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-				new RedisString(null),
-				new RedisArray.Generic<Tuple<string, string>>(
-					new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-				),
-				"XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID"
-				);
-		}
-		public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, params string[] id) {
-			return new RedisArray.Strings("XCLAIM", key, group, consumer, minIdleTime, id);
-		}
-		public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) {
-			return new RedisArray.Strings("XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID");
-		}
+        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XClaim(string key, string group, string consumer, long minIdleTime, params string[] id)
+        {
+            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
+                new RedisString(null),
+                new RedisArray.Generic<Tuple<string, string>>(
+                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
+                ),
+                "XCLAIM", key, group, consumer, minIdleTime, id
+                );
+        }
+        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force)
+        {
+            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
+                new RedisString(null),
+                new RedisArray.Generic<Tuple<string, string>>(
+                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
+                ),
+                "XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID"
+                );
+        }
+        public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, params string[] id)
+        {
+            return new RedisArray.Strings("XCLAIM", key, group, consumer, minIdleTime, id);
+        }
+        public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force)
+        {
+            return new RedisArray.Strings("XCLAIM", key, group, consumer, minIdleTime, id, "IDLE", idle, "RETRYCOUNT", retryCount, force ? "FORCE" : "", "JUSTID");
+        }
 
-		public static RedisInt XDel(string key, params string[] id) {
-			object[] args = RedisArgs.Concat(key, id);
+        public static RedisInt XDel(string key, params string[] id)
+        {
+            object[] args = RedisArgs.Concat(key, id);
             return new RedisInt("XDEL", args);
-		}
+        }
 
-		public static class XGroup {
-			public static RedisString Create(string key, string group, string id = "$") {
-				return new RedisString("XGROUP", "CREATE", key, group, id);
-			}
-			public static RedisString SetId(string key, string group, string id = "$") {
-				return new RedisString("XGROUP", "SETID", key, group, id);
-			}
-			public static RedisBool Destroy(string key, string group) {
-				return new RedisBool("XGROUP", "DESTROY", key, group);
-			}
-			public static RedisBool DelConsumer(string key, string group, string consumer) {
-				return new RedisBool("XGROUP", "DELCONSUMER", key, group, consumer);
-			}
-		}
+        public static class XGroup
+        {
+            public static RedisString Create(string key, string group, string id = "$")
+            {
+                return new RedisString("XGROUP", "CREATE", key, group, id);
+            }
+            public static RedisString SetId(string key, string group, string id = "$")
+            {
+                return new RedisString("XGROUP", "SETID", key, group, id);
+            }
+            public static RedisBool Destroy(string key, string group)
+            {
+                return new RedisBool("XGROUP", "DESTROY", key, group);
+            }
+            public static RedisBool DelConsumer(string key, string group, string consumer)
+            {
+                return new RedisBool("XGROUP", "DELCONSUMER", key, group, consumer);
+            }
+        }
 
-		//XINFO
+        //XINFO
 
-		public static RedisInt XLen(string key) {
-			return new RedisInt("XLEN", key);
-		}
-		
-		//XPENDING
+        public static RedisInt XLen(string key)
+        {
+            return new RedisInt("XLEN", key);
+        }
 
-		public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XRange(string key, string start, string end, long count = 1) {
-			return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-				new RedisString(null),
-				new RedisArray.Generic<Tuple<string, string>>(
-					new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-				),
-				"XRANGE", key, start, end, count
-				);
-		}
+        //XPENDING
 
-		public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XRevRange(string key, string end, string start, long count = 1) {
-			return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-				new RedisString(null),
-				new RedisArray.Generic<Tuple<string, string>>(
-					new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-				),
-				"XREVRANGE", key, start, end, count
-				);
-		}
+        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XRange(string key, string start, string end, long count = 1)
+        {
+            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
+                new RedisString(null),
+                new RedisArray.Generic<Tuple<string, string>>(
+                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
+                ),
+                "XRANGE", key, start, end, count
+                );
+        }
 
-		public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XRead(long count, long block, params (string key, string id)[] streams) {
-			var args = new List<object>();
-			if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
-			if (block > 0) args.AddRange(new[] { "BLOCK", block.ToString() });
-			args.AddRange(streams.Select(a => a.key));
-			args.AddRange(streams.Select(a => a.id));
-			return new RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]>(
-				new RedisString(null),
-				new RedisArray.Generic<Tuple<string, Tuple<string, string>[]>>(
-					new RedisTuple.Generic<string, Tuple<string, string>[]>.Repeating(
-						new RedisString(null), 
-						new RedisArray.Generic<Tuple<string, string>>(
-							new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-						),
-						null
-					)
-				),
-				"XREAD", args.ToArray()
-				);
-		}
+        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XRevRange(string key, string end, string start, long count = 1)
+        {
+            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
+                new RedisString(null),
+                new RedisArray.Generic<Tuple<string, string>>(
+                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
+                ),
+                "XREVRANGE", key, start, end, count
+                );
+        }
 
-		public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams) {
-			var args = new List<object>();
-			args.AddRange(new[] { group, consumer });
-			if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
-			if (block > 0) args.AddRange(new[] { "BLOCK", block.ToString() });
-			args.AddRange(streams.Select(a => a.key));
-			args.AddRange(streams.Select(a => a.id));
-			return new RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]>(
-				new RedisString(null),
-				new RedisArray.Generic<Tuple<string, Tuple<string, string>[]>>(
-					new RedisTuple.Generic<string, Tuple<string, string>[]>.Repeating(
-						new RedisString(null), 
-						new RedisArray.Generic<Tuple<string, string>>(
-							new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-						),
-						null
-					)
-				),
-				"XREADGROUP", args.ToArray()
-				);
-		}
+        public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XRead(long count, long block, params (string key, string id)[] streams)
+        {
+            var args = new List<object>();
+            if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
+            if (block > 0) args.AddRange(new[] { "BLOCK", block.ToString() });
+            args.AddRange(streams.Select(a => a.key));
+            args.AddRange(streams.Select(a => a.id));
+            return new RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]>(
+                new RedisString(null),
+                new RedisArray.Generic<Tuple<string, Tuple<string, string>[]>>(
+                    new RedisTuple.Generic<string, Tuple<string, string>[]>.Repeating(
+                        new RedisString(null),
+                        new RedisArray.Generic<Tuple<string, string>>(
+                            new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
+                        ),
+                        null
+                    )
+                ),
+                "XREAD", args.ToArray()
+                );
+        }
 
-		public static RedisInt XTrim(string key, long maxLen) {
-			var maxLenArg = maxLen > 0 ? maxLen.ToString() : $"~ {Math.Abs(maxLen)}";
-			return new RedisInt("XTRIM", key, "MAXLEN", maxLenArg);
-		}
-		
-		#endregion
+        public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams)
+        {
+            var args = new List<object>();
+            args.AddRange(new[] { group, consumer });
+            if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
+            if (block > 0) args.AddRange(new[] { "BLOCK", block.ToString() });
+            args.AddRange(streams.Select(a => a.key));
+            args.AddRange(streams.Select(a => a.id));
+            return new RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]>(
+                new RedisString(null),
+                new RedisArray.Generic<Tuple<string, Tuple<string, string>[]>>(
+                    new RedisTuple.Generic<string, Tuple<string, string>[]>.Repeating(
+                        new RedisString(null),
+                        new RedisArray.Generic<Tuple<string, string>>(
+                            new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
+                        ),
+                        null
+                    )
+                ),
+                "XREADGROUP", args.ToArray()
+                );
+        }
 
-		public static class Sentinel
+        public static RedisInt XTrim(string key, long maxLen)
+        {
+            var maxLenArg = maxLen > 0 ? maxLen.ToString() : $"~ {Math.Abs(maxLen)}";
+            return new RedisInt("XTRIM", key, "MAXLEN", maxLenArg);
+        }
+
+        #endregion
+
+        public static class Sentinel
         {
             public static RedisArray.Generic<RedisSentinelInfo> Sentinels(string masterName)
             {
@@ -1616,7 +1638,7 @@ namespace CSRedis
     abstract class RedisCommand<T> : RedisCommand
     {
         protected RedisCommand(string command, params object[] args)
-            : base (command,args)
+            : base(command, args)
         { }
 
         public abstract T Parse(RedisReader reader);

@@ -11,26 +11,27 @@ using System.Net.Sockets;
 
 namespace CSRedis
 {
-	/// <summary>
-	/// Represents a client connection to a Redis server instance
-	/// </summary>
-	public partial class RedisClient : IRedisClientSync, IRedisClientAsync {
-		const int DefaultPort = 6379;
-		const bool DefaultSSL = false;
-		const int DefaultConcurrency = 1000;
-		const int DefaultBufferSize = 10240;
-		readonly RedisConnector _connector;
-		readonly RedisTransaction _transaction;
-		readonly SubscriptionListener _subscription;
-		readonly MonitorListener _monitor;
-		bool _streaming;
+    /// <summary>
+    /// Represents a client connection to a Redis server instance
+    /// </summary>
+    public partial class RedisClient : IRedisClientSync, IRedisClientAsync
+    {
+        const int DefaultPort = 6379;
+        const bool DefaultSSL = false;
+        const int DefaultConcurrency = 1000;
+        const int DefaultBufferSize = 10240;
+        readonly RedisConnector _connector;
+        readonly RedisTransaction _transaction;
+        readonly SubscriptionListener _subscription;
+        readonly MonitorListener _monitor;
+        bool _streaming;
 
-		internal Socket Socket => (_connector?._redisSocket as RedisSocket)?._socket;
+        internal Socket Socket => (_connector?._redisSocket as RedisSocket)?._socket;
 
-		/// <summary>
-		/// Occurs when a subscription message is received
-		/// </summary>
-		public event EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived;
+        /// <summary>
+        /// Occurs when a subscription message is received
+        /// </summary>
+        public event EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived;
 
         /// <summary>
         /// Occurs when a subscription channel is added or removed
@@ -72,7 +73,7 @@ namespace CSRedis
         /// Get or set the string encoding used to communicate with the server
         /// </summary>
         public Encoding Encoding
-        { 
+        {
             get { return _connector.Encoding; }
             set { _connector.Encoding = value; }
         }
@@ -112,7 +113,7 @@ namespace CSRedis
             get { return _connector.ReconnectWait; }
             set { _connector.ReconnectWait = value; }
         }
-        
+
 
         /// <summary>
         /// Create a new RedisClient using default port and encoding
@@ -188,7 +189,7 @@ namespace CSRedis
         /// <param name="asyncConcurrency">Max concurrent threads (default 1000)</param>
         /// <param name="asyncBufferSize">Async thread buffer size (default 10240 bytes)</param>
         public RedisClient(EndPoint endpoint, int asyncConcurrency, int asyncBufferSize)
-            : this (endpoint, DefaultSSL, asyncConcurrency, asyncBufferSize)
+            : this(endpoint, DefaultSSL, asyncConcurrency, asyncBufferSize)
         { }
 
         /// <summary>
@@ -208,9 +209,9 @@ namespace CSRedis
 
         internal RedisClient(IRedisSocket socket, EndPoint endpoint, int asyncConcurrency, int asyncBufferSize)
         {
-			// use invariant culture - we have to set it explicitly for every thread we create to 
-			// prevent any floating-point problems (mostly because of number formats in non en-US cultures).
-			//CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture; 这行会影响 string.Compare 结果
+            // use invariant culture - we have to set it explicitly for every thread we create to 
+            // prevent any floating-point problems (mostly because of number formats in non en-US cultures).
+            //CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture; 这行会影响 string.Compare 结果
 
             _connector = new RedisConnector(endpoint, socket, asyncConcurrency, asyncBufferSize);
             _transaction = new RedisTransaction(_connector);
@@ -252,7 +253,7 @@ namespace CSRedis
             else
                 return _connector.EndPipe();
         }
-        
+
         /// <summary>
         /// Stream a BULK reply from the server using default buffer size
         /// </summary>

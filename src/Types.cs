@@ -168,12 +168,12 @@ namespace CSRedis
     /// <summary>
     /// Redis existence specification for SET command
     /// </summary>
-    public enum RedisExistence 
-    { 
+    public enum RedisExistence
+    {
         /// <summary>
         /// Only set the key if it does not already exist
         /// </summary>
-        Nx, 
+        Nx,
 
         /// <summary>
         /// Only set the key if it already exists
@@ -187,12 +187,12 @@ namespace CSRedis
     public abstract class RedisRole
     {
         readonly string _roleName;
-        
+
         /// <summary>
         /// Get the role type
         /// </summary>
         public string RoleName { get { return _roleName; } }
-        
+
         internal RedisRole(string roleName)
         {
             _roleName = roleName;
@@ -618,36 +618,39 @@ namespace CSRedis
         public RedisSentinelInfo(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-			SDownTime = this.GetSerializationItemValue<long>(info, "s-down-time");
+            SDownTime = this.GetSerializationItemValue<long>(info, "s-down-time");
             LastHelloMessage = this.GetSerializationItemValue<long>(info, "last-hello-message");
             VotedLeader = this.GetSerializationItemValue<string>(info, "voted-leader");
-			VotedLeaderEpoch = this.GetSerializationItemValue<long>(info, "voted-leader-epoch");
+            VotedLeaderEpoch = this.GetSerializationItemValue<long>(info, "voted-leader-epoch");
 
-			if (SDownTime == 0) SDownTime = -1;
-			if (LastHelloMessage == 0) LastHelloMessage = -1;
-			if (VotedLeaderEpoch == 0) VotedLeaderEpoch = -1;
-		}
+            if (SDownTime == 0) SDownTime = -1;
+            if (LastHelloMessage == 0) LastHelloMessage = -1;
+            if (VotedLeaderEpoch == 0) VotedLeaderEpoch = -1;
+        }
 
-		/// <summary>
-		/// Get a value from an instance of the SerializationInfo
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="info"></param>
-		/// <param name="key"></param>
-		/// <returns></returns>
-		private T GetSerializationItemValue<T>(SerializationInfo info, string key) {
-			foreach (SerializationEntry entry in info) {
-				if (entry.Name == key) {
-					return (T)Convert.ChangeType(entry.Value, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
-				}
-			}
-			return default(T);
-		}
+        /// <summary>
+        /// Get a value from an instance of the SerializationInfo
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="info"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        private T GetSerializationItemValue<T>(SerializationInfo info, string key)
+        {
+            foreach (SerializationEntry entry in info)
+            {
+                if (entry.Name == key)
+                {
+                    return (T)Convert.ChangeType(entry.Value, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
+            return default(T);
+        }
 
-		/// <summary>
-		/// Get or set the subjective down time
-		/// </summary>
-		public long SDownTime { get; set; }
+        /// <summary>
+        /// Get or set the subjective down time
+        /// </summary>
+        public long SDownTime { get; set; }
 
         /// <summary>
         /// Get or set milliseconds(?) since last hello message from current Sentinel node

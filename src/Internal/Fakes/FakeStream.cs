@@ -42,7 +42,7 @@ namespace CSRedis.Internal.Fakes
             }
         }
 
-        
+
 
         // todo: use Monitor.Wait() to simulate blocking thread on Read()
     }

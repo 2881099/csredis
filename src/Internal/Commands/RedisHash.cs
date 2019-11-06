@@ -48,7 +48,7 @@ namespace CSRedis.Internal.Commands
             }
         }
     }
-	class RedisHashBytes : RedisCommand<Dictionary<string, byte[]>>
+    class RedisHashBytes : RedisCommand<Dictionary<string, byte[]>>
     {
         public RedisHashBytes(string command, params object[] args)
             : base(command, args)

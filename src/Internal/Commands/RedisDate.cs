@@ -38,7 +38,7 @@ namespace CSRedis.Internal.Commands
             {
                 return RedisDate.FromTimestamp(timestamp) + FromMicroseconds(microseconds);
             }
-            
+
 
             public static TimeSpan FromMicroseconds(long microseconds)
             {

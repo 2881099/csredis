@@ -17,8 +17,8 @@ namespace CSRedis
     {
         readonly EndPoint _endPoint;
         readonly SocketPool _pool;
-		//readonly string pass;
-		//readonly int database;
+        //readonly string pass;
+        //readonly int database;
 
         /// <summary>
         /// Create a new connection pool
@@ -35,7 +35,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="endPoint">Redis server</param>
         /// <param name="max">Maximum simultaneous connections</param>
-        
+
         public RedisConnectionPool(EndPoint endPoint, int max)
         {
             _pool = new SocketPool(endPoint, max);
@@ -50,12 +50,12 @@ namespace CSRedis
         /// <returns>RedisClient instance from pool</returns>
         public RedisClient GetClient(int asyncConcurrency, int asyncBufferSize)
         {
-			var rc = new RedisClient(new RedisPooledSocket(_pool), _endPoint, asyncConcurrency, asyncBufferSize);
-			//rc.Connected += (s, o) => {
-			//	if (database > 0) rc.Select(database);
-			//	if (!string.IsNullOrEmpty(pass)) rc.Auth(pass);
-			//};
-			return rc;
+            var rc = new RedisClient(new RedisPooledSocket(_pool), _endPoint, asyncConcurrency, asyncBufferSize);
+            //rc.Connected += (s, o) => {
+            //	if (database > 0) rc.Select(database);
+            //	if (!string.IsNullOrEmpty(pass)) rc.Auth(pass);
+            //};
+            return rc;
         }
 
         /// <summary>

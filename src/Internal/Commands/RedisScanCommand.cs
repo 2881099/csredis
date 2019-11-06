@@ -7,7 +7,7 @@ using System.Text;
 
 namespace CSRedis.Internal.Commands
 {
-    class RedisScanCommand<T>: RedisCommand<RedisScan<T>>
+    class RedisScanCommand<T> : RedisCommand<RedisScan<T>>
     {
         RedisCommand<T[]> _command;
 
