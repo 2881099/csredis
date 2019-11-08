@@ -1563,9 +1563,6 @@ namespace CSRedis
 
                         if (IsUnsubscribed == false)
                         {
-                            subscr.conn.ResetValue();
-                            subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
-
                             if (isKeepliveReSubscribe == true)
                                 throw new Exception("每60秒检查发现订阅频道丢失");
 
@@ -1587,6 +1584,9 @@ namespace CSRedis
                         Console.ForegroundColor = forecolor;
                         Console.WriteLine();
                         Thread.CurrentThread.Join(1000 * 3);
+
+                        subscr.conn.ResetValue();
+                        subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
                     }
                 }
                 subscr.conn.Value.SubscriptionReceived -= SubscriptionReceived;
@@ -1765,9 +1765,6 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 
                         if (IsPUnsubscribed == false)
                         {
-                            conn.ResetValue();
-                            conn.Value.SubscriptionReceived += SubscriptionReceived;
-
                             //服务器断开连接 IsConnected == false https://github.com/2881099/csredis/issues/37
                             if (conn.Value.IsConnected == false)
                                 throw new Exception("redis-server 连接已断开");
@@ -1786,6 +1783,9 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                         Console.ForegroundColor = forecolor;
                         Console.WriteLine();
                         Thread.CurrentThread.Join(1000 * 3);
+
+                        conn.ResetValue();
+                        conn.Value.SubscriptionReceived += SubscriptionReceived;
                     }
                 }
             }
