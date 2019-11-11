@@ -14,6 +14,10 @@ namespace CSRedis
         public RedisException(string message)
             : base(message)
         { }
+
+        public RedisException(string message, Exception inner)
+            : base(message, inner)
+        { }
     }
 
     /// <summary>

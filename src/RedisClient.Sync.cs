@@ -2674,7 +2674,7 @@ namespace CSRedis
 
         public long XDel(string key, params string[] id) => Write(RedisCommands.XDel(key, id));
 
-        public string XGroupCreate(string key, string group, string id = "$") => Write(RedisCommands.XGroup.Create(key, group, id));
+        public string XGroupCreate(string key, string group, string id = "$", bool MkStream = false) => Write(RedisCommands.XGroup.Create(key, group, id, MkStream));
         public string XGroupSetId(string key, string group, string id = "$") => Write(RedisCommands.XGroup.SetId(key, group, id));
         public bool XGroupDestroy(string key, string group) => Write(RedisCommands.XGroup.Destroy(key, group));
         public bool XGroupDelConsumer(string key, string group, string consumer) => Write(RedisCommands.XGroup.DelConsumer(key, group, consumer));

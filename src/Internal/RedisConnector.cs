@@ -97,6 +97,10 @@ namespace CSRedis.Internal
                 Reconnect();
                 return Call(command);
             }
+            catch (RedisException ex)
+            {
+                throw new RedisException($"{ex.Message}\r\nCommand: {command}", ex);
+            }
         }
 
         public Task<T> CallAsync<T>(RedisCommand<T> command)

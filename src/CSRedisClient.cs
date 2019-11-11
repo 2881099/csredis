@@ -4082,8 +4082,9 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <param name="group">组名</param>
         /// <param name="id">特殊的ID ‘$’（这表示：流中最后一项的ID）。在这种情况下，从该消费者组获取数据的消费者只能看到到达流的新元素。但如果你希望消费者组获取整个流的历史记录，使用0作为消费者组的开始ID。</param>
+        /// <param name="MkStream">create the empty stream if it does not exist.</param>
         /// <returns>如果指定的消费者组已经存在，则该命令将返回-BUSYGROUP错误。</returns>
-        public string XGroupCreate(string key, string group, string id = "$") => ExecuteScalar(key, (c, k) => c.Value.XGroupCreate(k, group, id));
+        public string XGroupCreate(string key, string group, string id = "$", bool MkStream = false) => ExecuteScalar(key, (c, k) => c.Value.XGroupCreate(k, group, id, MkStream));
         /// <summary>
         /// 设置要传递的下一条消息。 通常情况下，在消费者创建时设置下一个ID，作为XGROUP CREATE的最后一个参数。 但是使用这种形式，可以在以后修改下一个ID，而无需再次删除和创建使用者组。
         /// </summary>
