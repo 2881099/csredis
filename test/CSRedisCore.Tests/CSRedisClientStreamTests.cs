@@ -136,6 +136,9 @@ namespace CSRedisCore.Tests {
             var id1 = rds.XAdd("testXRead01", ("f1", "v1"), ("f2", "v2"));
             var id2 = rds.XAdd("testXRead02", ("f1", "v1"), ("f2", "v2"));
             rds.XRead(10, 1000, ("testKey01", id1), ("testKey02", id2));
+
+            rds.XAdd("mt2", ("aaa", "111"), ("bbb", "222"));
+            var ttt1 = rds.XRead(2, 1000, ("mt2", "0-0"), ("mystream", "0-0"));
         }
 
         [Fact]

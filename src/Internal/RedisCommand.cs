@@ -1522,7 +1522,7 @@ namespace CSRedis
             return new RedisXRangeCommand("XREVRANGE", args.ToArray());
         }
 
-        public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XRead(long count, long block, params (string key, string id)[] streams)
+        public static RedisXReadCommand XRead(long count, long block, params (string key, string id)[] streams)
         {
             var args = new List<object>();
             if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
@@ -1530,22 +1530,10 @@ namespace CSRedis
             args.Add("STREAMS");
             args.AddRange(streams.Select(a => (object)a.key));
             args.AddRange(streams.Select(a => (object)a.id));
-            return new RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]>(
-                new RedisString(null),
-                new RedisArray.Generic<Tuple<string, Tuple<string, string>[]>>(
-                    new RedisTuple.Generic<string, Tuple<string, string>[]>.Repeating(
-                        new RedisString(null),
-                        new RedisArray.Generic<Tuple<string, string>>(
-                            new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-                        ),
-                        null
-                    )
-                ),
-                "XREAD", args.ToArray()
-                );
+            return new RedisXReadCommand("XREAD", args.ToArray());
         }
 
-        public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams)
+        public static RedisXReadCommand XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams)
         {
             var args = new List<object>();
             args.AddRange(new[] { "GROUP", group, consumer });
@@ -1554,19 +1542,7 @@ namespace CSRedis
             args.Add("STREAMS");
             args.AddRange(streams.Select(a => (object)a.key));
             args.AddRange(streams.Select(a => (object)a.id));
-            return new RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]>(
-                new RedisString(null),
-                new RedisArray.Generic<Tuple<string, Tuple<string, string>[]>>(
-                    new RedisTuple.Generic<string, Tuple<string, string>[]>.Repeating(
-                        new RedisString(null),
-                        new RedisArray.Generic<Tuple<string, string>>(
-                            new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-                        ),
-                        null
-                    )
-                ),
-                "XREADGROUP", args.ToArray()
-                );
+            return new RedisXReadCommand("XREADGROUP", args.ToArray());
         }
 
         public static RedisInt XTrim(string key, long maxLen)

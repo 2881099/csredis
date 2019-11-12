@@ -4124,7 +4124,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="end">结束id，特殊：- 和 +</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (string id, string field, string value)[] XRange(string key, string start, string end, long count = 1) =>
+        public (string id, string[] items)[] XRange(string key, string start, string end, long count = 1) =>
             ExecuteScalar(key, (c, k) => c.Value.XRange(k, start, end, count));
         /// <summary>
         /// 与XRANGE完全相同，但显著的区别是以相反的顺序返回条目，并以相反的顺序获取开始-结束参数：在XREVRANGE中，你需要先指定结束ID，再指定开始ID，该命令就会从结束ID侧开始生成两个ID之间（或完全相同）的所有元素。
@@ -4134,7 +4134,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="start">开始id，特殊：- 和 +</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (string id, string field, string value)[] XRevRange(string key, string end, string start, long count = 1) =>
+        public (string id, string[] items)[] XRevRange(string key, string end, string start, long count = 1) =>
             ExecuteScalar(key, (c, k) => c.Value.XRevRange(k, end, start, count));
 
         /// <summary>
@@ -4144,7 +4144,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="block">阻塞选项，毫秒</param>
         /// <param name="streams">(key,id) 数组</param>
         /// <returns></returns>
-        public (string stream, (string id, (string field, string value)[])[])[] XRead(long count, long block, params (string key, string id)[] streams) =>
+        public (string key, (string id, string[] items)[] data)[] XRead(long count, long block, params (string key, string id)[] streams) =>
             NodesNotSupport(streams.Select(a => a.key).ToArray(), null, (c, k) => c.Value.XRead(count, block, streams.Select((a, i) => (k[i], a.id)).ToArray()));
         /// <summary>
         /// XREADGROUP命令是XREAD命令的特殊版本，支持消费者组。
@@ -4155,7 +4155,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="block">阻塞选项，毫秒</param>
         /// <param name="streams">(key,id) 数组</param>
         /// <returns></returns>
-        public (string stream, (string id, (string field, string value)[])[])[] XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams) =>
+        public (string key, (string id, string[] items)[] data)[] XReadGroup(string group, string consumer, long count, long block, params (string key, string id)[] streams) =>
             NodesNotSupport(streams.Select(a => a.key).ToArray(), null, (c, k) => c.Value.XReadGroup(group, consumer, count, block, streams.Select((a, i) => (k[i], a.id)).ToArray()));
 
         /// <summary>
