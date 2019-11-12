@@ -102,12 +102,32 @@ namespace CSRedisCore.Tests {
         public void XRange()
         {
             rds.XRange("textXRangeKey01", "-", "+", 1);
+
+            for (var i = 0; i < 10; i++)
+            { 
+                //if (i >= 5) 
+                // Thread.Sleep(TimeSpan.FromSeconds(1));
+                rds.XAdd("mystream", 5, "*", ($"k{i}", $"v{i}"));
+            }
+
+            var ttt1 = rds.XRange("mystream", "-", "+", 1);
+            var ttt2 = rds.XRange("mystream", "-", "+", 2);
         }
 
         [Fact]
         public void XRevRange()
         {
             rds.XRevRange("textXRangeKey01", "-", "+", 1);
+
+            for (var i = 0; i < 10; i++)
+            {
+                //if (i >= 5) 
+                // Thread.Sleep(TimeSpan.FromSeconds(1));
+                rds.XAdd("mystream", 5, "*", ($"k{i}", $"v{i}"));
+            }
+
+            var ttt1 = rds.XRevRange("mystream", "-", "+", 1);
+            var ttt2 = rds.XRevRange("mystream", "-", "+", 2);
         }
 
         [Fact]

@@ -1505,32 +1505,21 @@ namespace CSRedis
 
         //XPENDING
 
-        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XRange(string key, string start, string end, long count = 1)
+        public static RedisXRangeCommand XRange(string key, string start, string end, long count = 1)
         {
             var args = new List<object>();
             args.AddRange(new[] { key, start, end });
             if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
-            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-                new RedisString(null),
-                new RedisArray.Generic<Tuple<string, string>>(
-                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-                ),
-                "XRANGE", args.ToArray()
-                );
+
+            return new RedisXRangeCommand("XRANGE", args.ToArray());
         }
 
-        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XRevRange(string key, string end, string start, long count = 1)
+        public static RedisXRangeCommand XRevRange(string key, string end, string start, long count = 1)
         {
             var args = new List<object>();
             args.AddRange(new[] { key, start, end });
             if (count > 0) args.AddRange(new[] { "COUNT", count.ToString() });
-            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-                new RedisString(null),
-                new RedisArray.Generic<Tuple<string, string>>(
-                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-                ),
-                "XREVRANGE", args.ToArray()
-                );
+            return new RedisXRangeCommand("XREVRANGE", args.ToArray());
         }
 
         public static RedisArray.StrongPairs<string, Tuple<string, Tuple<string, string>[]>[]> XRead(long count, long block, params (string key, string id)[] streams)

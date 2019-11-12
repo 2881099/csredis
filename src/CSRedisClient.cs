@@ -4124,7 +4124,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="end">结束id，特殊：- 和 +</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (string id, (string field, string value)[])[] XRange(string key, string start, string end, long count = 1) =>
+        public (string id, string field, string value)[] XRange(string key, string start, string end, long count = 1) =>
             ExecuteScalar(key, (c, k) => c.Value.XRange(k, start, end, count));
         /// <summary>
         /// 与XRANGE完全相同，但显著的区别是以相反的顺序返回条目，并以相反的顺序获取开始-结束参数：在XREVRANGE中，你需要先指定结束ID，再指定开始ID，该命令就会从结束ID侧开始生成两个ID之间（或完全相同）的所有元素。
@@ -4134,7 +4134,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="start">开始id，特殊：- 和 +</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (string id, (string field, string value)[])[] XRevRange(string key, string end, string start, long count = 1) =>
+        public (string id, string field, string value)[] XRevRange(string key, string end, string start, long count = 1) =>
             ExecuteScalar(key, (c, k) => c.Value.XRevRange(k, end, start, count));
 
         /// <summary>

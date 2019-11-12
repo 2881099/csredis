@@ -2681,10 +2681,8 @@ namespace CSRedis
 
         public long XLen(string key) => Write(RedisCommands.XLen(key));
 
-        public (string id, (string field, string value)[])[] XRange(string key, string start, string end, long count = 1) =>
-            Write(RedisCommands.XRange(key, start, end, count)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2)).ToArray())).ToArray();
-        public (string id, (string field, string value)[])[] XRevRange(string key, string end, string start, long count = 1) =>
-            Write(RedisCommands.XRevRange(key, end, start, count)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2)).ToArray())).ToArray();
+        public (string id, string field, string value)[] XRange(string key, string start, string end, long count = 1) => Write(RedisCommands.XRange(key, start, end, count));
+        public (string id, string field, string value)[] XRevRange(string key, string end, string start, long count = 1) => Write(RedisCommands.XRevRange(key, end, start, count));
 
         public (string stream, (string id, (string field, string value)[])[])[] XRead(long count, long block, params (string key, string id)[] streams) =>
             Write(RedisCommands.XRead(count, block, streams)).Select(a => (a.Item1, a.Item2.Select(b => (b.Item1, b.Item2.Select(c => (c.Item1, c.Item2)).ToArray())).ToArray())).ToArray();
