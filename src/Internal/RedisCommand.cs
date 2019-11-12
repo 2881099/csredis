@@ -1405,10 +1405,12 @@ namespace CSRedis
         #endregion
 
         #region Streams
-        public static RedisInt XAck(string key, string group, string id)
+        public static RedisInt XAck(string key, string group, params string[] id)
         {
-            object[] args = RedisArgs.Concat(key, group, id);
-            return new RedisInt("XACK", args);
+            var args = new List<object>();
+            args.AddRange(new object[] { key, group });
+            args.AddRange(id.Select(a => (object)a));
+            return new RedisInt("XACK", args.ToArray());
         }
         public static RedisString XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues)
         {

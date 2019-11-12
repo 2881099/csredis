@@ -2658,7 +2658,7 @@ namespace CSRedis
         #endregion
 
         #region Streams 5.0
-        public long XAck(string key, string group, string id) => Write(RedisCommands.XAck(key, group, id));
+        public long XAck(string key, string group, params string[] id) => Write(RedisCommands.XAck(key, group, id));
 
         public string XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues) => Write(RedisCommands.XAdd(key, maxLen, id, fieldValues));
 
