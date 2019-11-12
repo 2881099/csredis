@@ -1422,40 +1422,28 @@ namespace CSRedis
             return new RedisString("XADD", args.ToArray());
         }
 
-        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XClaim(string key, string group, string consumer, long minIdleTime, params string[] id)
+        public static RedisXRangeCommand XClaim(string key, string group, string consumer, long minIdleTime, params string[] id)
         {
             var args = new List<object>();
             args.AddRange(new object[] { key, group, consumer, minIdleTime });
             args.AddRange(id.Select(a => (object)a));
-            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-                new RedisString(null),
-                new RedisArray.Generic<Tuple<string, string>>(
-                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-                ),
-                "XCLAIM", args.ToArray()
-                );
+            return new RedisXRangeCommand("XCLAIM", args.ToArray());
         }
-        public static RedisArray.StrongPairs<string, Tuple<string, string>[]> XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force)
+        public static RedisXRangeCommand XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force)
         {
             var args = new List<object>();
             args.AddRange(new object[] { key, group, consumer, minIdleTime });
             args.AddRange(id.Select(a => (object)a));
             args.AddRange(new object[] { "IDLE", idle, "RETRYCOUNT", retryCount });
             if (force) args.Add("FORCE");
-            args.Add("JUSTID");
-            return new RedisArray.StrongPairs<string, Tuple<string, string>[]>(
-                new RedisString(null),
-                new RedisArray.Generic<Tuple<string, string>>(
-                    new RedisTuple.Generic<string, string>.Repeating(new RedisString(null), new RedisString(null), null)
-                ),
-                "XCLAIM", args.ToArray()
-                );
+            return new RedisXRangeCommand("XCLAIM", args.ToArray());
         }
         public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, params string[] id)
         {
             var args = new List<object>();
             args.AddRange(new object[] { key, group, consumer, minIdleTime });
             args.AddRange(id.Select(a => (object)a));
+            args.Add("JUSTID");
             return new RedisArray.Strings("XCLAIM", args.ToArray());
         }
         public static RedisArray.Strings XClaimJustId(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force)
@@ -1499,6 +1487,18 @@ namespace CSRedis
         }
 
         //XINFO
+        public static RedisXInfoStreamCommand XInfoStream(string key)
+        {
+            return new RedisXInfoStreamCommand("XINFO", "STREAM", key);
+        }
+        public static RedisXInfoGroupsCommand XInfoGroups(string key)
+        {
+            return new RedisXInfoGroupsCommand("XINFO", "GROUPS", key);
+        }
+        public static RedisXInfoConsumersCommand XInfoConsumers(string key, string group)
+        {
+            return new RedisXInfoConsumersCommand("XINFO", "CONSUMERS", key, group);
+        }
 
         public static RedisInt XLen(string key)
         {
@@ -1506,6 +1506,16 @@ namespace CSRedis
         }
 
         //XPENDING
+        public static RedisXPendingCommand XPending(string key, string group)
+        {
+            return new RedisXPendingCommand("XPENDING", key, group);
+        }
+        public static RedisXPendingStartEndCountCommand XPending(string key, string group, string start, string end, long count, string consumer = null)
+        {
+            if (string.IsNullOrEmpty(consumer))
+                return new RedisXPendingStartEndCountCommand("XPENDING", key, group, start, end, count);
+            return new RedisXPendingStartEndCountCommand("XPENDING", key, group, start, end, count, consumer);
+        }
 
         public static RedisXRangeCommand XRange(string key, string start, string end, long count = 1)
         {

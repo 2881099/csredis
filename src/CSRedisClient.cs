@@ -4025,7 +4025,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="minIdleTime">耗秒</param>
         /// <param name="id">消息id</param>
         /// <returns></returns>
-        public (string id, (string field, string value)[])[] XClaim(string key, string group, string consumer, long minIdleTime, params string[] id) =>
+        public (string id, string[] items)[] XClaim(string key, string group, string consumer, long minIdleTime, params string[] id) =>
             ExecuteScalar(key, (c, k) => c.Value.XClaim(k, group, consumer, minIdleTime, id));
         /// <summary>
         /// 在流的消费者组上下文中，此命令改变待处理消息的所有权
@@ -4039,7 +4039,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="retryCount">将重试计数器设置为指定的值。这个计数器在每一次消息被交付的时候递增。</param>
         /// <param name="force">在待处理条目列表（PEL）中创建待处理消息条目，即使某些指定的ID尚未在分配给不同客户端的待处理条目列表（PEL）中。但是消息必须存在于流中，否则不存在的消息ID将会被忽略。</param>
         /// <returns></returns>
-        public (string id, (string field, string value)[])[] XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) =>
+        public (string id, string[] items)[] XClaim(string key, string group, string consumer, long minIdleTime, string[] id, long idle, long retryCount, bool force) =>
             ExecuteScalar(key, (c, k) => c.Value.XClaim(k, group, consumer, minIdleTime, id, idle, retryCount, force));
 
         /// <summary>
@@ -4110,11 +4110,55 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         public bool XGroupDelConsumer(string key, string group, string consumer) => ExecuteScalar(key, (c, k) => c.Value.XGroupDelConsumer(k, group, consumer));
 
         /// <summary>
+        /// 返回有关存储在特定键的流的一般信息
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <returns></returns>
+        public (long length, long radixTreeKeys, long radixTreeNodes, long groups, string lastGeneratedId, (string id, string[] items) firstEntry, (string id, string[] items) lastEntry) XInfoStream(string key) =>
+            ExecuteScalar(key, (c, k) => c.Value.XInfoStream(k));
+        /// <summary>
+        /// 获得与流关联的所有消费者组数据，该命令显示该组中已知的消费者数量，以及该组中的待处理消息（已传递但尚未确认）数量
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <returns></returns>
+        public (string name, long consumers, long pending, string lastDeliveredId)[] XInfoGroups(string key) =>
+            ExecuteScalar(key, (c, k) => c.Value.XInfoGroups(k));
+        /// <summary>
+        /// 取得指定消费者组中的消费者列表，返回每个消息者的空闲毫秒时间（最后一个字段）以及消费者名称和待处理消息数量
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public (string name, long pending, long idle)[] XInfoConsumers(string key, string group) =>
+            ExecuteScalar(key, (c, k) => c.Value.XInfoConsumers(k, group));
+
+        /// <summary>
         /// 返回流中的条目数。如果指定的key不存在，则此命令返回0，就好像该流为空。 但是请注意，与其他的Redis类型不同，零长度流是可能的，所以你应该调用TYPE 或者 EXISTS 来检查一个key是否存在。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <returns></returns>
         public long XLen(string key) => ExecuteScalar(key, (c, k) => c.Value.XLen(k));
+
+        /// <summary>
+        /// XPENDING命令是检查待处理消息列表的接口，因此它是一个非常重要的命令，用于观察和了解消费者组正在发生的事情：哪些客户端是活跃的，哪些消息在等待消费，或者查看是否有空闲的消息。此外，该命令与XCLAIM一起使用，用于实现长时间故障的消费者的恢复，因此不处理某些消息：不同的消费者可以认领该消息并继续处理。
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public (long count, string minId, string maxId, (string consumer, long count)[] pendings) XPending(string key, string group) =>
+            ExecuteScalar(key, (c, k) => c.Value.XPending(k, group));
+        /// <summary>
+        /// XPENDING命令是检查待处理消息列表的接口，因此它是一个非常重要的命令，用于观察和了解消费者组正在发生的事情：哪些客户端是活跃的，哪些消息在等待消费，或者查看是否有空闲的消息。此外，该命令与XCLAIM一起使用，用于实现长时间故障的消费者的恢复，因此不处理某些消息：不同的消费者可以认领该消息并继续处理。
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="group"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="count"></param>
+        /// <param name="consumer"></param>
+        /// <returns></returns>
+        public (string id, string consumer, long idle, long transferTimes)[] XPending(string key, string group, string start, string end, long count, string consumer = null) =>
+            ExecuteScalar(key, (c, k) => c.Value.XPending(k, group, start, end, count, consumer = null));
 
         /// <summary>
         /// 返回流中满足给定ID范围的条目。范围由最小和最大ID指定。所有ID在指定的两个ID之间或与其中一个ID相等（闭合区间）的条目将会被返回。

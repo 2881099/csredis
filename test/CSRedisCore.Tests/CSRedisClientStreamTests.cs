@@ -39,20 +39,28 @@ namespace CSRedisCore.Tests {
         public void XClaim()
         {
             var id = rds.XAdd("testXClaim01", ("f1", "v1"), ("f2", "v2"));
-            rds.XGroupCreate("testXClaimKey01", "group01", id, true);
+            //rds.XGroupCreate("testXClaimKey01", "group01", id, true);
             rds.XClaim("testXClaimKey01", "group01", "consumer01", 5000, id);
             rds.XClaim("testXClaimKey01", "group01", "consumer01", 5000, new string[] { id }, 3000, 3, false);
             rds.XClaim("testXClaimKey01", "group01", "consumer01", 5000, new string[] { id }, 3000, 3, true);
+
+            var d11 = rds.XClaim("mystream", "group55", "Alice", 1000, "1573547631296-0");
+            var d22 = rds.XClaim("mystream", "group55", "Alice", 1000, new[] { "1573547631296-0" }, 1000, 3, true);
+            var d33 = rds.XClaim("mystream", "group55", "Alice", 1000, new[] { "1573547631296-0" }, 1000, 3, false);
         }
 
         [Fact]
         public void XClaimJustId()
         {
             var id = rds.XAdd("testXClaimJustId01", ("f1", "v1"), ("f2", "v2"));
-            rds.XGroupCreate("testXClaimJustIdKey01", "group01", id, true);
+            //rds.XGroupCreate("testXClaimJustIdKey01", "group01", id, true);
             rds.XClaimJustId("testXClaimJustIdKey01", "group01", "consumer01", 5000, id);
             rds.XClaimJustId("testXClaimJustIdKey01", "group01", "consumer01", 5000, new string[] { id }, 3000, 3, false);
             rds.XClaimJustId("testXClaimJustIdKey01", "group01", "consumer01", 5000, new string[] { id }, 3000, 3, true);
+
+            var d11 = rds.XClaimJustId("mystream", "group55", "Alice", 1000, "1573547631296-0");
+            var d22 = rds.XClaimJustId("mystream", "group55", "Alice", 1000, new[] { "1573547631296-0" }, 1000, 3, true);
+            var d33 = rds.XClaimJustId("mystream", "group55", "Alice", 1000, new[] { "1573547631296-0" }, 1000, 3, false);
         }
 
         [Fact]
@@ -66,14 +74,14 @@ namespace CSRedisCore.Tests {
         public void XGroupCreate()
         {
             var id = rds.XAdd("testXGroupCreate01", ("f1", "v1"), ("f2", "v2"));
-            rds.XGroupCreate("testXGroupCreateKey01", "group01", id, true);
-            rds.XGroupCreate("testXGroupCreateKey01", "group02", "$", true);
+            //rds.XGroupCreate("testXGroupCreateKey01", "group01", id, true);
+            //rds.XGroupCreate("testXGroupCreateKey01", "group02", "$", true);
         }
 
         [Fact]
         public void XGroupSetId()
         {
-            rds.XGroupCreate("testXGroupSetIdKey01", "group04", "$", true);
+            //rds.XGroupCreate("testXGroupSetIdKey01", "group04", "$", true);
             var id = rds.XAdd("testXGroupSetId01", ("f1", "v1"), ("f2", "v2"));
             rds.XGroupSetId("testXGroupSetIdKey01", "group04", id);
         }
@@ -88,7 +96,7 @@ namespace CSRedisCore.Tests {
         [Fact]
         public void XGroupDelConsumer()
         {
-            rds.XGroupCreate("testXGroupDelConsumerKey01", "group04", "$", true);
+            //rds.XGroupCreate("testXGroupDelConsumerKey01", "group04", "$", true);
             rds.XGroupDelConsumer("testXGroupDelConsumerKey01", "group04", "consumer01");
         }
 
@@ -146,8 +154,8 @@ namespace CSRedisCore.Tests {
         {
             var id1 = rds.XAdd("testXReadGroupKey01", ("f1", "v1"), ("f2", "v2"));
             var id2 = rds.XAdd("testXReadGroupKey02", ("f1", "v1"), ("f2", "v2"));
-            rds.XGroupCreate("testXReadGroupKey01", "testXReadGroup01", id1, true);
-            rds.XGroupCreate("testXReadGroupKey02", "testXReadGroup01", id2, true);
+            //rds.XGroupCreate("testXReadGroupKey01", "testXReadGroup01", id1, true);
+            //rds.XGroupCreate("testXReadGroupKey02", "testXReadGroup01", id2, true);
             rds.XReadGroup("testXReadGroup01", "consumer01", 10, 1000, ("testXReadGroupKey01", ">"), ("testXReadGroupKey02", ">"));
         }
 
@@ -155,6 +163,14 @@ namespace CSRedisCore.Tests {
         public void XTrim()
         {
             rds.XTrim("testXTrimKey01", 5);
+        }
+
+        [Fact]
+        public void XInfo()
+        {
+            var d11 = rds.XInfoStream("mystream");
+            var d22 = rds.XInfoGroups("mystream");
+            var d33 = rds.XInfoConsumers("mystream", "group55");
         }
     }
 }
