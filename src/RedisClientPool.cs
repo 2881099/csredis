@@ -99,7 +99,7 @@ namespace CSRedis
         internal int _port = 6379, _database = 0, _writebuffer = 10240, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 10000;
         internal string _ip = "127.0.0.1", _password = "", _clientname = "";
         internal bool _ssl = false, _testCluster = true;
-        internal int _preheat = -1;
+        internal int _preheat = 5;
         internal string Key => $"{_ip}:{_port}/{_database}";
         internal string Prefix { get; set; }
         public event EventHandler Connected;

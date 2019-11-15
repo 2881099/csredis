@@ -323,7 +323,7 @@ namespace CSRedis
                 if (SentinelManager != null)
                 {
                     var startIdx = connStr.IndexOf(',');
-                    if (startIdx != -1) connStr = connStr.Substring(startIdx);
+                    connStr = startIdx == -1 ? "" : connStr.Substring(startIdx);
                     if (string.IsNullOrEmpty(SentinelMasterValue))
                         connStr = $"255.255.255.255:19736{connStr},preheat=false"; //这是一个等待恢复的 pool
                     else
