@@ -288,15 +288,8 @@ namespace CSRedis
             }
         }
 
-        ~AutoPipelineOption()
-        {
-            Dispose();
-        }
-        bool _isDisposed = false;
         public void Dispose()
         {
-            if (_isDisposed) return;
-            _isDisposed = true;
             running = false;
 
             while (_cmdqs.TryDequeue(out var sync))

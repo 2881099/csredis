@@ -1600,11 +1600,6 @@ namespace CSRedis
                 this.Dispose();
             }
 
-            ~SubscribeObject()
-            {
-                this.Dispose();
-            }
-
             public void Dispose()
             {
                 this.IsUnsubscribed = true;
@@ -1795,11 +1790,6 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                 this.Dispose();
             }
 
-            ~PSubscribeObject()
-            {
-                this.Dispose();
-            }
-
             public void Dispose()
             {
                 this.IsPUnsubscribed = true;
@@ -1895,10 +1885,6 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             internal Action OnDispose;
             internal List<SubscribeListObject> SubscribeLists = new List<SubscribeListObject>();
 
-            ~SubscribeListBroadcastObject()
-            {
-                this.Dispose();
-            }
             public void Dispose()
             {
                 try { OnDispose?.Invoke(); } catch (ObjectDisposedException) { }
@@ -1994,10 +1980,6 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             internal List<SubscribeListObject> OtherSubs = new List<SubscribeListObject>();
             public bool IsUnsubscribed { get; set; }
 
-            ~SubscribeListObject()
-            {
-                this.Dispose();
-            }
             public void Dispose()
             {
                 this.IsUnsubscribed = true;

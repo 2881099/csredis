@@ -76,15 +76,11 @@ namespace CSRedis
             return ret;
         }
 
-        //bool _isDisposed;
-        //~CSRedisClientPipe() => this.Dispose();
         /// <summary>
         /// 提交批命令
         /// </summary>
         public void Dispose()
         {
-            //if (_isDisposed) return;
-            //_isDisposed = true;
             this.EndPipe();
         }
 
