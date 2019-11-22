@@ -17,7 +17,7 @@ namespace CSRedisCore.Tests
 		protected readonly TestClass Class = new TestClass { Id = 1, Name = "Class名称", CreateTime = DateTime.Now, TagId = new[] { 1, 3, 3, 3, 3 } };
 
 		public TestBase() {
-			//rds.NodesServerManager.FlushAll();
+			rds.NodesServerManager.FlushAll();
 		}
     }
 

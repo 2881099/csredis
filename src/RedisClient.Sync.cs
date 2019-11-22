@@ -2593,7 +2593,7 @@ namespace CSRedis
             if (withCoord) args.Add("WITHCOORD");
             if (withDist) args.Add("WITHDIST");
             if (withHash) args.Add("WITHHASH");
-            if (count.HasValue) args.Add(count);
+            if (count.HasValue) args.AddRange(new object[] { "COUNT", count });
             if (sorting.HasValue) args.Add(sorting);
 
             var cmd = new RedisTuple.Generic<string, double, long, double[]>.Single(
@@ -2610,7 +2610,7 @@ namespace CSRedis
             if (withCoord) args.Add("WITHCOORD");
             if (withDist) args.Add("WITHDIST");
             if (withHash) args.Add("WITHHASH");
-            if (count.HasValue) args.Add(count);
+            if (count.HasValue) args.AddRange(new object[] { "COUNT", count });
             if (sorting.HasValue) args.Add(sorting);
 
             var cmd = new RedisTuple.Generic<byte[], double, long, double[]>.Single(
@@ -2627,7 +2627,7 @@ namespace CSRedis
             if (withCoord) args.Add("WITHCOORD");
             if (withDist) args.Add("WITHDIST");
             if (withHash) args.Add("WITHHASH");
-            if (count.HasValue) args.Add(count);
+            if (count.HasValue) args.AddRange(new object[] { "COUNT", count });
             if (sorting.HasValue) args.Add(sorting);
 
             var cmd = new RedisTuple.Generic<string, double, long, double[]>.Single(
@@ -2644,7 +2644,7 @@ namespace CSRedis
             if (withCoord) args.Add("WITHCOORD");
             if (withDist) args.Add("WITHDIST");
             if (withHash) args.Add("WITHHASH");
-            if (count.HasValue) args.Add(count);
+            if (count.HasValue) args.AddRange(new object[] { "COUNT", count });
             if (sorting.HasValue) args.Add(sorting);
 
             var cmd = new RedisTuple.Generic<byte[], double, long, double[]>.Single(
