@@ -579,7 +579,7 @@ namespace CSRedis
             bool isMoved = ex.Message.StartsWith("MOVED ");
             bool isAsk = ex.Message.StartsWith("ASK ");
             if (isMoved == false && isAsk == false) return null;
-            var parts = ex.Message.Split(new[] { ' ' }, 3);
+            var parts = ex.Message.Split(new string[] { "\r\n" }, StringSplitOptions.None).FirstOrDefault().Split(new[] { ' ' }, 3);
             if (parts.Length != 3 ||
                 ushort.TryParse(parts[1], out var slot) == false) return null;
             return (isMoved, isAsk, slot, parts[2]);
