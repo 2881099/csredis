@@ -1478,6 +1478,7 @@ namespace CSRedis
                 var subscr = ((string[] chans, Object<RedisClient> conn))state;
                 var pool = subscr.conn.Pool as RedisClientPool;
                 var testCSRedis_Subscribe_Keepalive = "0\r\n";// $"CSRedis_Subscribe_Keepalive{Guid.NewGuid().ToString()}";
+                var testKeepalived = true;
 
                 EventHandler<RedisSubscriptionReceivedEventArgs> SubscriptionReceived = (a, b) =>
                 {
@@ -1500,6 +1501,10 @@ namespace CSRedis
                                     Body = b.Message.Body,
                                     Channel = b.Message.Channel
                                 });
+                            else
+                            {
+                                testKeepalived = true;
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -1525,13 +1530,22 @@ namespace CSRedis
                     {
                         foreach (var chan in subscr.chans)
                         {
-                            if (Redis.PublishNoneMessageId(chan, testCSRedis_Subscribe_Keepalive) <= 0)
+                            testKeepalived = false;
+                            Redis.PublishNoneMessageId(chan, testCSRedis_Subscribe_Keepalive);
+                            for (var a = 0; a < 50; a++)
+                            {
+                                if (isSubscribeing == false) return;
+                                Thread.CurrentThread.Join(100);
+                                if (testKeepalived) break;
+                            }
+                            if (testKeepalived == false)
                             {
                                 isKeepliveReSubscribe = true;
                                 //订阅掉线，重新订阅
                                 try { subscr.conn.Value.Unsubscribe(); } catch { }
                                 try { subscr.conn.Value.Quit(); } catch { }
                                 try { subscr.conn.Value.Socket?.Shutdown(System.Net.Sockets.SocketShutdown.Both); } catch { }
+                                break;
                             }
                         }
                     }
