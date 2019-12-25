@@ -177,7 +177,7 @@ partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="scoreMembers">一个或多个成员分数</param>
     /// <returns></returns>
-    public static Task<long> ZAddAsync(string key, params (double, object)[] scoreMembers) => Instance.ZAddAsync(key, scoreMembers);
+    public static Task<long> ZAddAsync(string key, params (decimal, object)[] scoreMembers) => Instance.ZAddAsync(key, scoreMembers);
     /// <summary>
     /// 获取有序集合的成员数量
     /// </summary>
@@ -188,10 +188,10 @@ partial class RedisHelper<TMark>
     /// 计算在有序集合中指定区间分数的成员数量
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <returns></returns>
-    public static Task<long> ZCountAsync(string key, double min, double max) => Instance.ZCountAsync(key, min, max);
+    public static Task<long> ZCountAsync(string key, decimal min, decimal max) => Instance.ZCountAsync(key, min, max);
     /// <summary>
     /// 计算在有序集合中指定区间分数的成员数量
     /// </summary>
@@ -207,7 +207,7 @@ partial class RedisHelper<TMark>
     /// <param name="member">成员</param>
     /// <param name="increment">增量值(默认=1)</param>
     /// <returns></returns>
-    public static Task<double> ZIncrByAsync(string key, string member, double increment = 1) => Instance.ZIncrByAsync(key, member, increment);
+    public static Task<decimal> ZIncrByAsync(string key, string member, decimal increment = 1) => Instance.ZIncrByAsync(key, member, increment);
 
     /// <summary>
     /// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中
@@ -217,7 +217,7 @@ partial class RedisHelper<TMark>
     /// <param name="aggregate">Sum | Min | Max</param>
     /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
     /// <returns></returns>
-    public static Task<long> ZInterStoreAsync(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZInterStoreAsync(destination, weights, aggregate, keys);
+    public static Task<long> ZInterStoreAsync(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZInterStoreAsync(destination, weights, aggregate, keys);
 
     /// <summary>
     /// 通过索引区间返回有序集合成指定区间内的成员
@@ -243,7 +243,7 @@ partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static Task<(string member, double score)[]> ZRangeWithScoresAsync(string key, long start, long stop) => Instance.ZRangeWithScoresAsync(key, start, stop);
+    public static Task<(string member, decimal score)[]> ZRangeWithScoresAsync(string key, long start, long stop) => Instance.ZRangeWithScoresAsync(key, start, stop);
     /// <summary>
     /// 通过索引区间返回有序集合成指定区间内的成员和分数
     /// </summary>
@@ -252,29 +252,29 @@ partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static Task<(T member, double score)[]> ZRangeWithScoresAsync<T>(string key, long start, long stop) => Instance.ZRangeWithScoresAsync<T>(key, start, stop);
+    public static Task<(T member, decimal score)[]> ZRangeWithScoresAsync<T>(string key, long start, long stop) => Instance.ZRangeWithScoresAsync<T>(key, start, stop);
 
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<string[]> ZRangeByScoreAsync(string key, double min, double max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync(key, min, max, limit, offset);
+    public static Task<string[]> ZRangeByScoreAsync(string key, decimal min, decimal max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<T[]> ZRangeByScoreAsync<T>(string key, double min, double max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync<T>(key, min, max, limit, offset);
+    public static Task<T[]> ZRangeByScoreAsync<T>(string key, decimal min, decimal max, long? limit = null, long offset = 0) => Instance.ZRangeByScoreAsync<T>(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员
     /// </summary>
@@ -301,24 +301,24 @@ partial class RedisHelper<TMark>
     /// 通过分数返回有序集合指定区间内的成员和分数
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, long? limit = null, long offset = 0) =>
+    public static Task<(string member, decimal score)[]> ZRangeByScoreWithScoresAsync(string key, decimal min, decimal max, long? limit = null, long offset = 0) =>
            Instance.ZRangeByScoreWithScoresAsync(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员和分数
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(T member, double score)[]> ZRangeByScoreWithScoresAsync<T>(string key, double min, double max, long? limit = null, long offset = 0) =>
+    public static Task<(T member, decimal score)[]> ZRangeByScoreWithScoresAsync<T>(string key, decimal min, decimal max, long? limit = null, long offset = 0) =>
            Instance.ZRangeByScoreWithScoresAsync<T>(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员和分数
@@ -329,7 +329,7 @@ partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? limit = null, long offset = 0) =>
+    public static Task<(string member, decimal score)[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? limit = null, long offset = 0) =>
            Instance.ZRangeByScoreWithScoresAsync(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员和分数
@@ -341,7 +341,7 @@ partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(T member, double score)[]> ZRangeByScoreWithScoresAsync<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
+    public static Task<(T member, decimal score)[]> ZRangeByScoreWithScoresAsync<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
            Instance.ZRangeByScoreWithScoresAsync<T>(key, min, max, limit, offset);
 
     /// <summary>
@@ -370,10 +370,10 @@ partial class RedisHelper<TMark>
     /// 移除有序集合中给定的分数区间的所有成员
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <returns></returns>
-    public static Task<long> ZRemRangeByScoreAsync(string key, double min, double max) => Instance.ZRemRangeByScoreAsync(key, min, max);
+    public static Task<long> ZRemRangeByScoreAsync(string key, decimal min, decimal max) => Instance.ZRemRangeByScoreAsync(key, min, max);
     /// <summary>
     /// 移除有序集合中给定的分数区间的所有成员
     /// </summary>
@@ -407,7 +407,7 @@ partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static Task<(string member, double score)[]> ZRevRangeWithScoresAsync(string key, long start, long stop) => Instance.ZRevRangeWithScoresAsync(key, start, stop);
+    public static Task<(string member, decimal score)[]> ZRevRangeWithScoresAsync(string key, long start, long stop) => Instance.ZRevRangeWithScoresAsync(key, start, stop);
     /// <summary>
     /// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
     /// </summary>
@@ -416,29 +416,29 @@ partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static Task<(T member, double score)[]> ZRevRangeWithScoresAsync<T>(string key, long start, long stop) => Instance.ZRevRangeWithScoresAsync<T>(key, start, stop);
+    public static Task<(T member, decimal score)[]> ZRevRangeWithScoresAsync<T>(string key, long start, long stop) => Instance.ZRevRangeWithScoresAsync<T>(key, start, stop);
 
     /// <summary>
     /// 返回有序集中指定分数区间内的成员，分数从高到低排序
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, long? limit = null, long? offset = 0) => Instance.ZRevRangeByScoreAsync(key, max, min, limit, offset);
+    public static Task<string[]> ZRevRangeByScoreAsync(string key, decimal max, decimal min, long? limit = null, long? offset = 0) => Instance.ZRevRangeByScoreAsync(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员，分数从高到低排序
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<T[]> ZRevRangeByScoreAsync<T>(string key, double max, double min, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreAsync<T>(key, max, min, limit, offset);
+    public static Task<T[]> ZRevRangeByScoreAsync<T>(string key, decimal max, decimal min, long? limit = null, long offset = 0) => Instance.ZRevRangeByScoreAsync<T>(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员，分数从高到低排序
     /// </summary>
@@ -465,24 +465,24 @@ partial class RedisHelper<TMark>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, long? limit = null, long offset = 0) =>
+    public static Task<(string member, decimal score)[]> ZRevRangeByScoreWithScoresAsync(string key, decimal max, decimal min, long? limit = null, long offset = 0) =>
            Instance.ZRevRangeByScoreWithScoresAsync(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(T member, double score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, double max, double min, long? limit = null, long offset = 0) =>
+    public static Task<(T member, decimal score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, decimal max, decimal min, long? limit = null, long offset = 0) =>
            Instance.ZRevRangeByScoreWithScoresAsync<T>(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -493,7 +493,7 @@ partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? limit = null, long offset = 0) =>
+    public static Task<(string member, decimal score)[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? limit = null, long offset = 0) =>
            Instance.ZRevRangeByScoreWithScoresAsync(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -505,7 +505,7 @@ partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static Task<(T member, double score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, string max, string min, long? limit = null, long offset = 0) =>
+    public static Task<(T member, decimal score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, string max, string min, long? limit = null, long offset = 0) =>
            Instance.ZRevRangeByScoreWithScoresAsync<T>(key, max, min, limit, offset);
 
     /// <summary>
@@ -521,7 +521,7 @@ partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="member">成员</param>
     /// <returns></returns>
-    public static Task<double?> ZScoreAsync(string key, object member) => Instance.ZScoreAsync(key, member);
+    public static Task<decimal?> ZScoreAsync(string key, object member) => Instance.ZScoreAsync(key, member);
 
     /// <summary>
     /// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
@@ -531,7 +531,7 @@ partial class RedisHelper<TMark>
     /// <param name="aggregate">Sum | Min | Max</param>
     /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
     /// <returns></returns>
-    public static Task<long> ZUnionStoreAsync(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZUnionStoreAsync(destination, weights, aggregate, keys);
+    public static Task<long> ZUnionStoreAsync(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZUnionStoreAsync(destination, weights, aggregate, keys);
 
     /// <summary>
     /// 迭代有序集合中的元素
@@ -541,7 +541,7 @@ partial class RedisHelper<TMark>
     /// <param name="pattern">模式</param>
     /// <param name="count">数量</param>
     /// <returns></returns>
-    public static Task<RedisScan<(string member, double score)>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null) =>
+    public static Task<RedisScan<(string member, decimal score)>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null) =>
            Instance.ZScanAsync(key, cursor, pattern, count);
     /// <summary>
     /// 迭代有序集合中的元素
@@ -552,7 +552,7 @@ partial class RedisHelper<TMark>
     /// <param name="pattern">模式</param>
     /// <param name="count">数量</param>
     /// <returns></returns>
-    public static Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) =>
+    public static Task<RedisScan<(T member, decimal score)>> ZScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) =>
            Instance.ZScanAsync<T>(key, cursor, pattern, count);
 
     /// <summary>
@@ -995,7 +995,7 @@ partial class RedisHelper<TMark>
     /// <param name="field">字段</param>
     /// <param name="value">增量值(默认=1)</param>
     /// <returns></returns>
-    public static Task<double> HIncrByFloatAsync(string key, string field, double value = 1) => Instance.HIncrByFloatAsync(key, field, value);
+    public static Task<decimal> HIncrByFloatAsync(string key, string field, decimal value = 1) => Instance.HIncrByFloatAsync(key, field, value);
     /// <summary>
     /// 获取所有哈希表中的字段
     /// </summary>
@@ -1180,7 +1180,7 @@ partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="value">增量值(默认=1)</param>
     /// <returns></returns>
-    public static Task<double> IncrByFloatAsync(string key, double value = 1) => Instance.IncrByFloatAsync(key, value);
+    public static Task<decimal> IncrByFloatAsync(string key, decimal value = 1) => Instance.IncrByFloatAsync(key, value);
     /// <summary>
     /// 获取多个指定 key 的值(数组)
     /// </summary>
@@ -1215,6 +1215,7 @@ partial class RedisHelper<TMark>
     /// <param name="exists">Nx, Xx</param>
     /// <returns></returns>
     public static Task<bool> SetAsync(string key, object value, int expireSeconds = -1, RedisExistence? exists = null) => Instance.SetAsync(key, value, expireSeconds, exists);
+    public static Task<bool> SetAsync(string key, object value, TimeSpan expire, RedisExistence? exists = null) => Instance.SetAsync(key, value, expire, exists);
     /// <summary>
     /// 对 key 所储存的字符串值，设置或清除指定偏移量上的位(bit)
     /// </summary>
@@ -1457,14 +1458,14 @@ partial class RedisHelper<TMark>
     /// <param name="latitude">纬度</param>
     /// <param name="member">成员</param>
     /// <returns>是否成功</returns>
-    public static Task<bool> GeoAddAsync(string key, double longitude, double latitude, object member) => Instance.GeoAddAsync(key, longitude, latitude, member);
+    public static Task<bool> GeoAddAsync(string key, decimal longitude, decimal latitude, object member) => Instance.GeoAddAsync(key, longitude, latitude, member);
     /// <summary>
     /// 将指定的地理空间位置（纬度、经度、成员）添加到指定的key中。这些数据将会存储到sorted set这样的目的是为了方便使用GEORADIUS或者GEORADIUSBYMEMBER命令对数据进行半径查询等操作。
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="values">批量添加的值</param>
     /// <returns>添加到sorted set元素的数目，但不包括已更新score的元素。</returns>
-    public static Task<long> GeoAddAsync(string key, params (double longitude, double latitude, object member)[] values) => Instance.GeoAddAsync(key, values);
+    public static Task<long> GeoAddAsync(string key, params (decimal longitude, decimal latitude, object member)[] values) => Instance.GeoAddAsync(key, values);
     /// <summary>
     /// 返回两个给定位置之间的距离。如果两个位置之间的其中一个不存在， 那么命令返回空值。GEODIST 命令在计算距离时会假设地球为完美的球形， 在极限情况下， 这一假设最大会造成 0.5% 的误差。
     /// </summary>
@@ -1473,7 +1474,7 @@ partial class RedisHelper<TMark>
     /// <param name="member2">成员2</param>
     /// <param name="unit">m 表示单位为米；km 表示单位为千米；mi 表示单位为英里；ft 表示单位为英尺；</param>
     /// <returns>计算出的距离会以双精度浮点数的形式被返回。 如果给定的位置元素不存在， 那么命令返回空值。</returns>
-    public static Task<double?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m) => Instance.GeoDistAsync(key, member1, member2, unit);
+    public static Task<decimal?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m) => Instance.GeoDistAsync(key, member1, member2, unit);
     /// <summary>
     /// 返回一个或多个位置元素的 Geohash 表示。通常使用表示位置的元素使用不同的技术，使用Geohash位置52点整数编码。由于编码和解码过程中所使用的初始最小和最大坐标不同，编码的编码也不同于标准。
     /// </summary>
@@ -1487,7 +1488,7 @@ partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="members">多个查询的成员</param>
     /// <returns>GEOPOS 命令返回一个数组， 数组中的每个项都由两个元素组成： 第一个元素为给定位置元素的经度， 而第二个元素则为给定位置元素的纬度。当给定的位置元素不存在时， 对应的数组项为空值。</returns>
-    public static Task<(double longitude, double latitude)?[]> GeoPosAsync(string key, object[] members) => Instance.GeoPosAsync(key, members);
+    public static Task<(decimal longitude, decimal latitude)?[]> GeoPosAsync(string key, object[] members) => Instance.GeoPosAsync(key, members);
 
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -1500,7 +1501,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<string[]> GeoRadiusAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<string[]> GeoRadiusAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusAsync(key, longitude, latitude, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -1513,7 +1514,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<T[]> GeoRadiusAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<T[]> GeoRadiusAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusAsync<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     /// <summary>
@@ -1527,7 +1528,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(string member, double dist)[]> GeoRadiusWithDistAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(string member, decimal dist)[]> GeoRadiusWithDistAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDistAsync(key, longitude, latitude, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -1540,7 +1541,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(T member, double dist)[]> GeoRadiusWithDistAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(T member, decimal dist)[]> GeoRadiusWithDistAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDistAsync<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     ///// <summary>
@@ -1554,7 +1555,7 @@ partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static Task<(string member, double longitude, double latitude)[]> GeoRadiusWithCoordAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static Task<(string member, decimal longitude, decimal latitude)[]> GeoRadiusWithCoordAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusWithCoordAsync(key, longitude, latitude, radius, unit, count, sorting);
     ///// <summary>
     ///// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -1567,7 +1568,7 @@ partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static Task<(T member, double longitude, double latitude)[]> GeoRadiusWithCoordAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static Task<(T member, decimal longitude, decimal latitude)[]> GeoRadiusWithCoordAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusWithCoordAsync<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     /// <summary>
@@ -1581,7 +1582,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(string member, double dist, double longitude, double latitude)[]> GeoRadiusWithDistAndCoordAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(string member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusWithDistAndCoordAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDistAndCoordAsync(key, longitude, latitude, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -1594,7 +1595,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(T member, double dist, double longitude, double latitude)[]> GeoRadiusWithDistAndCoordAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(T member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusWithDistAndCoordAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDistAndCoordAsync<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     /// <summary>
@@ -1607,7 +1608,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<string[]> GeoRadiusByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<string[]> GeoRadiusByMemberAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberAsync(key, member, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -1619,7 +1620,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<T[]> GeoRadiusByMemberAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<T[]> GeoRadiusByMemberAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberAsync<T>(key, member, radius, unit, count, sorting);
 
     /// <summary>
@@ -1632,7 +1633,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(string member, double dist)[]> GeoRadiusByMemberWithDistAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(string member, decimal dist)[]> GeoRadiusByMemberWithDistAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDistAsync(key, member, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -1644,7 +1645,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(T member, double dist)[]> GeoRadiusByMemberWithDistAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(T member, decimal dist)[]> GeoRadiusByMemberWithDistAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDistAsync<T>(key, member, radius, unit, count, sorting);
 
     ///// <summary>
@@ -1657,7 +1658,7 @@ partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static Task<(string member, double longitude, double latitude)[]> GeoRadiusByMemberWithCoordAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static Task<(string member, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithCoordAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusByMemberWithCoordAsync(key, member, radius, unit, count, sorting);
     ///// <summary>
     ///// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -1669,7 +1670,7 @@ partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static Task<(T member, double longitude, double latitude)[]> GeoRadiusByMemberWithCoordAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static Task<(T member, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithCoordAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusByMemberWithCoordAsync<T>(key, member, radius, unit, count, sorting);
 
     /// <summary>
@@ -1682,7 +1683,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(string member, double dist, double longitude, double latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(string member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDistAndCoordAsync(key, member, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -1694,7 +1695,7 @@ partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static Task<(T member, double dist, double longitude, double latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static Task<(T member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDistAndCoordAsync<T>(key, member, radius, unit, count, sorting);
     #endregion
 }

@@ -839,28 +839,28 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZPopMaxAsync(string key, long count) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMaxAsync(k, count))).Select(a => (a.Item1, a.Item2)).ToArray();
+        async public Task<(string member, decimal score)[]> ZPopMaxAsync(string key, long count) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMaxAsync(k, count))).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZPopMaxAsync<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMaxBytesAsync(k, count)));
+        async public Task<(T member, decimal score)[]> ZPopMaxAsync<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMaxBytesAsync(k, count)));
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZPopMinAsync(string key, long count) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMinAsync(k, count))).Select(a => (a.Item1, a.Item2)).ToArray();
+        async public Task<(string member, decimal score)[]> ZPopMinAsync(string key, long count) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMinAsync(k, count))).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZPopMinAsync<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMinBytesAsync(k, count)));
+        async public Task<(T member, decimal score)[]> ZPopMinAsync<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZPopMinBytesAsync(k, count)));
 
         /// <summary>
         /// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
@@ -868,10 +868,10 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="scoreMembers">一个或多个成员分数</param>
         /// <returns></returns>
-        async public Task<long> ZAddAsync(string key, params (double, object)[] scoreMembers)
+        async public Task<long> ZAddAsync(string key, params (decimal, object)[] scoreMembers)
         {
             if (scoreMembers == null || scoreMembers.Any() == false) return 0;
-            var args = scoreMembers.Select(a => new Tuple<double, object>(a.Item1, this.SerializeRedisValueInternal(a.Item2))).ToArray();
+            var args = scoreMembers.Select(a => new Tuple<decimal, object>(a.Item1, this.SerializeRedisValueInternal(a.Item2))).ToArray();
             return await ExecuteScalarAsync(key, (c, k) => c.Value.ZAddAsync(k, args));
         }
         /// <summary>
@@ -884,10 +884,10 @@ namespace CSRedis
         /// 计算在有序集合中指定区间分数的成员数量
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <returns></returns>
-        public Task<long> ZCountAsync(string key, double min, double max) => ExecuteScalarAsync(key, (c, k) => c.Value.ZCountAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString()));
+        public Task<long> ZCountAsync(string key, decimal min, decimal max) => ExecuteScalarAsync(key, (c, k) => c.Value.ZCountAsync(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString()));
         /// <summary>
         /// 计算在有序集合中指定区间分数的成员数量
         /// </summary>
@@ -903,7 +903,7 @@ namespace CSRedis
         /// <param name="member">成员</param>
         /// <param name="increment">增量值(默认=1)</param>
         /// <returns></returns>
-        public Task<double> ZIncrByAsync(string key, string member, double increment = 1)
+        public Task<decimal> ZIncrByAsync(string key, string member, decimal increment = 1)
         {
             var args = this.SerializeRedisValueInternal(member);
             return ExecuteScalarAsync(key, (c, k) => c.Value.ZIncrByAsync(k, increment, args));
@@ -917,7 +917,7 @@ namespace CSRedis
         /// <param name="aggregate">Sum | Min | Max</param>
         /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
         /// <returns></returns>
-        public Task<long> ZInterStoreAsync(string destination, double[] weights, RedisAggregate aggregate, params string[] keys)
+        public Task<long> ZInterStoreAsync(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys)
         {
             if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
             if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
@@ -948,7 +948,7 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZRangeWithScoresAsync(string key, long start, long stop) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeWithScoresAsync(k, start, stop))).Select(a => (a.Item1, a.Item2)).ToArray();
+        async public Task<(string member, decimal score)[]> ZRangeWithScoresAsync(string key, long start, long stop) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeWithScoresAsync(k, start, stop))).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// 通过索引区间返回有序集合成指定区间内的成员和分数
         /// </summary>
@@ -957,31 +957,31 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesWithScoresAsync(k, start, stop)));
+        async public Task<(T member, decimal score)[]> ZRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesWithScoresAsync(k, start, stop)));
 
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public Task<string[]> ZRangeByScoreAsync(string key, double min, double max, long? count = null, long offset = 0) =>
-            ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count));
+        public Task<string[]> ZRangeByScoreAsync(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreAsync(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), false, offset, count));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<T[]> ZRangeByScoreAsync<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
+        async public Task<T[]> ZRangeByScoreAsync<T>(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreAsync(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
@@ -1010,25 +1010,25 @@ namespace CSRedis
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, long? count = null, long offset = 0) =>
-            (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreWithScoresAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count))).Select(z => (z.Item1, z.Item2)).ToArray();
+        async public Task<(string member, decimal score)[]> ZRangeByScoreWithScoresAsync(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreWithScoresAsync(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), offset, count))).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZRangeByScoreWithScoresAsync<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count)));
+        async public Task<(T member, decimal score)[]> ZRangeByScoreWithScoresAsync<T>(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), offset, count)));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
@@ -1038,7 +1038,7 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? count = null, long offset = 0) =>
+        async public Task<(string member, decimal score)[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? count = null, long offset = 0) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeByScoreWithScoresAsync(k, min, max, offset, count))).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
@@ -1050,8 +1050,8 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZRangeByScoreWithScoresAsync<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min, max, offset, count)));
+        async public Task<(T member, decimal score)[]> ZRangeByScoreWithScoresAsync<T>(string key, string min, string max, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRangeBytesByScoreWithScoresAsync(k, min, max, offset, count)));
 
         /// <summary>
         /// 返回有序集合中指定成员的索引
@@ -1088,10 +1088,10 @@ namespace CSRedis
         /// 移除有序集合中给定的分数区间的所有成员
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <returns></returns>
-        public Task<long> ZRemRangeByScoreAsync(string key, double min, double max) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRemRangeByScoreAsync(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString()));
+        public Task<long> ZRemRangeByScoreAsync(string key, decimal min, decimal max) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRemRangeByScoreAsync(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString()));
         /// <summary>
         /// 移除有序集合中给定的分数区间的所有成员
         /// </summary>
@@ -1125,7 +1125,7 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZRevRangeWithScoresAsync(string key, long start, long stop) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeWithScoresAsync(k, start, stop))).Select(a => (a.Item1, a.Item2)).ToArray();
+        async public Task<(string member, decimal score)[]> ZRevRangeWithScoresAsync(string key, long start, long stop) => (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeWithScoresAsync(k, start, stop))).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
         /// </summary>
@@ -1134,30 +1134,30 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZRevRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesWithScoresAsync(k, start, stop)));
+        async public Task<(T member, decimal score)[]> ZRevRangeWithScoresAsync<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesWithScoresAsync(k, start, stop)));
 
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, long? count = null, long? offset = 0) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count));
+        public Task<string[]> ZRevRangeByScoreAsync(string key, decimal max, decimal min, long? count = null, long? offset = 0) => ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreAsync(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), false, offset, count));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<T[]> ZRevRangeByScoreAsync<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count)));
+        async public Task<T[]> ZRevRangeByScoreAsync<T>(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueArrayInternal<T>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreAsync(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), false, offset, count)));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
@@ -1185,25 +1185,25 @@ namespace CSRedis
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, long? count = null, long offset = 0) =>
-            (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreWithScoresAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count))).Select(z => (z.Item1, z.Item2)).ToArray();
+        async public Task<(string member, decimal score)[]> ZRevRangeByScoreWithScoresAsync(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreWithScoresAsync(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), offset, count))).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count)));
+        async public Task<(T member, decimal score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), offset, count)));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
@@ -1213,7 +1213,7 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(string member, double score)[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? count = null, long offset = 0) =>
+        async public Task<(string member, decimal score)[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? count = null, long offset = 0) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeByScoreWithScoresAsync(k, max, min, offset, count))).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -1225,8 +1225,8 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        async public Task<(T member, double score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, string max, string min, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max, min, offset, count)));
+        async public Task<(T member, decimal score)[]> ZRevRangeByScoreWithScoresAsync<T>(string key, string max, string min, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(await ExecuteScalarAsync(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScoresAsync(k, max, min, offset, count)));
 
         /// <summary>
         /// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
@@ -1245,7 +1245,7 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="member">成员</param>
         /// <returns></returns>
-        public Task<double?> ZScoreAsync(string key, object member)
+        public Task<decimal?> ZScoreAsync(string key, object member)
         {
             var args = this.SerializeRedisValueInternal(member);
             return ExecuteScalarAsync(key, (c, k) => c.Value.ZScoreAsync(k, args));
@@ -1259,7 +1259,7 @@ namespace CSRedis
         /// <param name="aggregate">Sum | Min | Max</param>
         /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
         /// <returns></returns>
-        public Task<long> ZUnionStoreAsync(string destination, double[] weights, RedisAggregate aggregate, params string[] keys)
+        public Task<long> ZUnionStoreAsync(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys)
         {
             if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
             if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
@@ -1274,10 +1274,10 @@ namespace CSRedis
         /// <param name="pattern">模式</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        async public Task<RedisScan<(string member, double score)>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null)
+        async public Task<RedisScan<(string member, decimal score)>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null)
         {
             var scan = await ExecuteScalarAsync(key, (c, k) => c.Value.ZScanAsync(k, cursor, pattern, count));
-            return new RedisScan<(string, double)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
+            return new RedisScan<(string, decimal)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
         }
         /// <summary>
         /// 迭代有序集合中的元素
@@ -1288,10 +1288,10 @@ namespace CSRedis
         /// <param name="pattern">模式</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        async public Task<RedisScan<(T member, double score)>> ZScanAsync<T>(string key, long cursor, string pattern = null, long? count = null)
+        async public Task<RedisScan<(T member, decimal score)>> ZScanAsync<T>(string key, long cursor, string pattern = null, long? count = null)
         {
             var scan = await ExecuteScalarAsync(key, (c, k) => c.Value.ZScanBytesAsync(k, cursor, pattern, count));
-            return new RedisScan<(T, double)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
+            return new RedisScan<(T, decimal)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, decimal>(scan.Items));
         }
 
         /// <summary>
@@ -1813,7 +1813,7 @@ namespace CSRedis
         /// <param name="field">字段</param>
         /// <param name="value">增量值(默认=1)</param>
         /// <returns></returns>
-        public Task<double> HIncrByFloatAsync(string key, string field, double value) => ExecuteScalarAsync(key, (c, k) => c.Value.HIncrByFloatAsync(k, field, value));
+        public Task<decimal> HIncrByFloatAsync(string key, string field, decimal value) => ExecuteScalarAsync(key, (c, k) => c.Value.HIncrByFloatAsync(k, field, value));
         /// <summary>
         /// 获取所有哈希表中的字段
         /// </summary>
@@ -2045,7 +2045,7 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="value">增量值(默认=1)</param>
         /// <returns></returns>
-        public Task<double> IncrByFloatAsync(string key, double value) => ExecuteScalarAsync(key, (c, k) => c.Value.IncrByFloatAsync(k, value));
+        public Task<decimal> IncrByFloatAsync(string key, decimal value) => ExecuteScalarAsync(key, (c, k) => c.Value.IncrByFloatAsync(k, value));
         /// <summary>
         /// 获取多个指定 key 的值(数组)
         /// </summary>
@@ -2114,6 +2114,15 @@ namespace CSRedis
             if (expireSeconds <= 0 && exists != null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, null, exists)) == "OK";
             if (expireSeconds > 0 && exists == null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, expireSeconds, null)) == "OK";
             if (expireSeconds > 0 && exists != null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, expireSeconds, exists)) == "OK";
+            return false;
+        }
+        async public Task<bool> SetAsync(string key, object value, TimeSpan expire, RedisExistence? exists = null)
+        {
+            object redisValule = this.SerializeRedisValueInternal(value);
+            if (expire <= TimeSpan.Zero && exists == null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule)) == "OK";
+            if (expire <= TimeSpan.Zero && exists != null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule, null, exists)) == "OK";
+            if (expire > TimeSpan.Zero && exists == null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule, expire, null)) == "OK";
+            if (expire > TimeSpan.Zero && exists != null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule, expire, exists)) == "OK";
             return false;
         }
         /// <summary>
@@ -2414,14 +2423,14 @@ namespace CSRedis
         /// <param name="latitude">纬度</param>
         /// <param name="member">成员</param>
         /// <returns>是否成功</returns>
-        async public Task<bool> GeoAddAsync(string key, double longitude, double latitude, object member) => await GeoAddAsync(key, (longitude, latitude, member)) == 1;
+        async public Task<bool> GeoAddAsync(string key, decimal longitude, decimal latitude, object member) => await GeoAddAsync(key, (longitude, latitude, member)) == 1;
         /// <summary>
         /// 将指定的地理空间位置（纬度、经度、成员）添加到指定的key中。这些数据将会存储到sorted set这样的目的是为了方便使用GEORADIUS或者GEORADIUSBYMEMBER命令对数据进行半径查询等操作。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="values">批量添加的值</param>
         /// <returns>添加到sorted set元素的数目，但不包括已更新score的元素。</returns>
-        async public Task<long> GeoAddAsync(string key, params (double longitude, double latitude, object member)[] values)
+        async public Task<long> GeoAddAsync(string key, params (decimal longitude, decimal latitude, object member)[] values)
         {
             if (values == null || values.Any() == false) return 0;
             var args = values.Select(z => (z.longitude, z.latitude, this.SerializeRedisValueInternal(z.member))).ToArray();
@@ -2435,7 +2444,7 @@ namespace CSRedis
         /// <param name="member2">成员2</param>
         /// <param name="unit">m 表示单位为米；km 表示单位为千米；mi 表示单位为英里；ft 表示单位为英尺；</param>
         /// <returns>计算出的距离会以双精度浮点数的形式被返回。 如果给定的位置元素不存在， 那么命令返回空值。</returns>
-        public Task<double?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m)
+        public Task<decimal?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m)
         {
             var args1 = this.SerializeRedisValueInternal(member1);
             var args2 = this.SerializeRedisValueInternal(member2);
@@ -2459,9 +2468,9 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="members">多个查询的成员</param>
         /// <returns>GEOPOS 命令返回一个数组， 数组中的每个项都由两个元素组成： 第一个元素为给定位置元素的经度， 而第二个元素则为给定位置元素的纬度。当给定的位置元素不存在时， 对应的数组项为空值。</returns>
-        async public Task<(double longitude, double latitude)?[]> GeoPosAsync(string key, object[] members)
+        async public Task<(decimal longitude, decimal latitude)?[]> GeoPosAsync(string key, object[] members)
         {
-            if (members == null || members.Any() == false) return new (double, double)?[0];
+            if (members == null || members.Any() == false) return new (decimal, decimal)?[0];
             var args = members.Select(z => this.SerializeRedisValueInternal(z)).ToArray();
             return await ExecuteScalarAsync(key, (c, k) => c.Value.GeoPosAsync(k, args));
         }
@@ -2477,7 +2486,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<string[]> GeoRadiusAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<string[]> GeoRadiusAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusAsync(k, longitude, latitude, radius, unit, count, sorting, false, false, false))).Select(a => a.member).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -2490,7 +2499,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<T[]> GeoRadiusAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<T[]> GeoRadiusAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, false, false, false))).Select(a => this.DeserializeRedisValueInternal<T>(a.member)).ToArray();
 
         /// <summary>
@@ -2504,7 +2513,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(string member, double dist)[]> GeoRadiusWithDistAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(string member, decimal dist)[]> GeoRadiusWithDistAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusAsync(k, longitude, latitude, radius, unit, count, sorting, false, true, false))).Select(a => (a.member, a.dist)).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -2517,7 +2526,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(T member, double dist)[]> GeoRadiusWithDistAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(T member, decimal dist)[]> GeoRadiusWithDistAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, false, true, false))).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist)).ToArray();
 
         /// <summary>
@@ -2531,7 +2540,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async private Task<(string member, double longitude, double latitude)[]> GeoRadiusWithCoordAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async private Task<(string member, decimal longitude, decimal latitude)[]> GeoRadiusWithCoordAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusAsync(k, longitude, latitude, radius, unit, count, sorting, true, false, false))).Select(a => (a.member, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -2544,7 +2553,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async private Task<(T member, double longitude, double latitude)[]> GeoRadiusWithCoordAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async private Task<(T member, decimal longitude, decimal latitude)[]> GeoRadiusWithCoordAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, true, false, false))).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.longitude, a.latitude)).ToArray();
 
         /// <summary>
@@ -2558,7 +2567,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(string member, double dist, double longitude, double latitude)[]> GeoRadiusWithDistAndCoordAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(string member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusWithDistAndCoordAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusAsync(k, longitude, latitude, radius, unit, count, sorting, true, true, false))).Select(a => (a.member, a.dist, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -2571,7 +2580,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(T member, double dist, double longitude, double latitude)[]> GeoRadiusWithDistAndCoordAsync<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(T member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusWithDistAndCoordAsync<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesAsync(k, longitude, latitude, radius, unit, count, sorting, true, true, false))).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray();
 
         /// <summary>
@@ -2584,7 +2593,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<string[]> GeoRadiusByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<string[]> GeoRadiusByMemberAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusByMemberAsync(k, member, radius, unit, count, sorting, false, false, false))).Select(a => a.member).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -2596,7 +2605,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<T[]> GeoRadiusByMemberAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<T[]> GeoRadiusByMemberAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, false, false, false))).Select(a => this.DeserializeRedisValueInternal<T>(a.member)).ToArray();
 
         /// <summary>
@@ -2609,7 +2618,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(string member, double dist)[]> GeoRadiusByMemberWithDistAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(string member, decimal dist)[]> GeoRadiusByMemberWithDistAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusByMemberAsync(k, member, radius, unit, count, sorting, false, true, false))).Select(a => (a.member, a.dist)).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -2621,7 +2630,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(T member, double dist)[]> GeoRadiusByMemberWithDistAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(T member, decimal dist)[]> GeoRadiusByMemberWithDistAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, false, true, false))).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist)).ToArray();
 
         /// <summary>
@@ -2634,7 +2643,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async private Task<(string member, double longitude, double latitude)[]> GeoRadiusByMemberWithCoordAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async private Task<(string member, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithCoordAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusByMemberAsync(k, member, radius, unit, count, sorting, true, false, false))).Select(a => (a.member, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -2646,7 +2655,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async private Task<(T member, double longitude, double latitude)[]> GeoRadiusByMemberWithCoordAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async private Task<(T member, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithCoordAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, true, false, false))).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.longitude, a.latitude)).ToArray();
 
         /// <summary>
@@ -2659,7 +2668,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(string member, double dist, double longitude, double latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(string member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusByMemberAsync(k, member, radius, unit, count, sorting, true, true, false))).Select(a => (a.member, a.dist, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -2671,7 +2680,7 @@ namespace CSRedis
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        async public Task<(T member, double dist, double longitude, double latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        async public Task<(T member, decimal dist, decimal longitude, decimal latitude)[]> GeoRadiusByMemberWithDistAndCoordAsync<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             (await ExecuteScalarAsync(key, (c, k) => c.Value.GeoRadiusBytesByMemberAsync(k, member, radius, unit, count, sorting, true, true, false))).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray();
         #endregion
     }

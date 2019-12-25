@@ -2043,28 +2043,28 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (string member, double score)[] ZPopMax(string key, long count) => ExecuteScalar(key, (c, k) => c.Value.ZPopMax(k, count)).Select(a => (a.Item1, a.Item2)).ToArray();
+        public (string member, decimal score)[] ZPopMax(string key, long count) => ExecuteScalar(key, (c, k) => c.Value.ZPopMax(k, count)).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (T member, double score)[] ZPopMax<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZPopMaxBytes(k, count)));
+        public (T member, decimal score)[] ZPopMax<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZPopMaxBytes(k, count)));
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (string member, double score)[] ZPopMin(string key, long count) => ExecuteScalar(key, (c, k) => c.Value.ZPopMin(k, count)).Select(a => (a.Item1, a.Item2)).ToArray();
+        public (string member, decimal score)[] ZPopMin(string key, long count) => ExecuteScalar(key, (c, k) => c.Value.ZPopMin(k, count)).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public (T member, double score)[] ZPopMin<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZPopMinBytes(k, count)));
+        public (T member, decimal score)[] ZPopMin<T>(string key, long count) => this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZPopMinBytes(k, count)));
 
         /// <summary>
         /// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
@@ -2072,10 +2072,10 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <param name="scoreMembers">一个或多个成员分数</param>
         /// <returns></returns>
-        public long ZAdd(string key, params (double, object)[] scoreMembers)
+        public long ZAdd(string key, params (decimal, object)[] scoreMembers)
         {
             if (scoreMembers == null || scoreMembers.Any() == false) return 0;
-            var args = scoreMembers.Select(a => new Tuple<double, object>(a.Item1, this.SerializeRedisValueInternal(a.Item2))).ToArray();
+            var args = scoreMembers.Select(a => new Tuple<decimal, object>(a.Item1, this.SerializeRedisValueInternal(a.Item2))).ToArray();
             return ExecuteScalar(key, (c, k) => c.Value.ZAdd(k, args));
         }
         /// <summary>
@@ -2088,10 +2088,10 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// 计算在有序集合中指定区间分数的成员数量
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <returns></returns>
-        public long ZCount(string key, double min, double max) => ExecuteScalar(key, (c, k) => c.Value.ZCount(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString()));
+        public long ZCount(string key, decimal min, decimal max) => ExecuteScalar(key, (c, k) => c.Value.ZCount(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString()));
         /// <summary>
         /// 计算在有序集合中指定区间分数的成员数量
         /// </summary>
@@ -2107,7 +2107,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="member">成员</param>
         /// <param name="increment">增量值(默认=1)</param>
         /// <returns></returns>
-        public double ZIncrBy(string key, object member, double increment = 1)
+        public decimal ZIncrBy(string key, object member, decimal increment = 1)
         {
             var args = this.SerializeRedisValueInternal(member);
             return ExecuteScalar(key, (c, k) => c.Value.ZIncrBy(k, increment, args));
@@ -2121,7 +2121,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="aggregate">Sum | Min | Max</param>
         /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
         /// <returns></returns>
-        public long ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys)
+        public long ZInterStore(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys)
         {
             if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
             if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
@@ -2152,7 +2152,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public (string member, double score)[] ZRangeWithScores(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.Value.ZRangeWithScores(k, start, stop)).Select(a => (a.Item1, a.Item2)).ToArray();
+        public (string member, decimal score)[] ZRangeWithScores(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.Value.ZRangeWithScores(k, start, stop)).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// 通过索引区间返回有序集合成指定区间内的成员和分数
         /// </summary>
@@ -2161,31 +2161,31 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public (T member, double score)[] ZRangeWithScores<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesWithScores(k, start, stop)));
+        public (T member, decimal score)[] ZRangeWithScores<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesWithScores(k, start, stop)));
 
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public string[] ZRangeByScore(string key, double min, double max, long? count = null, long offset = 0) =>
-            ExecuteScalar(key, (c, k) => c.Value.ZRangeByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count));
+        public string[] ZRangeByScore(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            ExecuteScalar(key, (c, k) => c.Value.ZRangeByScore(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), false, offset, count));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public T[] ZRangeByScore<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
+        public T[] ZRangeByScore<T>(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScore(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), false, offset, count)));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
@@ -2214,25 +2214,25 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (string member, double score)[] ZRangeByScoreWithScores(string key, double min, double max, long? count = null, long offset = 0) =>
-            ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count)).Select(z => (z.Item1, z.Item2)).ToArray();
+        public (string member, decimal score)[] ZRangeByScoreWithScores(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), offset, count)).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (T member, double score)[] ZRangeByScoreWithScores<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count)));
+        public (T member, decimal score)[] ZRangeByScoreWithScores<T>(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), offset, count)));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
@@ -2242,7 +2242,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (string member, double score)[] ZRangeByScoreWithScores(string key, string min, string max, long? count = null, long offset = 0) =>
+        public (string member, decimal score)[] ZRangeByScoreWithScores(string key, string min, string max, long? count = null, long offset = 0) =>
             ExecuteScalar(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min, max, offset, count)).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
@@ -2254,8 +2254,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (T member, double score)[] ZRangeByScoreWithScores<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, count)));
+        public (T member, decimal score)[] ZRangeByScoreWithScores<T>(string key, string min, string max, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, count)));
 
         /// <summary>
         /// 返回有序集合中指定成员的索引
@@ -2292,10 +2292,10 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// 移除有序集合中给定的分数区间的所有成员
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <returns></returns>
-        public long ZRemRangeByScore(string key, double min, double max) => ExecuteScalar(key, (c, k) => c.Value.ZRemRangeByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString()));
+        public long ZRemRangeByScore(string key, decimal min, decimal max) => ExecuteScalar(key, (c, k) => c.Value.ZRemRangeByScore(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString()));
         /// <summary>
         /// 移除有序集合中给定的分数区间的所有成员
         /// </summary>
@@ -2329,7 +2329,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public (string member, double score)[] ZRevRangeWithScores(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeWithScores(k, start, stop)).Select(a => (a.Item1, a.Item2)).ToArray();
+        public (string member, decimal score)[] ZRevRangeWithScores(string key, long start, long stop) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeWithScores(k, start, stop)).Select(a => (a.Item1, a.Item2)).ToArray();
         /// <summary>
         /// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
         /// </summary>
@@ -2338,30 +2338,30 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public (T member, double score)[] ZRevRangeWithScores<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesWithScores(k, start, stop)));
+        public (T member, decimal score)[] ZRevRangeWithScores<T>(string key, long start, long stop) => this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesWithScores(k, start, stop)));
 
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public string[] ZRevRangeByScore(string key, double max, double min, long? count = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count));
+        public string[] ZRevRangeByScore(string key, decimal max, decimal min, long? count = null, long? offset = 0) => ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScore(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), false, offset, count));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public T[] ZRevRangeByScore<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count)));
+        public T[] ZRevRangeByScore<T>(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScore(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), false, offset, count)));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
@@ -2389,25 +2389,25 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (string member, double score)[] ZRevRangeByScoreWithScores(string key, double max, double min, long? count = null, long offset = 0) =>
-            ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count)).Select(z => (z.Item1, z.Item2)).ToArray();
+        public (string member, decimal score)[] ZRevRangeByScoreWithScores(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), offset, count)).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count)));
+        public (T member, decimal score)[] ZRevRangeByScoreWithScores<T>(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), offset, count)));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
@@ -2417,7 +2417,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (string member, double score)[] ZRevRangeByScoreWithScores(string key, string max, string min, long? count = null, long offset = 0) =>
+        public (string member, decimal score)[] ZRevRangeByScoreWithScores(string key, string max, string min, long? count = null, long offset = 0) =>
             ExecuteScalar(key, (c, k) => c.Value.ZRevRangeByScoreWithScores(k, max, min, offset, count)).Select(z => (z.Item1, z.Item2)).ToArray();
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -2429,8 +2429,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? count = null, long offset = 0) =>
-            this.DeserializeRedisValueTuple1Internal<T, double>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, count)));
+        public (T member, decimal score)[] ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? count = null, long offset = 0) =>
+            this.DeserializeRedisValueTuple1Internal<T, decimal>(ExecuteScalar(key, (c, k) => c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, count)));
 
         /// <summary>
         /// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
@@ -2449,7 +2449,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <param name="member">成员</param>
         /// <returns></returns>
-        public double? ZScore(string key, object member)
+        public decimal? ZScore(string key, object member)
         {
             var args = this.SerializeRedisValueInternal(member);
             return ExecuteScalar(key, (c, k) => c.Value.ZScore(k, args));
@@ -2463,7 +2463,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="aggregate">Sum | Min | Max</param>
         /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
         /// <returns></returns>
-        public long ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys)
+        public long ZUnionStore(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys)
         {
             if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
             if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
@@ -2478,10 +2478,10 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="pattern">模式</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public RedisScan<(string member, double score)> ZScan(string key, long cursor, string pattern = null, long? count = null)
+        public RedisScan<(string member, decimal score)> ZScan(string key, long cursor, string pattern = null, long? count = null)
         {
             var scan = ExecuteScalar(key, (c, k) => c.Value.ZScan(k, cursor, pattern, count));
-            return new RedisScan<(string, double)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
+            return new RedisScan<(string, decimal)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
         }
         /// <summary>
         /// 迭代有序集合中的元素
@@ -2492,10 +2492,10 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="pattern">模式</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public RedisScan<(T member, double score)> ZScan<T>(string key, long cursor, string pattern = null, long? count = null)
+        public RedisScan<(T member, decimal score)> ZScan<T>(string key, long cursor, string pattern = null, long? count = null)
         {
             var scan = ExecuteScalar(key, (c, k) => c.Value.ZScanBytes(k, cursor, pattern, count));
-            return new RedisScan<(T, double)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
+            return new RedisScan<(T, decimal)>(scan.Cursor, this.DeserializeRedisValueTuple1Internal<T, decimal>(scan.Items));
         }
 
         /// <summary>
@@ -3119,7 +3119,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="field">字段</param>
         /// <param name="value">增量值(默认=1)</param>
         /// <returns></returns>
-        public double HIncrByFloat(string key, string field, double value) => ExecuteScalar(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
+        public decimal HIncrByFloat(string key, string field, decimal value) => ExecuteScalar(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
         /// <summary>
         /// 获取所有哈希表中的字段
         /// </summary>
@@ -3349,7 +3349,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <param name="value">增量值(默认=1)</param>
         /// <returns></returns>
-        public double IncrByFloat(string key, double value) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
+        public decimal IncrByFloat(string key, decimal value) => ExecuteScalar(key, (c, k) => c.Value.IncrByFloat(k, value));
         /// <summary>
         /// 获取多个指定 key 的值(数组)
         /// </summary>
@@ -3418,6 +3418,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             if (expireSeconds <= 0 && exists != null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule, null, exists)) == "OK";
             if (expireSeconds > 0 && exists == null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule, expireSeconds, null)) == "OK";
             if (expireSeconds > 0 && exists != null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule, expireSeconds, exists)) == "OK";
+            return false;
+        }
+        public bool Set(string key, object value, TimeSpan expire, RedisExistence? exists = null)
+        {
+            object redisValule = this.SerializeRedisValueInternal(value);
+            if (expire <= TimeSpan.Zero && exists == null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule)) == "OK";
+            if (expire <= TimeSpan.Zero && exists != null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule, null, exists)) == "OK";
+            if (expire > TimeSpan.Zero && exists == null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule, expire, null)) == "OK";
+            if (expire > TimeSpan.Zero && exists != null) return ExecuteScalar(key, (c, k) => c.Value.Set(k, redisValule, expire, exists)) == "OK";
             return false;
         }
         /// <summary>
@@ -3718,14 +3727,14 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="latitude">纬度</param>
         /// <param name="member">成员</param>
         /// <returns>是否成功</returns>
-        public bool GeoAdd(string key, double longitude, double latitude, object member) => GeoAdd(key, (longitude, latitude, member)) == 1;
+        public bool GeoAdd(string key, decimal longitude, decimal latitude, object member) => GeoAdd(key, (longitude, latitude, member)) == 1;
         /// <summary>
         /// 将指定的地理空间位置（纬度、经度、成员）添加到指定的key中。这些数据将会存储到sorted set这样的目的是为了方便使用GEORADIUS或者GEORADIUSBYMEMBER命令对数据进行半径查询等操作。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="values">批量添加的值</param>
         /// <returns>添加到sorted set元素的数目，但不包括已更新score的元素。</returns>
-        public long GeoAdd(string key, params (double longitude, double latitude, object member)[] values)
+        public long GeoAdd(string key, params (decimal longitude, decimal latitude, object member)[] values)
         {
             if (values == null || values.Any() == false) return 0;
             var args = values.Select(z => (z.longitude, z.latitude, this.SerializeRedisValueInternal(z.member))).ToArray();
@@ -3739,7 +3748,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="member2">成员2</param>
         /// <param name="unit">m 表示单位为米；km 表示单位为千米；mi 表示单位为英里；ft 表示单位为英尺；</param>
         /// <returns>计算出的距离会以双精度浮点数的形式被返回。 如果给定的位置元素不存在， 那么命令返回空值。</returns>
-        public double? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m)
+        public decimal? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m)
         {
             var args1 = this.SerializeRedisValueInternal(member1);
             var args2 = this.SerializeRedisValueInternal(member2);
@@ -3763,9 +3772,9 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <param name="members">多个查询的成员</param>
         /// <returns>GEOPOS 命令返回一个数组， 数组中的每个项都由两个元素组成： 第一个元素为给定位置元素的经度， 而第二个元素则为给定位置元素的纬度。当给定的位置元素不存在时， 对应的数组项为空值。</returns>
-        public (double longitude, double latitude)?[] GeoPos(string key, object[] members)
+        public (decimal longitude, decimal latitude)?[] GeoPos(string key, object[] members)
         {
-            if (members == null || members.Any() == false) return new (double, double)?[0];
+            if (members == null || members.Any() == false) return new (decimal, decimal)?[0];
             var args = members.Select(z => this.SerializeRedisValueInternal(z)).ToArray();
             return ExecuteScalar(key, (c, k) => c.Value.GeoPos(k, args));
         }
@@ -3781,7 +3790,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public string[] GeoRadius(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public string[] GeoRadius(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadius(k, longitude, latitude, radius, unit, count, sorting, false, false, false)).Select(a => a.member).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -3794,7 +3803,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public T[] GeoRadius<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public T[] GeoRadius<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytes(k, longitude, latitude, radius, unit, count, sorting, false, false, false)).Select(a => this.DeserializeRedisValueInternal<T>(a.member)).ToArray();
 
         /// <summary>
@@ -3808,7 +3817,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (string member, double dist)[] GeoRadiusWithDist(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (string member, decimal dist)[] GeoRadiusWithDist(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadius(k, longitude, latitude, radius, unit, count, sorting, false, true, false)).Select(a => (a.member, a.dist)).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -3821,7 +3830,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (T member, double dist)[] GeoRadiusWithDist<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (T member, decimal dist)[] GeoRadiusWithDist<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytes(k, longitude, latitude, radius, unit, count, sorting, false, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist)).ToArray();
 
         /// <summary>
@@ -3835,7 +3844,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        private (string member, double longitude, double latitude)[] GeoRadiusWithCoord(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        private (string member, decimal longitude, decimal latitude)[] GeoRadiusWithCoord(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadius(k, longitude, latitude, radius, unit, count, sorting, true, false, false)).Select(a => (a.member, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -3848,7 +3857,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        private (T member, double longitude, double latitude)[] GeoRadiusWithCoord<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        private (T member, decimal longitude, decimal latitude)[] GeoRadiusWithCoord<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytes(k, longitude, latitude, radius, unit, count, sorting, true, false, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.longitude, a.latitude)).ToArray();
 
         /// <summary>
@@ -3862,7 +3871,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (string member, double dist, double longitude, double latitude)[] GeoRadiusWithDistAndCoord(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (string member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusWithDistAndCoord(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadius(k, longitude, latitude, radius, unit, count, sorting, true, true, false)).Select(a => (a.member, a.dist, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -3875,7 +3884,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (T member, double dist, double longitude, double latitude)[] GeoRadiusWithDistAndCoord<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (T member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusWithDistAndCoord<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytes(k, longitude, latitude, radius, unit, count, sorting, true, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray();
 
         /// <summary>
@@ -3888,7 +3897,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public string[] GeoRadiusByMember(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public string[] GeoRadiusByMember(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusByMember(k, member, radius, unit, count, sorting, false, false, false)).Select(a => a.member).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -3900,7 +3909,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public T[] GeoRadiusByMember<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public T[] GeoRadiusByMember<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             this.DeserializeRedisValueArrayInternal<T>(ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytesByMember(k, member, radius, unit, count, sorting, false, false, false)).Select(a => a.member).ToArray());
 
         /// <summary>
@@ -3913,7 +3922,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (string member, double dist)[] GeoRadiusByMemberWithDist(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (string member, decimal dist)[] GeoRadiusByMemberWithDist(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusByMember(k, member, radius, unit, count, sorting, false, true, false)).Select(a => (a.member, a.dist)).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -3925,7 +3934,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (T member, double dist)[] GeoRadiusByMemberWithDist<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (T member, decimal dist)[] GeoRadiusByMemberWithDist<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytesByMember(k, member, radius, unit, count, sorting, false, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist)).ToArray();
 
         /// <summary>
@@ -3938,7 +3947,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        private (string member, double longitude, double latitude)[] GeoRadiusByMemberWithCoord(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        private (string member, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithCoord(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusByMember(k, member, radius, unit, count, sorting, true, false, false)).Select(a => (a.member, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -3950,7 +3959,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        private (T member, double longitude, double latitude)[] GeoRadiusByMemberWithCoord<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        private (T member, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithCoord<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytesByMember(k, member, radius, unit, count, sorting, true, false, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.longitude, a.latitude)).ToArray();
 
         /// <summary>
@@ -3963,7 +3972,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (string member, double dist, double longitude, double latitude)[] GeoRadiusByMemberWithDistAndCoord(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (string member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithDistAndCoord(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusByMember(k, member, radius, unit, count, sorting, true, true, false)).Select(a => (a.member, a.dist, a.longitude, a.latitude)).ToArray();
         /// <summary>
         /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -3975,7 +3984,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
         /// <param name="sorting">排序</param>
         /// <returns></returns>
-        public (T member, double dist, double longitude, double latitude)[] GeoRadiusByMemberWithDistAndCoord<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+        public (T member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithDistAndCoord<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
             ExecuteScalar(key, (c, k) => c.Value.GeoRadiusBytesByMember(k, member, radius, unit, count, sorting, true, true, false)).Select(a => (this.DeserializeRedisValueInternal<T>(a.member), a.dist, a.longitude, a.latitude)).ToArray();
         #endregion
 

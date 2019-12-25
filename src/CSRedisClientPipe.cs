@@ -193,34 +193,34 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZPopMax(string key, long count) =>
-            PipeCommand(key, (c, k) => { c.Value.ZPopMax(k, count); return default((string, double)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
+        public CSRedisClientPipe<(string member, decimal score)[]> ZPopMax(string key, long count) =>
+            PipeCommand(key, (c, k) => { c.Value.ZPopMax(k, count); return default((string, decimal)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZPopMax<T>(string key, long count) =>
-            PipeCommand(key, (c, k) => { c.Value.ZPopMaxBytes(k, count); return default((T member, double score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZPopMax<T>(string key, long count) =>
+            PipeCommand(key, (c, k) => { c.Value.ZPopMaxBytes(k, count); return default((T member, decimal score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZPopMin(string key, long count) =>
-            PipeCommand(key, (c, k) => { c.Value.ZPopMin(k, count); return default((string, double)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
+        public CSRedisClientPipe<(string member, decimal score)[]> ZPopMin(string key, long count) =>
+            PipeCommand(key, (c, k) => { c.Value.ZPopMin(k, count); return default((string, decimal)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
         /// <summary>
         /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZPopMin<T>(string key, long count) =>
-            PipeCommand(key, (c, k) => { c.Value.ZPopMinBytes(k, count); return default((T member, double score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZPopMin<T>(string key, long count) =>
+            PipeCommand(key, (c, k) => { c.Value.ZPopMinBytes(k, count); return default((T member, decimal score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
 
         /// <summary>
         /// 向有序集合添加一个或多个成员，或者更新已存在成员的分数
@@ -228,10 +228,10 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="scoreMembers">一个或多个成员分数</param>
         /// <returns></returns>
-        public CSRedisClientPipe<long> ZAdd(string key, params (double, object)[] scoreMembers)
+        public CSRedisClientPipe<long> ZAdd(string key, params (decimal, object)[] scoreMembers)
         {
             if (scoreMembers == null || scoreMembers.Any() == false) throw new Exception("scoreMembers 参数不可为空");
-            var ms = scoreMembers.Select(a => new Tuple<double, object>(a.Item1, rds.SerializeRedisValueInternal(a.Item2))).ToArray();
+            var ms = scoreMembers.Select(a => new Tuple<decimal, object>(a.Item1, rds.SerializeRedisValueInternal(a.Item2))).ToArray();
             return PipeCommand(key, (c, k) => c.Value.ZAdd(k, ms));
         }
         /// <summary>
@@ -244,10 +244,10 @@ namespace CSRedis
         /// 计算在有序集合中指定区间分数的成员数量
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <returns></returns>
-        public CSRedisClientPipe<long> ZCount(string key, double min, double max) => PipeCommand(key, (c, k) => c.Value.ZCount(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString()));
+        public CSRedisClientPipe<long> ZCount(string key, decimal min, decimal max) => PipeCommand(key, (c, k) => c.Value.ZCount(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString()));
         /// <summary>
         /// 计算在有序集合中指定区间分数的成员数量
         /// </summary>
@@ -263,7 +263,7 @@ namespace CSRedis
         /// <param name="member">成员</param>
         /// <param name="increment">增量值(默认=1)</param>
         /// <returns></returns>
-        public CSRedisClientPipe<double> ZIncrBy(string key, string member, double increment = 1) => PipeCommand(key, (c, k) => c.Value.ZIncrBy(k, increment, member));
+        public CSRedisClientPipe<decimal> ZIncrBy(string key, string member, decimal increment = 1) => PipeCommand(key, (c, k) => c.Value.ZIncrBy(k, increment, member));
 
         /// <summary>
         /// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中
@@ -273,7 +273,7 @@ namespace CSRedis
         /// <param name="aggregate">Sum | Min | Max</param>
         /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
         /// <returns></returns>
-        public CSRedisClientPipe<long> ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys)
+        public CSRedisClientPipe<long> ZInterStore(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys)
         {
             if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
             if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
@@ -307,9 +307,9 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZRangeWithScores(string key, long start, long stop) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRangeWithScores(k, start, stop); return default((string, double)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
+        public CSRedisClientPipe<(string member, decimal score)[]> ZRangeWithScores(string key, long start, long stop) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRangeWithScores(k, start, stop); return default((string, decimal)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
         /// <summary>
         /// 通过索引区间返回有序集合成指定区间内的成员和分数
         /// </summary>
@@ -318,32 +318,32 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZRangeWithScores<T>(string key, long start, long stop) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesWithScores(k, start, stop); return default((T member, double score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZRangeWithScores<T>(string key, long start, long stop) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesWithScores(k, start, stop); return default((T member, decimal score)[]); }, obj => rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
 
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<string[]> ZRangeByScore(string key, double min, double max, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => c.Value.ZRangeByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count));
+        public CSRedisClientPipe<string[]> ZRangeByScore(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => c.Value.ZRangeByScore(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), false, offset, count));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<T[]> ZRangeByScore<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), false, offset, count); return default(T[]); }, obj =>
+        public CSRedisClientPipe<T[]> ZRangeByScore<T>(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScore(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), false, offset, count); return default(T[]); }, obj =>
             rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员
@@ -374,27 +374,27 @@ namespace CSRedis
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZRangeByScoreWithScores(string key, double min, double max, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRangeByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count); return default((string, double)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(z => (z.Item1, z.Item2)));
+        public CSRedisClientPipe<(string member, decimal score)[]> ZRangeByScoreWithScores(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRangeByScoreWithScores(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), offset, count); return default((string, decimal)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(z => (z.Item1, z.Item2)));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZRangeByScoreWithScores<T>(string key, double min, double max, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScoreWithScores(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString(), offset, count); return default((T, double)[]); }, obj =>
-            rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZRangeByScoreWithScores<T>(string key, decimal min, decimal max, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScoreWithScores(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString(), offset, count); return default((T, decimal)[]); }, obj =>
+            rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
         /// </summary>
@@ -404,7 +404,7 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZRangeByScoreWithScores(string key, string min, string max, long? count = null, long offset = 0) =>
+        public CSRedisClientPipe<(string member, decimal score)[]> ZRangeByScoreWithScores(string key, string min, string max, long? count = null, long offset = 0) =>
             PipeCommand(key, (c, k) => c.Value.ZRangeByScoreWithScores(k, min, max, offset, count).Select(z => (z.Item1, z.Item2)).ToArray());
         /// <summary>
         /// 通过分数返回有序集合指定区间内的成员和分数
@@ -416,9 +416,9 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZRangeByScoreWithScores<T>(string key, string min, string max, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, count); return default((T, double)[]); }, obj =>
-            rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZRangeByScoreWithScores<T>(string key, string min, string max, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRangeBytesByScoreWithScores(k, min, max, offset, count); return default((T, decimal)[]); }, obj =>
+            rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
 
         /// <summary>
         /// 返回有序集合中指定成员的索引
@@ -450,10 +450,10 @@ namespace CSRedis
         /// 移除有序集合中给定的分数区间的所有成员
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
         /// <returns></returns>
-        public CSRedisClientPipe<long> ZRemRangeByScore(string key, double min, double max) => PipeCommand(key, (c, k) => c.Value.ZRemRangeByScore(k, min == double.MinValue ? "-inf" : min.ToString(), max == double.MaxValue ? "+inf" : max.ToString()));
+        public CSRedisClientPipe<long> ZRemRangeByScore(string key, decimal min, decimal max) => PipeCommand(key, (c, k) => c.Value.ZRemRangeByScore(k, min == decimal.MinValue ? "-inf" : min.ToString(), max == decimal.MaxValue ? "+inf" : max.ToString()));
         /// <summary>
         /// 移除有序集合中给定的分数区间的所有成员
         /// </summary>
@@ -489,9 +489,9 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZRevRangeWithScores(string key, long start, long stop) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeWithScores(k, start, stop); return default((string, double)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
+        public CSRedisClientPipe<(string member, decimal score)[]> ZRevRangeWithScores(string key, long start, long stop) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeWithScores(k, start, stop); return default((string, decimal)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(a => (a.Item1, a.Item2)).ToArray());
         /// <summary>
         /// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
         /// </summary>
@@ -500,33 +500,33 @@ namespace CSRedis
         /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZRevRangeWithScores<T>(string key, long start, long stop) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesWithScores(k, start, stop); return default((T, double)[]); }, obj =>
-            rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZRevRangeWithScores<T>(string key, long start, long stop) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesWithScores(k, start, stop); return default((T, decimal)[]); }, obj =>
+            rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
 
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<string[]> ZRevRangeByScore(string key, double max, double min, long? count = null, long? offset = 0) =>
-            PipeCommand(key, (c, k) => c.Value.ZRevRangeByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count));
+        public CSRedisClientPipe<string[]> ZRevRangeByScore(string key, decimal max, decimal min, long? count = null, long? offset = 0) =>
+            PipeCommand(key, (c, k) => c.Value.ZRevRangeByScore(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), false, offset, count));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<T[]> ZRevRangeByScore<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScore(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), false, offset, count); return default(T[]); }, obj =>
+        public CSRedisClientPipe<T[]> ZRevRangeByScore<T>(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScore(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), false, offset, count); return default(T[]); }, obj =>
             rds.DeserializeRedisValueArrayInternal<T>((byte[][])obj));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员，分数从高到低排序
@@ -557,27 +557,27 @@ namespace CSRedis
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZRevRangeByScoreWithScores(string key, double max, double min, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count); return default((string member, double score)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(z => (z.Item1, z.Item2)).ToArray());
+        public CSRedisClientPipe<(string member, decimal score)[]> ZRevRangeByScoreWithScores(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeByScoreWithScores(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), offset, count); return default((string member, decimal score)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(z => (z.Item1, z.Item2)).ToArray());
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
         /// <typeparam name="T">byte[] 或其他类型</typeparam>
         /// <param name="key">不含prefix前辍</param>
-        /// <param name="max">分数最大值 double.MaxValue 10</param>
-        /// <param name="min">分数最小值 double.MinValue 1</param>
+        /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+        /// <param name="min">分数最小值 decimal.MinValue 1</param>
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZRevRangeByScoreWithScores<T>(string key, double max, double min, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScoreWithScores(k, max == double.MaxValue ? "+inf" : max.ToString(), min == double.MinValue ? "-inf" : min.ToString(), offset, count); return default((T member, double score)[]); }, obj =>
-            rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZRevRangeByScoreWithScores<T>(string key, decimal max, decimal min, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScoreWithScores(k, max == decimal.MaxValue ? "+inf" : max.ToString(), min == decimal.MinValue ? "-inf" : min.ToString(), offset, count); return default((T member, decimal score)[]); }, obj =>
+            rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
@@ -587,9 +587,9 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(string member, double score)[]> ZRevRangeByScoreWithScores(string key, string max, string min, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeByScoreWithScores(k, max, min, offset, count); return default((string, double)[]); }, obj =>
-            ((Tuple<string, double>[])obj).Select(z => (z.Item1, z.Item2)).ToArray());
+        public CSRedisClientPipe<(string member, decimal score)[]> ZRevRangeByScoreWithScores(string key, string max, string min, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeByScoreWithScores(k, max, min, offset, count); return default((string, decimal)[]); }, obj =>
+            ((Tuple<string, decimal>[])obj).Select(z => (z.Item1, z.Item2)).ToArray());
         /// <summary>
         /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
         /// </summary>
@@ -600,9 +600,9 @@ namespace CSRedis
         /// <param name="count">返回多少成员</param>
         /// <param name="offset">返回条件偏移位置</param>
         /// <returns></returns>
-        public CSRedisClientPipe<(T member, double score)[]> ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? count = null, long offset = 0) =>
-            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, count); return default((T, double)[]); }, obj =>
-            rds.DeserializeRedisValueTuple1Internal<T, double>((Tuple<byte[], double>[])obj));
+        public CSRedisClientPipe<(T member, decimal score)[]> ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? count = null, long offset = 0) =>
+            PipeCommand(key, (c, k) => { c.Value.ZRevRangeBytesByScoreWithScores(k, max, min, offset, count); return default((T, decimal)[]); }, obj =>
+            rds.DeserializeRedisValueTuple1Internal<T, decimal>((Tuple<byte[], decimal>[])obj));
 
         /// <summary>
         /// 返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
@@ -617,7 +617,7 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="member">成员</param>
         /// <returns></returns>
-        public CSRedisClientPipe<double?> ZScore(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZScore(k, rds.SerializeRedisValueInternal(member)));
+        public CSRedisClientPipe<decimal?> ZScore(string key, object member) => PipeCommand(key, (c, k) => c.Value.ZScore(k, rds.SerializeRedisValueInternal(member)));
 
         /// <summary>
         /// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
@@ -627,7 +627,7 @@ namespace CSRedis
         /// <param name="aggregate">Sum | Min | Max</param>
         /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
         /// <returns></returns>
-        public CSRedisClientPipe<long> ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys)
+        public CSRedisClientPipe<long> ZUnionStore(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys)
         {
             if (keys == null || keys.Length == 0) throw new Exception("keys 参数不可为空");
             if (weights != null && weights.Length != keys.Length) throw new Exception("weights 和 keys 参数长度必须相同");
@@ -644,11 +644,11 @@ namespace CSRedis
         /// <param name="pattern">模式</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public CSRedisClientPipe<RedisScan<(string member, double score)>> ZScan(string key, long cursor, string pattern = null, long? count = null) =>
-            PipeCommand(key, (c, k) => { c.Value.ZScan(k, cursor, pattern, count); return default(RedisScan<(string, double)>); }, obj =>
+        public CSRedisClientPipe<RedisScan<(string member, decimal score)>> ZScan(string key, long cursor, string pattern = null, long? count = null) =>
+            PipeCommand(key, (c, k) => { c.Value.ZScan(k, cursor, pattern, count); return default(RedisScan<(string, decimal)>); }, obj =>
             {
-                var scan = (RedisScan<Tuple<string, double>>)obj;
-                return new RedisScan<(string, double)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
+                var scan = (RedisScan<Tuple<string, decimal>>)obj;
+                return new RedisScan<(string, decimal)>(scan.Cursor, scan.Items.Select(z => (z.Item1, z.Item2)).ToArray());
             });
         /// <summary>
         /// 迭代有序集合中的元素
@@ -659,11 +659,11 @@ namespace CSRedis
         /// <param name="pattern">模式</param>
         /// <param name="count">数量</param>
         /// <returns></returns>
-        public CSRedisClientPipe<RedisScan<(T member, double score)>> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
-            PipeCommand(key, (c, k) => { c.Value.ZScanBytes(k, cursor, pattern, count); return default(RedisScan<(T, double)>); }, obj =>
+        public CSRedisClientPipe<RedisScan<(T member, decimal score)>> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
+            PipeCommand(key, (c, k) => { c.Value.ZScanBytes(k, cursor, pattern, count); return default(RedisScan<(T, decimal)>); }, obj =>
             {
-                var scan = (RedisScan<Tuple<byte[], double>>)obj;
-                return new RedisScan<(T, double)>(scan.Cursor, rds.DeserializeRedisValueTuple1Internal<T, double>(scan.Items));
+                var scan = (RedisScan<Tuple<byte[], decimal>>)obj;
+                return new RedisScan<(T, decimal)>(scan.Cursor, rds.DeserializeRedisValueTuple1Internal<T, decimal>(scan.Items));
             });
 
         /// <summary>
@@ -1207,7 +1207,7 @@ namespace CSRedis
         /// <param name="field">字段</param>
         /// <param name="value">增量值(默认=1)</param>
         /// <returns></returns>
-        public CSRedisClientPipe<double> HIncrByFloat(string key, string field, double value) => PipeCommand(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
+        public CSRedisClientPipe<decimal> HIncrByFloat(string key, string field, decimal value) => PipeCommand(key, (c, k) => c.Value.HIncrByFloat(k, field, value));
         /// <summary>
         /// 获取所有哈希表中的字段
         /// </summary>
@@ -1430,7 +1430,7 @@ namespace CSRedis
         /// <param name="key">不含prefix前辍</param>
         /// <param name="value">增量值(默认=1)</param>
         /// <returns></returns>
-        public CSRedisClientPipe<double> IncrBy(string key, double value) => PipeCommand(key, (c, k) => c.Value.IncrByFloat(k, value));
+        public CSRedisClientPipe<decimal> IncrBy(string key, decimal value) => PipeCommand(key, (c, k) => c.Value.IncrByFloat(k, value));
         /// <summary>
         /// 获取多个指定 key 的值(数组)
         /// </summary>
@@ -1458,6 +1458,15 @@ namespace CSRedis
             if (expireSeconds <= 0 && exists != null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, null, exists); return false; }, obj => obj?.ToString() == "OK");
             if (expireSeconds > 0 && exists == null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, expireSeconds, null); return false; }, obj => obj?.ToString() == "OK");
             if (expireSeconds > 0 && exists != null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, expireSeconds, exists); return false; }, obj => obj?.ToString() == "OK");
+            return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule); return false; }, obj => obj?.ToString() == "OK");
+        }
+        public CSRedisClientPipe<bool> Set(string key, object value, TimeSpan expire, RedisExistence? exists = null)
+        {
+            object redisValule = rds.SerializeRedisValueInternal(value);
+            if (expire <= TimeSpan.Zero && exists == null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule); return false; }, obj => obj?.ToString() == "OK");
+            if (expire <= TimeSpan.Zero && exists != null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, null, exists); return false; }, obj => obj?.ToString() == "OK");
+            if (expire > TimeSpan.Zero && exists == null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, expire, null); return false; }, obj => obj?.ToString() == "OK");
+            if (expire > TimeSpan.Zero && exists != null) return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule, expire, exists); return false; }, obj => obj?.ToString() == "OK");
             return PipeCommand(key, (c, k) => { c.Value.Set(k, redisValule); return false; }, obj => obj?.ToString() == "OK");
         }
         /// <summary>

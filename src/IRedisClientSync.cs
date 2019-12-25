@@ -385,7 +385,7 @@ namespace CSRedis
         /// <param name="field">Field to increment</param>
         /// <param name="increment">Increment value</param>
         /// <returns>Value of field after increment</returns>
-        double HIncrByFloat(string key, string field, double increment);
+        decimal HIncrByFloat(string key, string field, decimal increment);
 
 
         /// <summary>
@@ -920,7 +920,7 @@ namespace CSRedis
         /// <param name="exclusiveMin">Minimum score is exclusive</param>
         /// <param name="exclusiveMax">Maximum score is exclusive</param>
         /// <returns>Number of elements in the specified score range</returns>
-        long ZCount(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false);
+        long ZCount(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false);
 
 
 
@@ -944,7 +944,7 @@ namespace CSRedis
         /// <param name="increment">Increment by value</param>
         /// <param name="member">Sorted set member to increment</param>
         /// <returns>New score of member</returns>
-        double ZIncrBy(string key, double increment, object member);
+        decimal ZIncrBy(string key, decimal increment, object member);
 
 
 
@@ -957,7 +957,7 @@ namespace CSRedis
         /// <param name="aggregate">Aggregation function of resulting set</param>
         /// <param name="keys">Sorted set keys to intersect</param>
         /// <returns>Number of elements in the resulting sorted set</returns>
-        long ZInterStore(string destination, double[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
+        long ZInterStore(string destination, decimal[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
 
 
 
@@ -994,8 +994,8 @@ namespace CSRedis
         /// <param name="start">Start offset</param>
         /// <param name="stop">Stop offset</param>
         /// <returns>Array of elements in the specified range with scores</returns>
-        Tuple<string, double>[] ZRangeWithScores(string key, long start, long stop);
-        Tuple<byte[], double>[] ZRangeBytesWithScores(string key, long start, long stop);
+        Tuple<string, decimal>[] ZRangeWithScores(string key, long start, long stop);
+        Tuple<byte[], decimal>[] ZRangeBytesWithScores(string key, long start, long stop);
 
 
 
@@ -1011,8 +1011,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified range (with optional scores);</returns>
-        string[] ZRangeByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-        byte[][] ZRangeBytesByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        string[] ZRangeByScore(string key, decimal min, decimal max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        byte[][] ZRangeBytesByScore(string key, decimal min, decimal max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
@@ -1042,8 +1042,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified range (with optional scores);</returns>
-        Tuple<string, double>[] ZRangeByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-        Tuple<byte[], double>[] ZRangeBytesByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        Tuple<string, decimal>[] ZRangeByScoreWithScores(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        Tuple<byte[], decimal>[] ZRangeBytesByScoreWithScores(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
@@ -1056,8 +1056,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified range (with optional scores);</returns>
-        Tuple<string, double>[] ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
-        Tuple<byte[], double>[] ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
+        Tuple<string, decimal>[] ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
+        Tuple<byte[], decimal>[] ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null);
 
 
 
@@ -1104,7 +1104,7 @@ namespace CSRedis
         /// <param name="exclusiveMin">Minimum score is exclusive</param>
         /// <param name="exclusiveMax">Maximum score is exclusive</param>
         /// <returns>Number of elements removed</returns>
-        long ZRemRangeByScore(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false);
+        long ZRemRangeByScore(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false);
         long ZRemRangeByScore(string key, string min, string max);
 
 
@@ -1130,8 +1130,8 @@ namespace CSRedis
         /// <param name="start">Start offset</param>
         /// <param name="stop">Stop offset</param>
         /// <returns>List of elements in the specified range (with optional scores);</returns>
-        Tuple<string, double>[] ZRevRangeWithScores(string key, long start, long stop);
-        Tuple<byte[], double>[] ZRevRangeBytesWithScores(string key, long start, long stop);
+        Tuple<string, decimal>[] ZRevRangeWithScores(string key, long start, long stop);
+        Tuple<byte[], decimal>[] ZRevRangeBytesWithScores(string key, long start, long stop);
 
 
 
@@ -1148,8 +1148,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        string[] ZRevRangeByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
-        byte[][] ZRevRangeBytesByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        string[] ZRevRangeByScore(string key, decimal max, decimal min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        byte[][] ZRevRangeBytesByScore(string key, decimal max, decimal min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
@@ -1179,8 +1179,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        Tuple<string, double>[] ZRevRangeByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
-        Tuple<byte[], double>[] ZRevRangeBytesByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        Tuple<string, decimal>[] ZRevRangeByScoreWithScores(string key, decimal max, decimal min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        Tuple<byte[], decimal>[] ZRevRangeBytesByScoreWithScores(string key, decimal max, decimal min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
@@ -1193,8 +1193,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified score range (with optional scores);</returns>
-        Tuple<string, double>[] ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
-        Tuple<byte[], double>[] ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
+        Tuple<string, decimal>[] ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
+        Tuple<byte[], decimal>[] ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null);
 
 
 
@@ -1215,7 +1215,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Score of member, or null if member does not exist</returns>
-        double? ZScore(string key, object member);
+        decimal? ZScore(string key, object member);
 
 
 
@@ -1228,7 +1228,7 @@ namespace CSRedis
         /// <param name="aggregate">Aggregation function of resulting set</param>
         /// <param name="keys">Sorted set keys to union</param>
         /// <returns>Number of elements in the resulting sorted set</returns>
-        long ZUnionStore(string destination, double[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
+        long ZUnionStore(string destination, decimal[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
 
 
 
@@ -1252,8 +1252,8 @@ namespace CSRedis
         /// <param name="pattern">Glob-style pattern to filter returned elements</param>
         /// <param name="count">Maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
-        RedisScan<Tuple<string, double>> ZScan(string key, long cursor, string pattern = null, long? count = null);
-        RedisScan<Tuple<byte[], double>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null);
+        RedisScan<Tuple<string, decimal>> ZScan(string key, long cursor, string pattern = null, long? count = null);
+        RedisScan<Tuple<byte[], decimal>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null);
 
 
 
@@ -1577,7 +1577,7 @@ namespace CSRedis
         /// <param name="key">Key to modify</param>
         /// <param name="increment">Increment amount</param>
         /// <returns>Value of key after increment</returns>
-        double IncrByFloat(string key, double increment);
+        decimal IncrByFloat(string key, decimal increment);
 
 
 
@@ -2124,14 +2124,14 @@ namespace CSRedis
         #endregion
 
         #region Geo redis-server 3.2
-        long GeoAdd(string key, params (double longitude, double latitude, object member)[] values);
-        double? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m);
+        long GeoAdd(string key, params (decimal longitude, decimal latitude, object member)[] values);
+        decimal? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m);
         string[] GeoHash(string key, object[] members);
-        (double longitude, double latitude)?[] GeoPos(string key, object[] members);
-        (string member, double dist, double longitude, double latitude, long hash)[] GeoRadius(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-        (byte[] member, double dist, double longitude, double latitude, long hash)[] GeoRadiusBytes(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-        (string member, double dist, double longitude, double latitude, long hash)[] GeoRadiusByMember(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-        (byte[] member, double dist, double longitude, double latitude, long hash)[] GeoRadiusBytesByMember(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        (decimal longitude, decimal latitude)?[] GeoPos(string key, object[] members);
+        (string member, decimal dist, decimal longitude, decimal latitude, long hash)[] GeoRadius(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        (byte[] member, decimal dist, decimal longitude, decimal latitude, long hash)[] GeoRadiusBytes(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        (string member, decimal dist, decimal longitude, decimal latitude, long hash)[] GeoRadiusByMember(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        (byte[] member, decimal dist, decimal longitude, decimal latitude, long hash)[] GeoRadiusBytesByMember(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
         #endregion
     }
 

@@ -465,7 +465,7 @@ namespace CSRedis
         /// <param name="field">Field to increment</param>
         /// <param name="increment">Increment value</param>
         /// <returns>Value of field after increment</returns>
-        Task<double> HIncrByFloatAsync(string key, string field, double increment);
+        Task<decimal> HIncrByFloatAsync(string key, string field, decimal increment);
 
 
 
@@ -965,7 +965,7 @@ namespace CSRedis
         /// <param name="exclusiveMin">Minimum score is exclusive</param>
         /// <param name="exclusiveMax">Maximum score is exclusive</param>
         /// <returns>Number of elements in the specified score range</returns>
-        Task<long> ZCountAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false);
+        Task<long> ZCountAsync(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false);
 
 
 
@@ -989,7 +989,7 @@ namespace CSRedis
         /// <param name="increment">Increment by value</param>
         /// <param name="member">Sorted set member to increment</param>
         /// <returns>New score of member</returns>
-        Task<double> ZIncrByAsync(string key, double increment, object member);
+        Task<decimal> ZIncrByAsync(string key, decimal increment, object member);
 
 
 
@@ -1002,7 +1002,7 @@ namespace CSRedis
         /// <param name="aggregate">Aggregation function of resulting set</param>
         /// <param name="keys">Sorted set keys to intersect</param>
         /// <returns>Number of elements in the resulting sorted set</returns>
-        Task<long> ZInterStoreAsync(string destination, double[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
+        Task<long> ZInterStoreAsync(string destination, decimal[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
 
 
 
@@ -1039,8 +1039,8 @@ namespace CSRedis
         /// <param name="start">Start offset</param>
         /// <param name="stop">Stop offset</param>
         /// <returns>Array of elements in the specified range with scores</returns>
-        Task<Tuple<string, double>[]> ZRangeWithScoresAsync(string key, long start, long stop);
-        Task<Tuple<byte[], double>[]> ZRangeBytesWithScoresAsync(string key, long start, long stop);
+        Task<Tuple<string, decimal>[]> ZRangeWithScoresAsync(string key, long start, long stop);
+        Task<Tuple<byte[], decimal>[]> ZRangeBytesWithScoresAsync(string key, long start, long stop);
 
 
 
@@ -1056,8 +1056,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<string[]> ZRangeByScoreAsync(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-        Task<byte[][]> ZRangeBytesByScoreAsync(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        Task<string[]> ZRangeByScoreAsync(string key, decimal min, decimal max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        Task<byte[][]> ZRangeBytesByScoreAsync(string key, decimal min, decimal max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
@@ -1087,8 +1087,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRangeByScoreWithScoresAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
-        Task<Tuple<byte[], double>[]> ZRangeBytesByScoreWithScoresAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        Task<Tuple<string, decimal>[]> ZRangeByScoreWithScoresAsync(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
+        Task<Tuple<byte[], decimal>[]> ZRangeBytesByScoreWithScoresAsync(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null);
 
 
 
@@ -1101,8 +1101,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
-        Task<Tuple<byte[], double>[]> ZRangeBytesByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
+        Task<Tuple<string, decimal>[]> ZRangeByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
+        Task<Tuple<byte[], decimal>[]> ZRangeBytesByScoreWithScoresAsync(string key, string min, string max, long? offset = null, long? count = null);
 
 
 
@@ -1149,7 +1149,7 @@ namespace CSRedis
         /// <param name="exclusiveMin">Minimum score is exclusive</param>
         /// <param name="exclusiveMax">Maximum score is exclusive</param>
         /// <returns>Number of elements removed</returns>
-        Task<long> ZRemRangeByScoreAsync(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false);
+        Task<long> ZRemRangeByScoreAsync(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false);
         Task<long> ZRemRangeByScoreAsync(string key, string min, string max);
 
 
@@ -1175,8 +1175,8 @@ namespace CSRedis
         /// <param name="start">Start offset</param>
         /// <param name="stop">Stop offset</param>
         /// <returns>List of elements in the specified range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRevRangeWithScoresAsync(string key, long start, long stop);
-        Task<Tuple<byte[], double>[]> ZRevRangeBytesWithScoresAsync(string key, long start, long stop);
+        Task<Tuple<string, decimal>[]> ZRevRangeWithScoresAsync(string key, long start, long stop);
+        Task<Tuple<byte[], decimal>[]> ZRevRangeBytesWithScoresAsync(string key, long start, long stop);
 
 
 
@@ -1192,8 +1192,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<string[]> ZRevRangeByScoreAsync(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
-        Task<byte[][]> ZRevRangeBytesByScoreAsync(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        Task<string[]> ZRevRangeByScoreAsync(string key, decimal max, decimal min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        Task<byte[][]> ZRevRangeBytesByScoreAsync(string key, decimal max, decimal min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
@@ -1223,8 +1223,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRevRangeByScoreWithScoresAsync(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
-        Task<Tuple<byte[], double>[]> ZRevRangeBytesByScoreWithScoresAsync(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        Task<Tuple<string, decimal>[]> ZRevRangeByScoreWithScoresAsync(string key, decimal max, decimal min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
+        Task<Tuple<byte[], decimal>[]> ZRevRangeBytesByScoreWithScoresAsync(string key, decimal max, decimal min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null);
 
 
 
@@ -1237,8 +1237,8 @@ namespace CSRedis
         /// <param name="offset">Start offset</param>
         /// <param name="count">Number of elements to return</param>
         /// <returns>List of elements in the specified score range (with optional scores)</returns>
-        Task<Tuple<string, double>[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
-        Task<Tuple<byte[], double>[]> ZRevRangeBytesByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
+        Task<Tuple<string, decimal>[]> ZRevRangeByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
+        Task<Tuple<byte[], decimal>[]> ZRevRangeBytesByScoreWithScoresAsync(string key, string max, string min, long? offset = null, long? count = null);
 
 
 
@@ -1259,7 +1259,7 @@ namespace CSRedis
         /// <param name="key">Sorted set key</param>
         /// <param name="member">Member to lookup</param>
         /// <returns>Score of member, or null if member does not exist</returns>
-        Task<double?> ZScoreAsync(string key, object member);
+        Task<decimal?> ZScoreAsync(string key, object member);
 
 
 
@@ -1272,7 +1272,7 @@ namespace CSRedis
         /// <param name="aggregate">Aggregation function of resulting set</param>
         /// <param name="keys">Sorted set keys to union</param>
         /// <returns>Number of elements in the resulting sorted set</returns>
-        Task<long> ZUnionStoreAsync(string destination, double[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
+        Task<long> ZUnionStoreAsync(string destination, decimal[] weights = null, RedisAggregate? aggregate = null, params string[] keys);
 
 
 
@@ -1285,8 +1285,8 @@ namespace CSRedis
         /// <param name="pattern">Glob-style pattern to filter returned elements</param>
         /// <param name="count">Maximum number of elements to return</param>
         /// <returns>Updated cursor and result set</returns>
-        Task<RedisScan<Tuple<string, double>>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null);
-        Task<RedisScan<Tuple<byte[], double>>> ZScanBytesAsync(string key, long cursor, string pattern = null, long? count = null);
+        Task<RedisScan<Tuple<string, decimal>>> ZScanAsync(string key, long cursor, string pattern = null, long? count = null);
+        Task<RedisScan<Tuple<byte[], decimal>>> ZScanBytesAsync(string key, long cursor, string pattern = null, long? count = null);
 
 
 
@@ -1576,7 +1576,7 @@ namespace CSRedis
         /// <param name="key">Key to modify</param>
         /// <param name="increment">Increment amount</param>
         /// <returns>Value of key after increment</returns>
-        Task<double> IncrByFloatAsync(string key, double increment);
+        Task<decimal> IncrByFloatAsync(string key, decimal increment);
 
 
 
@@ -2112,14 +2112,14 @@ namespace CSRedis
         #endregion
 
         #region Geo redis-server 3.2
-        Task<long> GeoAddAsync(string key, params (double longitude, double latitude, object member)[] values);
-        Task<double?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m);
+        Task<long> GeoAddAsync(string key, params (decimal longitude, decimal latitude, object member)[] values);
+        Task<decimal?> GeoDistAsync(string key, object member1, object member2, GeoUnit unit = GeoUnit.m);
         Task<string[]> GeoHashAsync(string key, object[] members);
-        Task<(double longitude, double latitude)?[]> GeoPosAsync(string key, object[] members);
-        Task<(string member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-        Task<(byte[] member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusBytesAsync(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-        Task<(string member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
-        Task<(byte[] member, double dist, double longitude, double latitude, long hash)[]> GeoRadiusBytesByMemberAsync(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        Task<(decimal longitude, decimal latitude)?[]> GeoPosAsync(string key, object[] members);
+        Task<(string member, decimal dist, decimal longitude, decimal latitude, long hash)[]> GeoRadiusAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        Task<(byte[] member, decimal dist, decimal longitude, decimal latitude, long hash)[]> GeoRadiusBytesAsync(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        Task<(string member, decimal dist, decimal longitude, decimal latitude, long hash)[]> GeoRadiusByMemberAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
+        Task<(byte[] member, decimal dist, decimal longitude, decimal latitude, long hash)[]> GeoRadiusBytesByMemberAsync(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null, bool withCoord = false, bool withDist = false, bool withHash = false);
         #endregion
 #endif
     }

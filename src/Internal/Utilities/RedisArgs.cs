@@ -63,11 +63,11 @@ namespace CSRedis.Internal.Utilities
         /// <param name="score">Numeric base score</param>
         /// <param name="isExclusive">Score is exclusive, rather than inclusive</param>
         /// <returns>String representing Redis score/range notation</returns>
-        public static string GetScore(double score, bool isExclusive)
+        public static string GetScore(decimal score, bool isExclusive)
         {
-            if (Double.IsNegativeInfinity(score) || score == Double.MinValue)
+            if (score == decimal.MinValue)
                 return "-inf";
-            else if (Double.IsPositiveInfinity(score) || score == Double.MaxValue)
+            else if (score == decimal.MaxValue)
                 return "+inf";
             else if (isExclusive)
                 return '(' + score.ToString();

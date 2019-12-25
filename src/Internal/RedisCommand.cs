@@ -263,7 +263,7 @@ namespace CSRedis
         {
             return new RedisInt("HINCRBY", key, field, increment);
         }
-        public static RedisFloat HIncrByFloat(string key, string field, double increment)
+        public static RedisFloat HIncrByFloat(string key, string field, decimal increment)
         {
             return new RedisFloat("HINCRBYFLOAT", key, field, increment);
         }
@@ -652,21 +652,21 @@ namespace CSRedis
         #endregion
 
         #region Sorted Sets
-        public static RedisArray.WeakPairs<string, double> ZPopMax(string key, long count)
+        public static RedisArray.WeakPairs<string, decimal> ZPopMax(string key, long count)
         {
-            return new RedisArray.WeakPairs<string, double>("ZPOPMAX", key, count);
+            return new RedisArray.WeakPairs<string, decimal>("ZPOPMAX", key, count);
         }
-        public static RedisArray.StrongPairs<byte[], double> ZPopMaxBytes(string key, long count)
+        public static RedisArray.StrongPairs<byte[], decimal> ZPopMaxBytes(string key, long count)
         {
-            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZPOPMAX", key, count);
+            return new RedisArray.StrongPairs<byte[], decimal>(new RedisBytes(null), new RedisFloat(null), "ZPOPMAX", key, count);
         }
-        public static RedisArray.WeakPairs<string, double> ZPopMin(string key, long count)
+        public static RedisArray.WeakPairs<string, decimal> ZPopMin(string key, long count)
         {
-            return new RedisArray.WeakPairs<string, double>("ZPOPMIN", key, count);
+            return new RedisArray.WeakPairs<string, decimal>("ZPOPMIN", key, count);
         }
-        public static RedisArray.StrongPairs<byte[], double> ZPopMinBytes(string key, long count)
+        public static RedisArray.StrongPairs<byte[], decimal> ZPopMinBytes(string key, long count)
         {
-            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZPOPMIN", key, count);
+            return new RedisArray.StrongPairs<byte[], decimal>(new RedisBytes(null), new RedisFloat(null), "ZPOPMIN", key, count);
         }
 
         public static RedisInt ZAdd<TScore, TMember>(string key, params Tuple<TScore, TMember>[] scoreMembers)
@@ -683,7 +683,7 @@ namespace CSRedis
         {
             return new RedisInt("ZCARD", key);
         }
-        public static RedisInt ZCount(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false)
+        public static RedisInt ZCount(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -693,11 +693,11 @@ namespace CSRedis
         {
             return new RedisInt("ZCOUNT", key, min, max);
         }
-        public static RedisFloat ZIncrBy(string key, double increment, object member)
+        public static RedisFloat ZIncrBy(string key, decimal increment, object member)
         {
             return new RedisFloat("ZINCRBY", key, increment, member);
         }
-        public static RedisInt ZInterStore(string destination, double[] weights = null, RedisAggregate? aggregate = null, params string[] keys)
+        public static RedisInt ZInterStore(string destination, decimal[] weights = null, RedisAggregate? aggregate = null, params string[] keys)
         {
             List<object> args = new List<object>();
             args.Add(destination);
@@ -730,33 +730,33 @@ namespace CSRedis
                 : new[] { key, start.ToString(), stop.ToString() };
             return new RedisArray.Bytes("ZRANGE", args);
         }
-        public static RedisArray.WeakPairs<string, double> ZRangeWithScores(string key, long start, long stop)
+        public static RedisArray.WeakPairs<string, decimal> ZRangeWithScores(string key, long start, long stop)
         {
-            return new RedisArray.WeakPairs<string, double>("ZRANGE", key, start, stop, "WITHSCORES");
+            return new RedisArray.WeakPairs<string, decimal>("ZRANGE", key, start, stop, "WITHSCORES");
         }
-        public static RedisArray.StrongPairs<byte[], double> ZRangeBytesWithScores(string key, long start, long stop)
+        public static RedisArray.StrongPairs<byte[], decimal> ZRangeBytesWithScores(string key, long start, long stop)
         {
-            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZRANGE", key, start, stop, "WITHSCORES");
+            return new RedisArray.StrongPairs<byte[], decimal>(new RedisBytes(null), new RedisFloat(null), "ZRANGE", key, start, stop, "WITHSCORES");
         }
-        public static RedisArray.Strings ZRangeByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        public static RedisArray.Strings ZRangeByScore(string key, decimal min, decimal max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRangeByScore(key, min_score, max_score, withScores, offset, count);
         }
-        public static RedisArray.Bytes ZRangeBytesByScore(string key, double min, double max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRangeBytesByScore(string key, decimal min, decimal max, bool withScores = false, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRangeBytesByScore(key, min_score, max_score, withScores, offset, count);
         }
-        public static RedisArray.WeakPairs<string, double> ZRangeByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        public static RedisArray.WeakPairs<string, decimal> ZRangeByScoreWithScores(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRangeByScoreWithScores(key, min_score, max_score, offset, count);
         }
-        public static RedisArray.StrongPairs<byte[], double> ZRangeBytesByScoreWithScores(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], decimal> ZRangeBytesByScoreWithScores(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -782,21 +782,21 @@ namespace CSRedis
 
             return new RedisArray.Bytes("ZRANGEBYSCORE", args);
         }
-        public static RedisArray.WeakPairs<string, double> ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
+        public static RedisArray.WeakPairs<string, decimal> ZRangeByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
         {
             object[] args = new[] { key, min, max, "WITHSCORES" };
             if (offset.HasValue && count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
 
-            return new RedisArray.WeakPairs<string, double>("ZRANGEBYSCORE", args);
+            return new RedisArray.WeakPairs<string, decimal>("ZRANGEBYSCORE", args);
         }
-        public static RedisArray.StrongPairs<byte[], double> ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], decimal> ZRangeBytesByScoreWithScores(string key, string min, string max, long? offset = null, long? count = null)
         {
             object[] args = new[] { key, min, max, "WITHSCORES" };
             if (offset.HasValue && count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", offset.Value.ToString(), count.Value.ToString() });
 
-            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZRANGEBYSCORE", args);
+            return new RedisArray.StrongPairs<byte[], decimal>(new RedisBytes(null), new RedisFloat(null), "ZRANGEBYSCORE", args);
         }
         public static RedisInt.Nullable ZRank(string key, object member)
         {
@@ -811,7 +811,7 @@ namespace CSRedis
         {
             return new RedisInt("ZREMRANGEBYRANK", key, start, stop);
         }
-        public static RedisInt ZRemRangeByScore(string key, double min, double max, bool exclusiveMin = false, bool exclusiveMax = false)
+        public static RedisInt ZRemRangeByScore(string key, decimal min, decimal max, bool exclusiveMin = false, bool exclusiveMax = false)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -836,21 +836,21 @@ namespace CSRedis
                 : new[] { key, start.ToString(), stop.ToString() };
             return new RedisArray.Bytes("ZREVRANGE", args);
         }
-        public static RedisArray.WeakPairs<string, double> ZRevRangeWithScores(string key, long start, long stop)
+        public static RedisArray.WeakPairs<string, decimal> ZRevRangeWithScores(string key, long start, long stop)
         {
-            return new RedisArray.WeakPairs<string, double>("ZREVRANGE", key, start.ToString(), stop.ToString(), "WITHSCORES");
+            return new RedisArray.WeakPairs<string, decimal>("ZREVRANGE", key, start.ToString(), stop.ToString(), "WITHSCORES");
         }
-        public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesWithScores(string key, long start, long stop)
+        public static RedisArray.StrongPairs<byte[], decimal> ZRevRangeBytesWithScores(string key, long start, long stop)
         {
-            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZREVRANGE", key, start.ToString(), stop.ToString(), "WITHSCORES");
+            return new RedisArray.StrongPairs<byte[], decimal>(new RedisBytes(null), new RedisFloat(null), "ZREVRANGE", key, start.ToString(), stop.ToString(), "WITHSCORES");
         }
-        public static RedisArray.Strings ZRevRangeByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        public static RedisArray.Strings ZRevRangeByScore(string key, decimal max, decimal min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRevRangeByScore(key, max_score, min_score, withScores, offset, count);
         }
-        public static RedisArray.Bytes ZRevRangeBytesByScore(string key, double max, double min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        public static RedisArray.Bytes ZRevRangeBytesByScore(string key, decimal max, decimal min, bool withScores = false, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
@@ -876,33 +876,33 @@ namespace CSRedis
 
             return new RedisArray.Bytes("ZREVRANGEBYSCORE", args);
         }
-        public static RedisArray.WeakPairs<string, double> ZRevRangeByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        public static RedisArray.WeakPairs<string, decimal> ZRevRangeByScoreWithScores(string key, decimal max, decimal min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRevRangeByScoreWithScores(key, max_score, min_score, offset, count);
         }
-        public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesByScoreWithScores(string key, double max, double min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], decimal> ZRevRangeBytesByScoreWithScores(string key, decimal max, decimal min, bool exclusiveMax = false, bool exclusiveMin = false, long? offset = null, long? count = null)
         {
             string min_score = RedisArgs.GetScore(min, exclusiveMin);
             string max_score = RedisArgs.GetScore(max, exclusiveMax);
             return ZRevRangeBytesByScoreWithScores(key, max_score, min_score, offset, count);
         }
-        public static RedisArray.WeakPairs<string, double> ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
+        public static RedisArray.WeakPairs<string, decimal> ZRevRangeByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
         {
             object[] args = new[] { key, max, min, "WITHSCORES" };
             if (count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", (offset ?? 0).ToString(), count.Value.ToString() });
 
-            return new RedisArray.WeakPairs<string, double>("ZREVRANGEBYSCORE", args);
+            return new RedisArray.WeakPairs<string, decimal>("ZREVRANGEBYSCORE", args);
         }
-        public static RedisArray.StrongPairs<byte[], double> ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
+        public static RedisArray.StrongPairs<byte[], decimal> ZRevRangeBytesByScoreWithScores(string key, string max, string min, long? offset = null, long? count = null)
         {
             object[] args = new[] { key, max, min, "WITHSCORES" };
             if (count.HasValue)
                 args = RedisArgs.Concat(args, new[] { "LIMIT", (offset ?? 0).ToString(), count.Value.ToString() });
 
-            return new RedisArray.StrongPairs<byte[], double>(new RedisBytes(null), new RedisFloat(null), "ZREVRANGEBYSCORE", args);
+            return new RedisArray.StrongPairs<byte[], decimal>(new RedisBytes(null), new RedisFloat(null), "ZREVRANGEBYSCORE", args);
         }
         public static RedisInt.Nullable ZRevRank(string key, object member)
         {
@@ -912,7 +912,7 @@ namespace CSRedis
         {
             return new RedisFloat.Nullable("ZSCORE", key, member);
         }
-        public static RedisInt ZUnionStore(string destination, double[] weights = null, RedisAggregate? aggregate = null, params string[] keys)
+        public static RedisInt ZUnionStore(string destination, decimal[] weights = null, RedisAggregate? aggregate = null, params string[] keys)
         {
             List<object> args = new List<object>();
             args.Add(destination);
@@ -931,7 +931,7 @@ namespace CSRedis
             }
             return new RedisInt("ZUNIONSTORE", args.ToArray());
         }
-        public static RedisScanCommand<Tuple<string, double>> ZScan(string key, long cursor, string pattern = null, long? count = null)
+        public static RedisScanCommand<Tuple<string, decimal>> ZScan(string key, long cursor, string pattern = null, long? count = null)
         {
             var args = new List<object>();
             args.Add(key);
@@ -940,12 +940,12 @@ namespace CSRedis
                 args.AddRange(new[] { "MATCH", pattern });
             if (count != null)
                 args.AddRange(new object[] { "COUNT", count });
-            return new RedisScanCommand<Tuple<string, double>>(
-                new RedisArray.WeakPairs<string, double>("ZSCAN", args.ToArray()));
-            //<Tuple<string, double>>(
-            //new RedisTuple.Generic<string, double>.Bulk("ZSCAN", args.ToArray())));
+            return new RedisScanCommand<Tuple<string, decimal>>(
+                new RedisArray.WeakPairs<string, decimal>("ZSCAN", args.ToArray()));
+            //<Tuple<string, decimal>>(
+            //new RedisTuple.Generic<string, decimal>.Bulk("ZSCAN", args.ToArray())));
         }
-        public static RedisScanCommand<Tuple<byte[], double>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null)
+        public static RedisScanCommand<Tuple<byte[], decimal>> ZScanBytes(string key, long cursor, string pattern = null, long? count = null)
         {
             var args = new List<object>();
             args.Add(key);
@@ -954,11 +954,11 @@ namespace CSRedis
                 args.AddRange(new[] { "MATCH", pattern });
             if (count != null)
                 args.AddRange(new object[] { "COUNT", count });
-            return new RedisScanCommand<Tuple<byte[], double>>(
-                new RedisArray.StrongPairs<byte[], double>(
+            return new RedisScanCommand<Tuple<byte[], decimal>>(
+                new RedisArray.StrongPairs<byte[], decimal>(
                 new RedisBytes(null), new RedisFloat(null), "ZSCAN", args.ToArray()));
-            //<Tuple<string, double>>(
-            //new RedisTuple.Generic<string, double>.Bulk("ZSCAN", args.ToArray())));
+            //<Tuple<string, decimal>>(
+            //new RedisTuple.Generic<string, decimal>.Bulk("ZSCAN", args.ToArray())));
         }
         public static RedisArray.Strings ZRangeByLex(string key, string min, string max, long? offset = null, long? count = null)
         {
@@ -1137,7 +1137,7 @@ namespace CSRedis
         {
             return new RedisInt("INCRBY", key, increment);
         }
-        public static RedisFloat IncrByFloat(string key, double increment)
+        public static RedisFloat IncrByFloat(string key, decimal increment)
         {
             return new RedisFloat("INCRBYFLOAT", key, increment);
         }

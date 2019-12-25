@@ -280,7 +280,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="scoreMembers">一个或多个成员分数</param>
     /// <returns></returns>
-    public static long ZAdd(string key, params (double, object)[] scoreMembers) => Instance.ZAdd(key, scoreMembers);
+    public static long ZAdd(string key, params (decimal, object)[] scoreMembers) => Instance.ZAdd(key, scoreMembers);
     /// <summary>
     /// 获取有序集合的成员数量
     /// </summary>
@@ -291,10 +291,10 @@ public abstract partial class RedisHelper<TMark>
     /// 计算在有序集合中指定区间分数的成员数量
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <returns></returns>
-    public static long ZCount(string key, double min, double max) => Instance.ZCount(key, min, max);
+    public static long ZCount(string key, decimal min, decimal max) => Instance.ZCount(key, min, max);
     /// <summary>
     /// 计算在有序集合中指定区间分数的成员数量
     /// </summary>
@@ -310,7 +310,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="member">成员</param>
     /// <param name="increment">增量值(默认=1)</param>
     /// <returns></returns>
-    public static double ZIncrBy(string key, string member, double increment = 1) => Instance.ZIncrBy(key, member, increment);
+    public static decimal ZIncrBy(string key, string member, decimal increment = 1) => Instance.ZIncrBy(key, member, increment);
 
     /// <summary>
     /// 计算给定的一个或多个有序集的交集，将结果集存储在新的有序集合 destination 中
@@ -320,7 +320,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="aggregate">Sum | Min | Max</param>
     /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
     /// <returns></returns>
-    public static long ZInterStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZInterStore(destination, weights, aggregate, keys);
+    public static long ZInterStore(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZInterStore(destination, weights, aggregate, keys);
 
     /// <summary>
     /// 通过索引区间返回有序集合成指定区间内的成员
@@ -346,7 +346,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static (string member, double score)[] ZRangeWithScores(string key, long start, long stop) => Instance.ZRangeWithScores(key, start, stop);
+    public static (string member, decimal score)[] ZRangeWithScores(string key, long start, long stop) => Instance.ZRangeWithScores(key, start, stop);
     /// <summary>
     /// 通过索引区间返回有序集合成指定区间内的成员和分数
     /// </summary>
@@ -355,30 +355,30 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static (T member, double score)[] ZRangeWithScores<T>(string key, long start, long stop) => Instance.ZRangeWithScores<T>(key, start, stop);
+    public static (T member, decimal score)[] ZRangeWithScores<T>(string key, long start, long stop) => Instance.ZRangeWithScores<T>(key, start, stop);
 
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static string[] ZRangeByScore(string key, double min, double max, long? limit = null, long offset = 0) =>
+    public static string[] ZRangeByScore(string key, decimal min, decimal max, long? limit = null, long offset = 0) =>
         Instance.ZRangeByScore(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static T[] ZRangeByScore<T>(string key, double min, double max, long? limit = null, long offset = 0) =>
+    public static T[] ZRangeByScore<T>(string key, decimal min, decimal max, long? limit = null, long offset = 0) =>
         Instance.ZRangeByScore<T>(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员
@@ -408,24 +408,24 @@ public abstract partial class RedisHelper<TMark>
     /// 通过分数返回有序集合指定区间内的成员和分数
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (string member, double score)[] ZRangeByScoreWithScores(string key, double min, double max, long? limit = null, long offset = 0) =>
+    public static (string member, decimal score)[] ZRangeByScoreWithScores(string key, decimal min, decimal max, long? limit = null, long offset = 0) =>
         Instance.ZRangeByScoreWithScores(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员和分数
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (T member, double score)[] ZRangeByScoreWithScores<T>(string key, double min, double max, long? limit = null, long offset = 0) =>
+    public static (T member, decimal score)[] ZRangeByScoreWithScores<T>(string key, decimal min, decimal max, long? limit = null, long offset = 0) =>
         Instance.ZRangeByScoreWithScores<T>(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员和分数
@@ -436,7 +436,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (string member, double score)[] ZRangeByScoreWithScores(string key, string min, string max, long? limit = null, long offset = 0) =>
+    public static (string member, decimal score)[] ZRangeByScoreWithScores(string key, string min, string max, long? limit = null, long offset = 0) =>
         Instance.ZRangeByScoreWithScores(key, min, max, limit, offset);
     /// <summary>
     /// 通过分数返回有序集合指定区间内的成员和分数
@@ -448,7 +448,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (T member, double score)[] ZRangeByScoreWithScores<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
+    public static (T member, decimal score)[] ZRangeByScoreWithScores<T>(string key, string min, string max, long? limit = null, long offset = 0) =>
            Instance.ZRangeByScoreWithScores<T>(key, min, max, limit, offset);
 
     /// <summary>
@@ -477,10 +477,10 @@ public abstract partial class RedisHelper<TMark>
     /// 移除有序集合中给定的分数区间的所有成员
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
     /// <returns></returns>
-    public static long ZRemRangeByScore(string key, double min, double max) => Instance.ZRemRangeByScore(key, min, max);
+    public static long ZRemRangeByScore(string key, decimal min, decimal max) => Instance.ZRemRangeByScore(key, min, max);
     /// <summary>
     /// 移除有序集合中给定的分数区间的所有成员
     /// </summary>
@@ -514,7 +514,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static (string member, double score)[] ZRevRangeWithScores(string key, long start, long stop) => Instance.ZRevRangeWithScores(key, start, stop);
+    public static (string member, decimal score)[] ZRevRangeWithScores(string key, long start, long stop) => Instance.ZRevRangeWithScores(key, start, stop);
     /// <summary>
     /// 返回有序集中指定区间内的成员和分数，通过索引，分数从高到底
     /// </summary>
@@ -523,29 +523,29 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="start">开始位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <param name="stop">结束位置，0表示第一个元素，-1表示最后一个元素</param>
     /// <returns></returns>
-    public static (T member, double score)[] ZRevRangeWithScores<T>(string key, long start, long stop) => Instance.ZRevRangeWithScores<T>(key, start, stop);
+    public static (T member, decimal score)[] ZRevRangeWithScores<T>(string key, long start, long stop) => Instance.ZRevRangeWithScores<T>(key, start, stop);
 
     /// <summary>
     /// 返回有序集中指定分数区间内的成员，分数从高到低排序
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static string[] ZRevRangeByScore(string key, double max, double min, long? limit = null, long? offset = 0) => Instance.ZRevRangeByScore(key, max, min, limit, offset);
+    public static string[] ZRevRangeByScore(string key, decimal max, decimal min, long? limit = null, long? offset = 0) => Instance.ZRevRangeByScore(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员，分数从高到低排序
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static T[] ZRevRangeByScore<T>(string key, double max, double min, long? limit = null, long offset = 0) =>
+    public static T[] ZRevRangeByScore<T>(string key, decimal max, decimal min, long? limit = null, long offset = 0) =>
         Instance.ZRevRangeByScore<T>(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员，分数从高到低排序
@@ -574,24 +574,24 @@ public abstract partial class RedisHelper<TMark>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (string member, double score)[] ZRevRangeByScoreWithScores(string key, double max, double min, long? limit = null, long offset = 0) =>
+    public static (string member, decimal score)[] ZRevRangeByScoreWithScores(string key, decimal max, decimal min, long? limit = null, long offset = 0) =>
          Instance.ZRevRangeByScoreWithScores(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
     /// </summary>
     /// <typeparam name="T">byte[] 或其他类型</typeparam>
     /// <param name="key">不含prefix前辍</param>
-    /// <param name="max">分数最大值 double.MaxValue 10</param>
-    /// <param name="min">分数最小值 double.MinValue 1</param>
+    /// <param name="max">分数最大值 decimal.MaxValue 10</param>
+    /// <param name="min">分数最小值 decimal.MinValue 1</param>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, double max, double min, long? limit = null, long offset = 0) =>
+    public static (T member, decimal score)[] ZRevRangeByScoreWithScores<T>(string key, decimal max, decimal min, long? limit = null, long offset = 0) =>
            Instance.ZRevRangeByScoreWithScores<T>(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -602,7 +602,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (string member, double score)[] ZRevRangeByScoreWithScores(string key, string max, string min, long? limit = null, long offset = 0) =>
+    public static (string member, decimal score)[] ZRevRangeByScoreWithScores(string key, string max, string min, long? limit = null, long offset = 0) =>
            Instance.ZRevRangeByScoreWithScores(key, max, min, limit, offset);
     /// <summary>
     /// 返回有序集中指定分数区间内的成员和分数，分数从高到低排序
@@ -614,7 +614,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="limit">返回多少成员</param>
     /// <param name="offset">返回条件偏移位置</param>
     /// <returns></returns>
-    public static (T member, double score)[] ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? limit = null, long offset = 0) =>
+    public static (T member, decimal score)[] ZRevRangeByScoreWithScores<T>(string key, string max, string min, long? limit = null, long offset = 0) =>
         Instance.ZRevRangeByScoreWithScores<T>(key, max, min, limit, offset);
 
     /// <summary>
@@ -630,7 +630,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="member">成员</param>
     /// <returns></returns>
-    public static double? ZScore(string key, object member) => Instance.ZScore(key, member);
+    public static decimal? ZScore(string key, object member) => Instance.ZScore(key, member);
 
     /// <summary>
     /// 计算给定的一个或多个有序集的并集，将结果集存储在新的有序集合 destination 中
@@ -640,7 +640,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="aggregate">Sum | Min | Max</param>
     /// <param name="keys">一个或多个有序集合，不含prefix前辍</param>
     /// <returns></returns>
-    public static long ZUnionStore(string destination, double[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZUnionStore(destination, weights, aggregate, keys);
+    public static long ZUnionStore(string destination, decimal[] weights, RedisAggregate aggregate, params string[] keys) => Instance.ZUnionStore(destination, weights, aggregate, keys);
 
     /// <summary>
     /// 迭代有序集合中的元素
@@ -650,7 +650,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="pattern">模式</param>
     /// <param name="count">数量</param>
     /// <returns></returns>
-    public static RedisScan<(string member, double score)> ZScan(string key, long cursor, string pattern = null, long? count = null) =>
+    public static RedisScan<(string member, decimal score)> ZScan(string key, long cursor, string pattern = null, long? count = null) =>
            Instance.ZScan(key, cursor, pattern, count);
     /// <summary>
     /// 迭代有序集合中的元素
@@ -661,7 +661,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="pattern">模式</param>
     /// <param name="count">数量</param>
     /// <returns></returns>
-    public static RedisScan<(T member, double score)> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
+    public static RedisScan<(T member, decimal score)> ZScan<T>(string key, long cursor, string pattern = null, long? count = null) =>
            Instance.ZScan<T>(key, cursor, pattern, count);
 
     /// <summary>
@@ -1185,7 +1185,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="field">字段</param>
     /// <param name="value">增量值(默认=1)</param>
     /// <returns></returns>
-    public static double HIncrByFloat(string key, string field, double value = 1) => Instance.HIncrByFloat(key, field, value);
+    public static decimal HIncrByFloat(string key, string field, decimal value = 1) => Instance.HIncrByFloat(key, field, value);
     /// <summary>
     /// 获取所有哈希表中的字段
     /// </summary>
@@ -1370,7 +1370,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="value">增量值(默认=1)</param>
     /// <returns></returns>
-    public static double IncrByFloat(string key, double value = 1) => Instance.IncrByFloat(key, value);
+    public static decimal IncrByFloat(string key, decimal value = 1) => Instance.IncrByFloat(key, value);
     /// <summary>
     /// 获取多个指定 key 的值(数组)
     /// </summary>
@@ -1404,8 +1404,8 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="expireSeconds">过期(秒单位)</param>
     /// <param name="exists">Nx, Xx</param>
     /// <returns></returns>
-    public static bool Set(string key, object value, int expireSeconds = -1, RedisExistence? exists = null) =>
-        Instance.Set(key, value, expireSeconds, exists);
+    public static bool Set(string key, object value, int expireSeconds = -1, RedisExistence? exists = null) => Instance.Set(key, value, expireSeconds, exists);
+    public static bool Set(string key, object value, TimeSpan expire, RedisExistence? exists = null) => Instance.Set(key, value, expire, exists);
     /// <summary>
     /// 对 key 所储存的字符串值，设置或清除指定偏移量上的位(bit)
     /// </summary>
@@ -1649,14 +1649,14 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="latitude">纬度</param>
     /// <param name="member">成员</param>
     /// <returns>是否成功</returns>
-    public static bool GeoAdd(string key, double longitude, double latitude, object member) => Instance.GeoAdd(key, longitude, latitude, member);
+    public static bool GeoAdd(string key, decimal longitude, decimal latitude, object member) => Instance.GeoAdd(key, longitude, latitude, member);
     /// <summary>
     /// 将指定的地理空间位置（纬度、经度、成员）添加到指定的key中。这些数据将会存储到sorted set这样的目的是为了方便使用GEORADIUS或者GEORADIUSBYMEMBER命令对数据进行半径查询等操作。
     /// </summary>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="values">批量添加的值</param>
     /// <returns>添加到sorted set元素的数目，但不包括已更新score的元素。</returns>
-    public static long GeoAdd(string key, params (double longitude, double latitude, object member)[] values) => Instance.GeoAdd(key, values);
+    public static long GeoAdd(string key, params (decimal longitude, decimal latitude, object member)[] values) => Instance.GeoAdd(key, values);
     /// <summary>
     /// 返回两个给定位置之间的距离。如果两个位置之间的其中一个不存在， 那么命令返回空值。GEODIST 命令在计算距离时会假设地球为完美的球形， 在极限情况下， 这一假设最大会造成 0.5% 的误差。
     /// </summary>
@@ -1665,7 +1665,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="member2">成员2</param>
     /// <param name="unit">m 表示单位为米；km 表示单位为千米；mi 表示单位为英里；ft 表示单位为英尺；</param>
     /// <returns>计算出的距离会以双精度浮点数的形式被返回。 如果给定的位置元素不存在， 那么命令返回空值。</returns>
-    public static double? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m) => Instance.GeoDist(key, member1, member2, unit);
+    public static decimal? GeoDist(string key, object member1, object member2, GeoUnit unit = GeoUnit.m) => Instance.GeoDist(key, member1, member2, unit);
     /// <summary>
     /// 返回一个或多个位置元素的 Geohash 表示。通常使用表示位置的元素使用不同的技术，使用Geohash位置52点整数编码。由于编码和解码过程中所使用的初始最小和最大坐标不同，编码的编码也不同于标准。
     /// </summary>
@@ -1679,7 +1679,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <param name="members">多个查询的成员</param>
     /// <returns>GEOPOS 命令返回一个数组， 数组中的每个项都由两个元素组成： 第一个元素为给定位置元素的经度， 而第二个元素则为给定位置元素的纬度。当给定的位置元素不存在时， 对应的数组项为空值。</returns>
-    public static (double longitude, double latitude)?[] GeoPos(string key, object[] members) => Instance.GeoPos(key, members);
+    public static (decimal longitude, decimal latitude)?[] GeoPos(string key, object[] members) => Instance.GeoPos(key, members);
 
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -1692,7 +1692,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static string[] GeoRadius(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static string[] GeoRadius(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadius(key, longitude, latitude, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -1705,7 +1705,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static T[] GeoRadius<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static T[] GeoRadius<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadius<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     /// <summary>
@@ -1719,7 +1719,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (string member, double dist)[] GeoRadiusWithDist(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (string member, decimal dist)[] GeoRadiusWithDist(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDist(key, longitude, latitude, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -1732,7 +1732,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (T member, double dist)[] GeoRadiusWithDist<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (T member, decimal dist)[] GeoRadiusWithDist<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDist<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     ///// <summary>
@@ -1746,7 +1746,7 @@ public abstract partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static (string member, double longitude, double latitude)[] GeoRadiusWithCoord(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static (string member, decimal longitude, decimal latitude)[] GeoRadiusWithCoord(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusWithCoord(key, longitude, latitude, radius, unit, count, sorting);
     ///// <summary>
     ///// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -1759,7 +1759,7 @@ public abstract partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static (T member, double longitude, double latitude)[] GeoRadiusWithCoord<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static (T member, decimal longitude, decimal latitude)[] GeoRadiusWithCoord<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusWithCoord<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     /// <summary>
@@ -1773,7 +1773,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (string member, double dist, double longitude, double latitude)[] GeoRadiusWithDistAndCoord(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (string member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusWithDistAndCoord(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDistAndCoord(key, longitude, latitude, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -1786,7 +1786,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (T member, double dist, double longitude, double latitude)[] GeoRadiusWithDistAndCoord<T>(string key, double longitude, double latitude, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (T member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusWithDistAndCoord<T>(string key, decimal longitude, decimal latitude, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusWithDistAndCoord<T>(key, longitude, latitude, radius, unit, count, sorting);
 
     /// <summary>
@@ -1799,7 +1799,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static string[] GeoRadiusByMember(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static string[] GeoRadiusByMember(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMember(key, member, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
@@ -1811,7 +1811,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static T[] GeoRadiusByMember<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static T[] GeoRadiusByMember<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMember<T>(key, member, radius, unit, count, sorting);
 
     /// <summary>
@@ -1824,7 +1824,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (string member, double dist)[] GeoRadiusByMemberWithDist(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (string member, decimal dist)[] GeoRadiusByMemberWithDist(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDist(key, member, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离）。
@@ -1836,7 +1836,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (T member, double dist)[] GeoRadiusByMemberWithDist<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (T member, decimal dist)[] GeoRadiusByMemberWithDist<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDist<T>(key, member, radius, unit, count, sorting);
 
     ///// <summary>
@@ -1849,7 +1849,7 @@ public abstract partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static (string member, double longitude, double latitude)[] GeoRadiusByMemberWithCoord(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static (string member, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithCoord(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusByMemberWithCoord(key, member, radius, unit, count, sorting);
     ///// <summary>
     ///// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含经度、纬度）。
@@ -1861,7 +1861,7 @@ public abstract partial class RedisHelper<TMark>
     ///// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     ///// <param name="sorting">排序</param>
     ///// <returns></returns>
-    //private static (T member, double longitude, double latitude)[] GeoRadiusByMemberWithCoord<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    //private static (T member, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithCoord<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
     //	Instance.GeoRadiusByMemberWithCoord<T>(key, member, radius, unit, count, sorting);
 
     /// <summary>
@@ -1874,7 +1874,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (string member, double dist, double longitude, double latitude)[] GeoRadiusByMemberWithDistAndCoord(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (string member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithDistAndCoord(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDistAndCoord(key, member, radius, unit, count, sorting);
     /// <summary>
     /// 以给定的成员为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素（包含距离、经度、纬度）。
@@ -1886,7 +1886,7 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="count">虽然用户可以使用 COUNT 选项去获取前 N 个匹配元素， 但是因为命令在内部可能会需要对所有被匹配的元素进行处理， 所以在对一个非常大的区域进行搜索时， 即使只使用 COUNT 选项去获取少量元素， 命令的执行速度也可能会非常慢。 但是从另一方面来说， 使用 COUNT 选项去减少需要返回的元素数量， 对于减少带宽来说仍然是非常有用的。</param>
     /// <param name="sorting">排序</param>
     /// <returns></returns>
-    public static (T member, double dist, double longitude, double latitude)[] GeoRadiusByMemberWithDistAndCoord<T>(string key, object member, double radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
+    public static (T member, decimal dist, decimal longitude, decimal latitude)[] GeoRadiusByMemberWithDistAndCoord<T>(string key, object member, decimal radius, GeoUnit unit = GeoUnit.m, long? count = null, GeoOrderBy? sorting = null) =>
         Instance.GeoRadiusByMemberWithDistAndCoord<T>(key, member, radius, unit, count, sorting);
     #endregion
 
