@@ -104,7 +104,9 @@ namespace CSRedis.Internal.IO
             }
 
             isDisposed = false;
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket = endpoint.AddressFamily == AddressFamily.InterNetworkV6 ?
+                new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp) :
+                new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _remote = endpoint;
         }
 

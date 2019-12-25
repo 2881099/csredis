@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.Sockets;
 
 namespace CSRedis
 {
@@ -115,8 +117,44 @@ namespace CSRedis
         internal void SetHost(string host)
         {
             var spt = (host ?? "").Split(':');
-            _ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
-            if (spt.Length < 2 || int.TryParse(spt[1].Trim(), out _port) == false) _port = 6379;
+            if (spt.Length == 1)
+            {
+                _ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
+                _port = 6379;
+                return;
+            }
+            if (spt.Length == 2)
+            {
+                if (int.TryParse(spt.Last().Trim(), out var testPort2))
+                {
+                    _ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
+                    _port = testPort2;
+                }
+                else
+                {
+                    _ip = host;
+                    _port = 6379;
+                }
+                return;
+            }
+            if (IPAddress.TryParse(host, out var tryip) && tryip.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                _ip = host;
+                _port = 6379;
+                return;
+            }
+            if (int.TryParse(spt.Last().Trim(), out var testPort))
+            {
+                var testHost = string.Join(":", spt.Where((a, b) => b < spt.Length - 1));
+                if (IPAddress.TryParse(testHost, out tryip) && tryip.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    _ip = testHost;
+                    _port = 6379;
+                    return;
+                }
+            }
+            _ip = host;
+            _port = 6379;
         }
 
         private string _connectionString;

@@ -1462,6 +1462,7 @@ namespace CSRedis
                 {
                     Console.CancelKeyPress += (s1, e1) =>
                     {
+                        if (e1.Cancel) return;
                         this.Dispose();
                     };
                 }
@@ -1684,6 +1685,7 @@ namespace CSRedis
                 {
                     Console.CancelKeyPress += (s1, e1) =>
                     {
+                        if (e1.Cancel) return;
                         this.Dispose();
                     };
                 }
@@ -1887,6 +1889,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             {
                 Console.CancelKeyPress += (s1, e1) =>
                 {
+                    if (e1.Cancel) return;
                     subobj.Dispose();
                 };
             }
@@ -1982,6 +1985,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             {
                 Console.CancelKeyPress += (s1, e1) =>
                 {
+                    if (e1.Cancel) return;
                     subobj.Dispose();
                 };
             }
