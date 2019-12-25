@@ -142,7 +142,7 @@ namespace CSRedisCore.Tests {
 			key = "TestIncrBy";
 			Assert.Equal(1, rds.IncrBy(key, 1));
 			Assert.Equal(11, rds.IncrBy(key, 10));
-			Assert.Equal(21.5, rds.IncrByFloat(key, 10.5));
+			Assert.Equal(21.5m, rds.IncrByFloat(key, 10.5m));
 		}
 
 		[Fact]

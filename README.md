@@ -53,6 +53,8 @@ var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultData
 | name              | <空>  | 连接名称，可以使用 Client List 命令查看 |
 | prefix            | <空>  | key前辍，所有方法都会附带此前辍，csredis.Set(prefix + "key", 111); |
 
+> IPv6 格式：[fe80::b164:55b3:4b4f:7ce6%15]:6379
+
 # 哨兵模式
 
 ```csharp

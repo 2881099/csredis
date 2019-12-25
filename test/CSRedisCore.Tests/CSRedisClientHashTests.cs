@@ -76,12 +76,12 @@ namespace CSRedisCore.Tests {
 		[Fact]
 		public void HIncrByFloat() {
 			Assert.True(rds.HMSet("TestHIncrByFloat", "null1", base.Null, "string1", base.String, "bytes1", base.Bytes, "class1", base.Class, "class1array", new[] { base.Class, base.Class }));
-			Assert.Equal(0.5, rds.HIncrByFloat("TestHIncrByFloat", "null1", 0.5));
-			Assert.Throws<CSRedis.RedisException>(() => rds.HIncrByFloat("TestHIncrByFloat", "string1", 1.5));
+			Assert.Equal(0.5m, rds.HIncrByFloat("TestHIncrByFloat", "null1", 0.5m));
+			Assert.Throws<CSRedis.RedisException>(() => rds.HIncrByFloat("TestHIncrByFloat", "string1", 1.5m));
 			Assert.Throws<CSRedis.RedisException>(() => rds.HIncrByFloat("TestHIncrByFloat", "bytes1", 5));
 
-			Assert.Equal(3.8, rds.HIncrByFloat("TestHIncrByFloat", "null1", 3.3));
-			Assert.Equal(14.3, rds.HIncrByFloat("TestHIncrByFloat", "null1", 10.5));
+			Assert.Equal(3.8m, rds.HIncrByFloat("TestHIncrByFloat", "null1", 3.3m));
+			Assert.Equal(14.3m, rds.HIncrByFloat("TestHIncrByFloat", "null1", 10.5m));
 		}
 
 		[Fact]

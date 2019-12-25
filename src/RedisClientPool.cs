@@ -116,34 +116,45 @@ namespace CSRedis
 
         internal void SetHost(string host)
         {
+            if (string.IsNullOrEmpty(host?.Trim())) {
+                _ip = "127.0.0.1";
+                _port = 6379;
+                return;
+            }
+            host = host.Trim();
+            var ipv6 = Regex.Match(host, @"^\[([^\]]+)\]\s*(:\s*(\d+))?$");
+            if (ipv6.Success) //ipv6+port 格式： [fe80::b164:55b3:4b4f:7ce6%15]:6379
+            {
+                _ip = ipv6.Groups[1].Value.Trim();
+                _port = int.TryParse(ipv6.Groups[3].Value, out var tryint) && tryint > 0 ? tryint : 6379;
+                return;
+            }
             var spt = (host ?? "").Split(':');
-            if (spt.Length == 1)
+            if (spt.Length == 1) //ipv4 or domain
             {
                 _ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
                 _port = 6379;
                 return;
             }
-            if (spt.Length == 2)
+            if (spt.Length == 2) //ipv4:port or domain:port
             {
                 if (int.TryParse(spt.Last().Trim(), out var testPort2))
                 {
                     _ip = string.IsNullOrEmpty(spt[0].Trim()) == false ? spt[0].Trim() : "127.0.0.1";
                     _port = testPort2;
+                    return;
                 }
-                else
-                {
-                    _ip = host;
-                    _port = 6379;
-                }
+                _ip = host;
+                _port = 6379;
                 return;
             }
-            if (IPAddress.TryParse(host, out var tryip) && tryip.AddressFamily == AddressFamily.InterNetworkV6)
+            if (IPAddress.TryParse(host, out var tryip) && tryip.AddressFamily == AddressFamily.InterNetworkV6) //test ipv6
             {
                 _ip = host;
                 _port = 6379;
                 return;
             }
-            if (int.TryParse(spt.Last().Trim(), out var testPort))
+            if (int.TryParse(spt.Last().Trim(), out var testPort)) //test ipv6:port
             {
                 var testHost = string.Join(":", spt.Where((a, b) => b < spt.Length - 1));
                 if (IPAddress.TryParse(testHost, out tryip) && tryip.AddressFamily == AddressFamily.InterNetworkV6)
