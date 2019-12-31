@@ -29,13 +29,6 @@ namespace CSRedis.Internal
             _active = true;
             return _connector.Call(RedisCommands.Multi());
         }
-
-        public Task<string> StartAsync()
-        {
-            _active = true;
-            return _connector.CallAsync(RedisCommands.Multi());
-        }
-
         public T Write<T>(RedisCommand<T> command)
         {
             string response = _connector.Call(RedisCommands.AsTransaction(command));
@@ -43,17 +36,6 @@ namespace CSRedis.Internal
 
             _execCommand.AddParser(x => command.Parse(x));
             return default(T);
-        }
-
-        public Task<T> WriteAsync<T>(RedisCommand<T> command)
-        {
-            lock (_execCommand)
-            {
-                _execCommand.AddParser(x => command.Parse(x));
-                return _connector.CallAsync(RedisCommands.AsTransaction(command))
-                    .ContinueWith(t => OnTransactionQueued(command, t.Result))
-                    .ContinueWith(t => default(T));
-            }
         }
 
         public object[] Execute()
@@ -77,22 +59,10 @@ namespace CSRedis.Internal
             return _connector.Call(_execCommand);
         }
 
-        public Task<object[]> ExecuteAsync()
-        {
-            _active = false;
-            return _connector.CallAsync(_execCommand);
-        }
-
         public string Abort()
         {
             _active = false;
             return _connector.Call(RedisCommands.Discard());
-        }
-
-        public Task<string> AbortAsync()
-        {
-            _active = false;
-            return _connector.CallAsync(RedisCommands.Discard());
         }
 
         void OnTransactionQueued<T>(RedisCommand<T> command, string response)
@@ -108,5 +78,34 @@ namespace CSRedis.Internal
             if (TransactionQueued != null)
                 TransactionQueued(this, new RedisTransactionQueuedEventArgs(response, command, args));
         }
+
+#if net40
+#else
+        public Task<string> StartAsync()
+        {
+            _active = true;
+            return _connector.CallAsync(RedisCommands.Multi());
+        }
+        public Task<T> WriteAsync<T>(RedisCommand<T> command)
+        {
+            lock (_execCommand)
+            {
+                _execCommand.AddParser(x => command.Parse(x));
+                return _connector.CallAsync(RedisCommands.AsTransaction(command))
+                    .ContinueWith(t => OnTransactionQueued(command, t.Result))
+                    .ContinueWith(t => default(T));
+            }
+        }
+        public Task<object[]> ExecuteAsync()
+        {
+            _active = false;
+            return _connector.CallAsync(_execCommand);
+        }
+        public Task<string> AbortAsync()
+        {
+            _active = false;
+            return _connector.CallAsync(RedisCommands.Discard());
+        }
+#endif
     }
 }

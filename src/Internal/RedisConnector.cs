@@ -16,14 +16,12 @@ namespace CSRedis.Internal
     {
         readonly int _concurrency;
         readonly int _bufferSize;
-        readonly Lazy<AsyncConnector> _asyncConnector;
         internal readonly IRedisSocket _redisSocket;
         readonly EndPoint _endPoint;
         readonly RedisIO _io;
 
         public event EventHandler Connected;
 
-        public AsyncConnector Async { get { return _asyncConnector.Value; } }
         public bool IsConnected { get { return _redisSocket.Connected; } }
         public EndPoint EndPoint { get { return _endPoint; } }
         public bool IsPipelined { get { return _io.IsPipelined; } }
@@ -53,7 +51,6 @@ namespace CSRedis.Internal
             _endPoint = endPoint;
             _redisSocket = socket;
             _io = new RedisIO();
-            _asyncConnector = new Lazy<AsyncConnector>(AsyncConnectorFactory);
             //_autoPipeline = new AutoPipelineOption(_io);
         }
 
@@ -67,10 +64,13 @@ namespace CSRedis.Internal
             return _redisSocket.Connected;
         }
 
+#if net40
+#else
         public Task<bool> ConnectAsync()
         {
-            return Async.ConnectAsync();
+            return _redisSocket.ConnectAsync(_endPoint);
         }
+#endif
 
         //public IAutoPipelineOption AutoPipeline => _autoPipeline;
         //AutoPipelineOption _autoPipeline;
@@ -103,13 +103,18 @@ namespace CSRedis.Internal
             }
         }
 
-        public Task<T> CallAsync<T>(RedisCommand<T> command)
+#if net40
+#else
+        async public Task<T> CallAsync<T>(RedisCommand<T> command)
         {
             //if (_autoPipeline.IsEnabled)
             //	return _autoPipeline.EnqueueAsync(command);
 
-            return Async.CallAsync(command);
+            await _io.Writer.WriteAsync(command, _io.Stream);
+            //_io.Stream.BeginRead()
+            return command.Parse(_io.Reader);
         }
+#endif
 
         public void Write(RedisCommand command)
         {
@@ -188,9 +193,6 @@ namespace CSRedis.Internal
 
         public void Dispose()
         {
-            if (_asyncConnector.IsValueCreated)
-                _asyncConnector.Value.Dispose();
-
             _io.Dispose();
 
             if (_redisSocket != null)
@@ -222,13 +224,6 @@ namespace CSRedis.Internal
         void OnAsyncConnected(object sender, EventArgs args)
         {
             OnConnected();
-        }
-
-        AsyncConnector AsyncConnectorFactory()
-        {
-            var connector = new AsyncConnector(_redisSocket, _endPoint, _io, _concurrency, _bufferSize);
-            connector.Connected += OnAsyncConnected;
-            return connector;
         }
 
         void ConnectIfNotConnected()

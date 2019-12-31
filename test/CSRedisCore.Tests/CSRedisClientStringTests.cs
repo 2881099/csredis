@@ -27,6 +27,25 @@ namespace CSRedisCore.Tests {
 		}
 
 		[Fact]
+		async public Task AppendAsync()
+		{
+			var key = "TestAppendAsync_null";
+			await rds.SetAsync(key, base.String);
+			await rds.AppendAsync(key, base.Null);
+			Assert.Equal(await rds.GetAsync(key), base.String);
+
+			key = "TestAppendAsync_string";
+			await rds.SetAsync(key, base.String);
+			await rds.AppendAsync(key, base.String);
+			Assert.Equal(await rds.GetAsync(key), base.String + base.String);
+
+			key = "TestAppendAsync_bytes";
+			await rds.SetAsync(key, base.Bytes);
+			await rds.AppendAsync(key, base.Bytes);
+			Assert.Equal(Convert.ToBase64String(await rds.GetAsync<byte[]>(key)), Convert.ToBase64String(base.Bytes.Concat(base.Bytes).ToArray()));
+		}
+
+		[Fact]
 		public void BitCount() {
 			var key = "TestBitCount";
 			rds.SetBit(key, 100, true);

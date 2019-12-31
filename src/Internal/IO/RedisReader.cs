@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CSRedis.Internal.IO
 {
-    class RedisReader
+    partial class RedisReader
     {
         readonly Stream _stream;
         readonly RedisIO _io;
