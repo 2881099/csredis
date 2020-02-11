@@ -9,7 +9,7 @@ namespace CSRedisCore.Tests
     {
 		//测试 redis-cluster 不能设置 defaultDatabase
 
-		protected CSRedisClient rds = new CSRedisClient("192.168.164.10,defaultDatabase=0,poolsize=3,tryit=0");
+		protected CSRedisClient rds = new CSRedisClient("127.0.0.1,defaultDatabase=0,poolsize=3,tryit=0");
 
 		protected readonly object Null = null;
 		protected readonly string String = "我是中国人";
