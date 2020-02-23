@@ -4,7 +4,7 @@
 		<AssemblyName>CSRedisCore</AssemblyName>
 		<PackageId>CSRedisCore</PackageId>
 		<RootNamespace>CSRedisCore</RootNamespace>
-		<Version>3.4.1</Version>
+		<Version>3.4.2</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageProjectUrl>https://github.com/2881099/csredis</PackageProjectUrl>
 		<Description>CSRedis 是 redis.io 官方推荐库，支持 redis-trib集群、哨兵、私有分区与连接池管理技术，简易 RedisHelper 静态类。</Description>
@@ -17,7 +17,7 @@
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<WarningLevel>3</WarningLevel>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>YeXiangQin.pfx</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>false</DelaySign>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
