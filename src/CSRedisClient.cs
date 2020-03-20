@@ -4302,7 +4302,7 @@ return 0", _name, _value)?.ToString() == "1";
         public void Dispose() => this.Unlock();
     }
 
-    public enum KeyType { None, String, List, Set, ZSet, Hash }
+    public enum KeyType { None, String, List, Set, ZSet, Hash, Stream }
     public enum InfoSection { Server, Clients, Memory, Persistence, Stats, Replication, CPU, CommandStats, Cluster, Keyspace }
     public enum ClientKillType { normal, slave, pubsub }
 }
