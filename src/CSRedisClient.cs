@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using SafeObjectPool;
+using CSRedus.Internal.ObjectPool;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;

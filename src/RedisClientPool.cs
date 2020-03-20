@@ -1,4 +1,4 @@
-﻿using SafeObjectPool;
+﻿using CSRedus.Internal.ObjectPool;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -112,6 +112,7 @@ namespace CSRedis
         public TimeSpan IdleTimeout { get; set; } = TimeSpan.FromSeconds(20);
         public int AsyncGetCapacity { get; set; } = 100000;
         public bool IsThrowGetTimeoutException { get; set; } = true;
+        public bool IsAutoDisposeWithSystem { get; set; } = true;
         public int CheckAvailableInterval { get; set; } = 5;
 
         internal void SetHost(string host)
@@ -225,6 +226,9 @@ namespace CSRedis
                             break;
                         case "testcluster":
                             _testCluster = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : true;
+                            break;
+                        case "autodispose":
+                            IsAutoDisposeWithSystem = kv.Length > 1 ? kv[1].ToLower().Trim() == "true" : true;
                             break;
                     }
                 }
