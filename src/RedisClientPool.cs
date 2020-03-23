@@ -271,7 +271,7 @@ namespace CSRedis
         {
             if (obj != null)
             {
-                if (obj.IsConnected) try { obj.Quit(); } catch { }
+                //if (obj.IsConnected) try { obj.Quit(); } catch { } 此行会导致，服务器主动断开后，执行该命令超时停留10-20秒
                 try { obj.Dispose(); } catch { }
             }
         }
