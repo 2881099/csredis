@@ -23,8 +23,8 @@
 var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,prefix=my_");
 ```
 
-| Parameter | Default value    | Explain |
-| :---------------- | --------------: | :------------------- |
+| Parameter         | Default  | Explain |
+| :---------------- | -------: | :------------------- |
 | password          | <Empty>  | Redis server password |
 | defaultDatabase   | 0        | Redis server database |
 | **asyncPipeline** | false    | The asynchronous method automatically uses pipeline, and the 10W concurrent time is 450ms (welcome to feedback) |
@@ -72,7 +72,7 @@ RedisHelper.Initialization(csredis);
 services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(RedisHelper.Instance));
 ```
 
-> Note: the CSRedisClient singleton, RedisHelper static class is recommended
+> Note: CSRedisClient is singleton, RedisHelper static class is recommended
 
 ```csharp
 RedisHelper.Set("test1", "123123", 60);
@@ -177,9 +177,9 @@ StackExchange.Redis StringGetAsync：7986ms
 CSRedisClient GetAsync：4931ms
 CSRedisCore GetAsync：5960ms
 -------------------
-CSRedisCore SetAsync(Task.WaitAll)：609ms
-StackExchange.Redis StringSetAsync(Task.WaitAll)：172ms
+CSRedisCore SetAsync(Task.WaitAll)：559ms
+StackExchange.Redis StringSetAsync (concurrent Task.WaitAll)：172ms
 -------------------
 CSRedisCore GetAsync(Task.WaitAll)：435ms
-StackExchange.Redis StringGetAsync(Task.WaitAll)：176ms
+StackExchange.Redis StringGetAsync (concurrent Task.WaitAll)：176ms
 ```
