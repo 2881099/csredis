@@ -25,6 +25,7 @@ namespace CSRedis.Internal
         public bool IsConnected { get { return _redisSocket.Connected; } }
         public EndPoint EndPoint { get { return _endPoint; } }
         public bool IsPipelined { get { return _io.IsPipelined; } }
+        public RedisPipeline Pipeline { get { return _io.Pipeline; } }
         public int ReconnectAttempts { get; set; }
         public int ReconnectWait { get; set; }
         public int ReceiveTimeout
@@ -87,7 +88,8 @@ namespace CSRedis.Internal
                 //if (_autoPipeline.IsEnabled)
                 //	return _autoPipeline.EnqueueSync(command);
 
-                _io.Writer.Write(command, _io.Stream);
+                //Console.WriteLine("--------------Call " + command.ToString());
+                _io.Write(_io.Writer.Prepare(command));
                 return command.Parse(_io.Reader);
             }
             catch (IOException)
@@ -110,7 +112,8 @@ namespace CSRedis.Internal
             //if (_autoPipeline.IsEnabled)
             //	return _autoPipeline.EnqueueAsync(command);
 
-            await _io.Writer.WriteAsync(command, _io.Stream);
+            //Console.WriteLine("--------------CallAsync");
+            await _io.WriteAsync(command);
             //_io.Stream.BeginRead()
             return command.Parse(_io.Reader);
         }
@@ -122,7 +125,8 @@ namespace CSRedis.Internal
 
             try
             {
-                _io.Writer.Write(command, _io.Stream);
+                //Console.WriteLine("--------------Write");
+                _io.Write(_io.Writer.Prepare(command));
             }
             catch (IOException)
             {

@@ -7,18 +7,16 @@ namespace CSRedis.Internal.IO
 {
     partial class RedisReader
     {
-        readonly Stream _stream;
         readonly RedisIO _io;
 
         public RedisReader(RedisIO io)
         {
-            _stream = io.Stream;
             _io = io;
         }
 
         public RedisMessage ReadType()
         {
-            RedisMessage type = (RedisMessage)_stream.ReadByte();
+            RedisMessage type = (RedisMessage)_io.ReadByte();
             //Console.WriteLine($"ReadType: {type}");
             if (type == RedisMessage.Error)
                 throw new RedisException(ReadStatus(false));
@@ -63,7 +61,7 @@ namespace CSRedis.Internal.IO
             int bytes_remaining = size;
 
             while (bytes_read < size)
-                bytes_read += _stream.Read(bulk, bytes_read, size - bytes_read);
+                bytes_read += _io.Read(bulk, bytes_read, size - bytes_read);
 
             //Console.WriteLine($"ReadBulkBytes1: {Encoding.UTF8.GetString(bulk)}");
             ExpectBytesRead(size, bytes_read);
@@ -88,7 +86,7 @@ namespace CSRedis.Internal.IO
                 while (bytes_read < bytes_to_buffer)
                 {
                     int bytes_to_read = Math.Min(bytes_to_buffer - bytes_read, size - position);
-                    bytes_read += _stream.Read(buffer, bytes_read, bytes_to_read);
+                    bytes_read += _io.Read(buffer, bytes_read, bytes_to_read);
                 }
                 position += bytes_read;
                 destination.Write(buffer, 0, bytes_read);
@@ -111,27 +109,9 @@ namespace CSRedis.Internal.IO
             RedisMessage type = ReadType();
             if ((int)type == -1)
             {
-                using (var ms = new MemoryStream())
-                {
-                    var ns = _io.NetworkStream as NetworkStream;
-                    if (ns != null)
-                    {
-                        try
-                        {
-                            var data = new byte[1024];
-                            while (ns.DataAvailable && ns.CanRead)
-                            {
-                                var numBytesRead = ns.Read(data, 0, data.Length);
-                                if (numBytesRead <= 0) break;
-                                ms.Write(data, 0, numBytesRead);
-                            }
-                        }
-                        catch { }
-                    }
-
-                    try { _stream.Close(); } catch { }
-                    throw new EndOfStreamException($"Unexpected end of stream; expected type '{expectedType}'; data = '{Encoding.UTF8.GetString(ms.ToArray())}'");
-                }
+                var alldata = _io.ReadAll();
+                try { _io.Dispose(); } catch { }
+                throw new EndOfStreamException($"Unexpected end of stream; expected type '{expectedType}'; data = '{Encoding.UTF8.GetString(alldata)}'");
             }
             if (type != expectedType)
                 throw new RedisProtocolException($"Unexpected response type: {type} (expecting {expectedType})");
@@ -157,8 +137,8 @@ namespace CSRedis.Internal.IO
 
         public void ReadCRLF() // TODO: remove hardcoded
         {
-            var r = _stream.ReadByte();
-            var n = _stream.ReadByte();
+            var r = _io.ReadByte();
+            var n = _io.ReadByte();
             //Console.WriteLine($"ReadCRLF: {r} {n}");
             if (r != (byte)13 && n != (byte)10)
                 throw new RedisProtocolException(String.Format("Expecting CRLF; got bytes: {0}, {1}", r, n));
@@ -210,7 +190,7 @@ namespace CSRedis.Internal.IO
             bool should_break = false;
             while (true)
             {
-                c = (char)_stream.ReadByte();
+                c = (char)_io.ReadByte();
                 if (c == '\r') // TODO: remove hardcoded
                     should_break = true;
                 else if (c == '\n' && should_break)

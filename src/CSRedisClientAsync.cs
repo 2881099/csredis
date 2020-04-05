@@ -1,5 +1,6 @@
 ﻿using CSRedus.Internal.ObjectPool;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,14 +15,113 @@ namespace CSRedis
     public partial class CSRedisClient
     {
 
+        ConcurrentDictionary<string, AutoPipe> _autoPipe = new ConcurrentDictionary<string, AutoPipe>();
+        class AutoPipe
+        {
+            public Object<RedisClient> Client;
+            public long GetTimes;
+            public long TimesZore;
+            public bool IsSingleEndPipe;
+            public Exception ReturnException;
+        }
+        async Task<AutoPipe> GetClientAsync(RedisClientPool pool)
+        {
+            if (pool._policy._asyncPipeline == false)
+                return new AutoPipe { Client = await pool.GetAsync(), GetTimes = 1, TimesZore = 0, IsSingleEndPipe = false };
+
+            if (_autoPipe.TryGetValue(pool.Key, out var ap) && ap.IsSingleEndPipe == false)
+            {
+                Interlocked.Increment(ref ap.GetTimes);
+                return ap;
+            }
+            ap = new AutoPipe { Client = await pool.GetAsync(), GetTimes = 1, TimesZore = 0, IsSingleEndPipe = false };
+            if (_autoPipe.TryAdd(pool.Key, ap))
+            {
+                ap.Client.Value._asyncPipe = new ConcurrentQueue<TaskCompletionSource<object>>();
+                new Thread(() =>
+                {
+                    var rc = ap.Client.Value;
+
+                    void trySetException(Exception ex)
+                    {
+                        if (_autoPipe.TryRemove(pool.Key, out var oldap))
+                        {
+                            while (rc._asyncPipe?.IsEmpty == false)
+                            {
+                                TaskCompletionSource<object> trytsc = null;
+                                if (rc._asyncPipe?.TryDequeue(out trytsc) == true)
+                                    trytsc.TrySetException(ex);
+                            }
+                            rc._asyncPipe = null;
+                            pool.Return(ap.Client, ap.ReturnException);
+                        }
+                    }
+                    while (true)
+                    {
+                        Thread.CurrentThread.Join(1);
+                        if (rc._asyncPipe?.IsEmpty == false)
+                        {
+                            try
+                            {
+                                var ret = rc.EndPipe();
+                                if (ret.Length == 1) ap.IsSingleEndPipe = true;
+                                else if (ret.Length > 1) ap.IsSingleEndPipe = false;
+                                foreach (var rv in ret)
+                                {
+                                    TaskCompletionSource<object> trytsc = null;
+                                    if (rc._asyncPipe?.TryDequeue(out trytsc) == true)
+                                        trytsc.TrySetResult(rv);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                trySetException(ex);
+                                return;
+                            }
+                            continue;
+                        }
+
+                        if (ap.ReturnException != null)
+                        {
+                            trySetException(ap.ReturnException);
+                            return;
+                        }
+                        var tmpTimes = Interlocked.Increment(ref ap.TimesZore);
+                        if (tmpTimes >= 10) ap.IsSingleEndPipe = false;
+                        if (tmpTimes >= 1000)
+                        {
+                            if (_autoPipe.TryRemove(pool.Key, out var oldap))
+                            {
+                                rc._asyncPipe = null;
+                                pool.Return(ap.Client, ap.ReturnException);
+                                break;
+                            }
+                        }
+                    }
+                }).Start();
+            }
+            return ap;
+        }
+        void ReturnClient(AutoPipe ap, Object<RedisClient> obj, RedisClientPool pool, Exception ex)
+        {
+            var times = Interlocked.Decrement(ref ap.GetTimes);
+            if (times <= 0)
+                Interlocked.Exchange(ref ap.TimesZore, 0);
+            ap.ReturnException = ex;
+            if (_autoPipe.TryGetValue(pool.Key, out var dicap) == false || dicap != ap)
+                pool.Return(ap.Client, ap.ReturnException);
+        }
+
         async Task<T> GetAndExecuteAsync<T>(RedisClientPool pool, Func<Object<RedisClient>, Task<T>> handerAsync, int jump = 100, int errtimes = 0)
         {
+            AutoPipe ap = null;
             Object<RedisClient> obj = null;
             Exception ex = null;
             var redirect = ParseClusterRedirect(null);
             try
             {
-                obj = await pool.GetAsync();
+                ap = await GetClientAsync(pool);
+                obj = ap.Client;
                 while (true)
                 { //因网络出错重试，默认1次
                     try
@@ -78,7 +178,8 @@ namespace CSRedis
             }
             finally
             {
-                pool.Return(obj, ex);
+                ReturnClient(ap, obj, pool, ex);
+                //pool.Return(obj, ex);
             }
             if (redirect == null)
                 return await GetAndExecuteAsync<T>(pool, handerAsync, jump - 1, errtimes);

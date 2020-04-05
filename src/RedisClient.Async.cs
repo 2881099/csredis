@@ -1,6 +1,7 @@
 ﻿using CSRedis.Internal.Commands;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -30,12 +31,23 @@ namespace CSRedis
             return WriteAsync(RedisCommands.Call(command, args));
         }
 
-        Task<T> WriteAsync<T>(RedisCommand<T> command)
+        internal ConcurrentQueue<TaskCompletionSource<object>> _asyncPipe;
+        async Task<T> WriteAsync<T>(RedisCommand<T> command)
         {
             if (_transaction.Active)
-                return _transaction.WriteAsync(command);
+                return await  _transaction.WriteAsync(command);
+            else if (_asyncPipe != null)
+            {
+                var tsc = new TaskCompletionSource<object>();
+                _asyncPipe.Enqueue(tsc);
+                
+                _connector.Pipeline.Write(command);
+
+                var ret = await tsc.Task;
+                return (T)ret;
+            }
             else
-                return _connector.CallAsync(command);
+                return await _connector.CallAsync(command);
         }
 
         #region Connection

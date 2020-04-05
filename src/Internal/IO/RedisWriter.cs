@@ -21,49 +21,6 @@ namespace CSRedis.Internal.IO
             _io = io;
         }
 
-        public int Write(RedisCommand command, Stream stream)
-        {
-            var data = Prepare(command);
-            stream.Write(data, 0, data.Length);
-            //Console.WriteLine($"WriteSync: {Encoding.UTF8.GetString(data)}");
-            return data.Length;
-        }
-
-#if net40
-#else
-        public Task<int> WriteAsync(RedisCommand command, Stream stream)
-        {
-            var data = Prepare(command);
-
-            var tcs = new TaskCompletionSource<int>();
-            stream.BeginWrite(data, 0, data.Length, asyncResult =>
-            {
-                try
-                {
-                    stream.EndWrite(asyncResult);
-                    tcs.TrySetResult(data.Length);
-                }
-                catch (Exception ex)
-                {
-                    tcs.TrySetException(ex);
-                }
-            }, null);
-            return tcs.Task;
-        }
-#endif
-
-        public int Write(RedisCommand command, byte[] buffer, int offset)
-        {
-            int b = 0;
-            byte[] data = Prepare(command);
-            var dataLen = data.Length;
-            var bufferLen = buffer.Length;
-            if (dataLen > bufferLen - offset) throw new Exception($"发送数据长度 {dataLen} 大于 异步写入缓冲块大小 {bufferLen - offset}，请设置连接串参数：writeBuffer");
-            for (int a = offset; a < bufferLen && b < data.Length; a++, b++) buffer[a] = data[b];
-            //Console.WriteLine($"WriteAsync: {Encoding.UTF8.GetString(data)}");
-            return b;
-        }
-
         public byte[] Prepare(RedisCommand command)
         {
             var parts = command.Command.Split(' ');

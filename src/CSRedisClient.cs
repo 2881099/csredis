@@ -554,7 +554,7 @@ namespace CSRedis
                 {
                     if (Nodes.TryGetValue(nodeKey, out movedPool) == false)
                     {
-                        var connectionString = $"{redirect.endpoint},password={pool._policy._password},defaultDatabase={pool._policy._database},poolsize={pool._policy.PoolSize},connectTimeout={pool._policy._connectTimeout},preheat=false,ssl={(pool._policy._ssl ? "true" : "false")},writeBuffer={pool._policy._writebuffer},tryit={pool._policy._tryit},name={pool._policy._clientname},prefix={pool._policy.Prefix}";
+                        var connectionString = pool._policy.BuildConnectionString(redirect.endpoint);
                         movedPool = new RedisClientPool(connectionString, client => { });
                         if (this.TryAddNode(nodeKey, movedPool) == false)
                         {

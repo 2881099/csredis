@@ -10,27 +10,28 @@ namespace CSRedis.Internal
 {
     class RedisPipeline : IDisposable
     {
-        readonly Stream _buffer;
-        readonly Stream _destination;
-        readonly RedisWriter _writer;
-        readonly RedisReader _reader;
+        readonly RedisIO _io;
+        readonly MemoryStream _buffer;
+        readonly object _bufferLock = new object();
         readonly ConcurrentQueue<Func<object>> _parsers;
 
         public bool Active { get; private set; }
 
         internal RedisPipeline(RedisIO io)
         {
-            _reader = io.Reader;
-            _destination = io.Stream;
+            _io = io;
             _buffer = new MemoryStream();
-            _writer = new RedisWriter(io);
             _parsers = new ConcurrentQueue<Func<object>>();
         }
 
         public T Write<T>(RedisCommand<T> command)
         {
-            _writer.Write(command, _buffer);
-            _parsers.Enqueue(() => command.Parse(_reader));
+            var data = _io.Writer.Prepare(command);
+            lock (_bufferLock)
+            {
+                _buffer.Write(data, 0, data.Length);
+                _parsers.Enqueue(() => command.Parse(_io.Reader));
+            }
             return default(T);
         }
 
@@ -43,18 +44,41 @@ namespace CSRedis.Internal
         {
             try
             {
-                _buffer.Position = 0;
-                _buffer.CopyTo(_destination);
+                object[] results = new object[0];
+                if (_parsers.IsEmpty == false)
+                {
+                    lock (_bufferLock)
+                    {
+                        if (_parsers.IsEmpty == false)
+                        {
+                            _buffer.Position = 0;
+                            //Console.WriteLine(Encoding.UTF8.GetString(_buffer.ToArray()));
+                            _io.Write(_buffer);
+                            
+                            _buffer.SetLength(0);
 
-                object[] results = new object[_parsers.Count];
+                            results = new object[_parsers.Count];
+                        }
+                    }
+                }
+
                 for (int i = 0; i < results.Length; i++)
-                    if (_parsers.TryDequeue(out var func)) results[i] = func();
+                    if (_parsers.TryDequeue(out var func))
+                    {
+                        try
+                        {
+                            results[i] = func();
+                        }
+                        catch(Exception ex)
+                        {
+                            throw ex;
+                        }
+                    }
 
                 return results;
             }
             finally
             {
-                _buffer.SetLength(0);
                 Active = false;
             }
         }
