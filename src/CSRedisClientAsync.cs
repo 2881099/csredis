@@ -31,6 +31,8 @@ namespace CSRedis
 
             if (_autoPipe.TryGetValue(pool.Key, out var ap) && ap.IsSingleEndPipe == false)
             {
+                if (pool.UnavailableException != null) 
+                    throw new Exception($"【{pool._policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{pool.UnavailableException?.Message}", pool.UnavailableException);
                 Interlocked.Increment(ref ap.GetTimes);
                 return ap;
             }
@@ -44,17 +46,16 @@ namespace CSRedis
 
                     void trySetException(Exception ex)
                     {
-                        if (_autoPipe.TryRemove(pool.Key, out var oldap))
+                        pool.SetUnavailable(ex);
+                        while (rc._asyncPipe?.IsEmpty == false)
                         {
-                            while (rc._asyncPipe?.IsEmpty == false)
-                            {
-                                TaskCompletionSource<object> trytsc = null;
-                                if (rc._asyncPipe?.TryDequeue(out trytsc) == true)
-                                    trytsc.TrySetException(ex);
-                            }
-                            rc._asyncPipe = null;
-                            pool.Return(ap.Client, ap.ReturnException);
+                            TaskCompletionSource<object> trytsc = null;
+                            if (rc._asyncPipe?.TryDequeue(out trytsc) == true)
+                                trytsc.TrySetException(ex);
                         }
+                        rc._asyncPipe = null;
+                        pool.Return(ap.Client);
+                        _autoPipe.TryRemove(pool.Key, out var oldap);
                     }
                     while (true)
                     {
@@ -90,12 +91,10 @@ namespace CSRedis
                         if (tmpTimes >= 10) ap.IsSingleEndPipe = false;
                         if (tmpTimes >= 1000)
                         {
-                            if (_autoPipe.TryRemove(pool.Key, out var oldap))
-                            {
-                                rc._asyncPipe = null;
-                                pool.Return(ap.Client, ap.ReturnException);
-                                break;
-                            }
+                            rc._asyncPipe = null;
+                            pool.Return(ap.Client, ap.ReturnException);
+                            _autoPipe.TryRemove(pool.Key, out var oldap);
+                            break;
                         }
                     }
                 }).Start();
@@ -104,6 +103,7 @@ namespace CSRedis
         }
         void ReturnClient(AutoPipe ap, Object<RedisClient> obj, RedisClientPool pool, Exception ex)
         {
+            if (ap == null) return;
             var times = Interlocked.Decrement(ref ap.GetTimes);
             if (times <= 0)
                 Interlocked.Exchange(ref ap.TimesZore, 0);
@@ -147,6 +147,7 @@ namespace CSRedis
                     catch (Exception ex2)
                     {
                         ex = ex2;
+                        if (pool.UnavailableException != null) throw ex;
                         var isPong = false;
                         try
                         {

@@ -267,7 +267,7 @@ namespace CSRedus.Internal.ObjectPool
                 throw new ObjectDisposedException($"【{Policy.Name}】对象池已释放，无法访问。");
 
             if (checkAvailable && UnavailableException != null)
-                throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{UnavailableException?.Message}");
+                throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{UnavailableException?.Message}", UnavailableException);
 
             if ((_freeObjects.TryPop(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize)
             {

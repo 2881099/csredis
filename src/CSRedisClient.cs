@@ -486,6 +486,7 @@ namespace CSRedis
                     catch (Exception ex2)
                     {
                         ex = ex2;
+                        if (pool.UnavailableException != null) throw ex;
                         var isPong = false;
                         try
                         {

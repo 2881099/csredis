@@ -357,9 +357,10 @@ namespace CSRedis
                 initConns.Add(conn);
                 pool.Policy.OnCheckAvailable(conn);
             }
-            catch
+            catch (Exception ex)
             {
                 initTestOk = false; //预热一次失败，后面将不进行
+                pool.SetUnavailable(ex);
             }
             for (var a = 1; initTestOk && a < minPoolSize; a += 10)
             {

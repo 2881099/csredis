@@ -17,6 +17,7 @@ namespace CSRedis.Internal.IO
         object _streamLock = new object();
         NetworkStream _networkStream;
 
+        public BufferedStream Stream { get { return GetOrThrow(_stream); } }
         public RedisWriter Writer { get { return _writer; } }
         public RedisReader Reader { get { return GetOrThrow(_reader); } }
         public Encoding Encoding { get; set; }
@@ -50,7 +51,7 @@ namespace CSRedis.Internal.IO
             var tcs = new TaskCompletionSource<int>();
             lock (_streamLock)
             {
-                _stream.BeginWrite(data, 0, data.Length, asyncResult =>
+                Stream.BeginWrite(data, 0, data.Length, asyncResult =>
                 {
                     try
                     {
@@ -70,22 +71,22 @@ namespace CSRedis.Internal.IO
         public void Write(byte[] data)
         {
             lock (_streamLock)
-                _stream.Write(data, 0, data.Length);
+                Stream.Write(data, 0, data.Length);
         }
         public void Write(Stream stream)
         {
             lock (_streamLock)
-                stream.CopyTo(_stream);
+                stream.CopyTo(Stream);
         }
         public int ReadByte()
         {
             lock (_streamLock)
-                return _stream.ReadByte();
+                return Stream.ReadByte();
         }
         public int Read(byte[] data, int offset, int count)
         {
             lock (_streamLock)
-                return _stream.Read(data, offset, count);
+                return Stream.Read(data, offset, count);
         }
         public Byte[] ReadAll()
         {
