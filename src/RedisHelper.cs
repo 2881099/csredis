@@ -706,6 +706,42 @@ public abstract partial class RedisHelper<TMark>
     /// <returns></returns>
     public static long ZLexCount(string key, string min, string max) =>
            Instance.ZLexCount(key, min, max);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static (string member, decimal score)[] ZPopMax(string key, long count) =>
+        Instance.ZPopMax(key, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static (T member, decimal score)[] ZPopMax<T>(string key, long count) =>
+        Instance.ZPopMax<T>(key, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static (string member, decimal score)[] ZPopMin(string key, long count) =>
+        Instance.ZPopMin(key, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static (T member, decimal score)[] ZPopMin<T>(string key, long count) =>
+        Instance.ZPopMin<T>(key, count);
     #endregion
 
     #region Set
@@ -1890,7 +1926,7 @@ public abstract partial class RedisHelper<TMark>
         Instance.GeoRadiusByMemberWithDistAndCoord<T>(key, member, radius, unit, count, sorting);
     #endregion
 
-    /// <summary>
+    /// <summary> 
     /// 开启分布式锁，若超时返回null
     /// </summary>
     /// <param name="name">锁名称</param>
