@@ -1080,6 +1080,42 @@ partial class RedisHelper<TMark>
     /// <returns></returns>
     public static Task<RedisScan<(string field, T value)>> HScanAsync<T>(string key, long cursor, string pattern = null, long? count = null) =>
            Instance.HScanAsync<T>(key, cursor, pattern, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static Task<(string member, decimal score)[]> ZPopMaxAsync(string key, long count) =>
+        Instance.ZPopMaxAsync(key, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最高得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最高的元素将是第一个元素，然后是分数较低的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static Task<(T member, decimal score)[]> ZPopMaxAsync<T>(string key, long count) =>
+        Instance.ZPopMaxAsync<T>(key, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static Task<(string member, decimal score)[]> ZPopMinAsync(string key, long count) =>
+        Instance.ZPopMinAsync(key, count);
+
+    /// <summary>
+    /// [redis-server 5.0.0] 删除并返回有序集合key中的最多count个具有最低得分的成员。如未指定，count的默认值为1。指定一个大于有序集合的基数的count不会产生错误。 当返回多个元素时候，得分最低的元素将是第一个元素，然后是分数较高的元素。
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="count">数量</param>
+    /// <returns></returns>
+    public static Task<(T member, decimal score)[]> ZPopMinAsync<T>(string key, long count) =>
+        Instance.ZPopMinAsync<T>(key, count);
     #endregion
 
     #region String
