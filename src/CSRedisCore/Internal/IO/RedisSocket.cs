@@ -80,7 +80,7 @@ namespace CSRedis.Internal.IO
 
         public Stream GetStream()
         {
-            Stream netStream = new NetworkStream(_socket);
+            Stream netStream = new NetworkStream(_socket, true);
 
             if (!_ssl) return netStream;
 

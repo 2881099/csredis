@@ -33,7 +33,10 @@ namespace CSRedis.Internal.IO
         public void SetStream(Stream stream)
         {
             if (_stream != null)
-                _stream.Dispose();
+            {
+                try { _stream.Close(); } catch { }
+                try { _stream.Dispose(); } catch { }
+            }
 
             _stream = stream;
             _reader = new RedisReader(this);
@@ -43,39 +46,47 @@ namespace CSRedis.Internal.IO
 
 #if net40
 #else
-        public Task<int> WriteAsync(RedisCommand command)
+        async public Task<int> WriteAsync(RedisCommand command)
         {
             var data = _writer.Prepare(command);
-
-            var tcs = new TaskCompletionSource<int>();
-            lock (_streamLock)
-            {
-                Stream.BeginWrite(data, 0, data.Length, asyncResult =>
-                {
-                    try
-                    {
-                        _stream.EndWrite(asyncResult);
-                        tcs.TrySetResult(data.Length);
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.TrySetException(ex);
-                    }
-                }, null);
-            }
-            return tcs.Task;
+            await Stream.WriteAsync(data, 0, data.Length);
+            return data.Length;
+            //var tcs = new TaskCompletionSource<int>();
+            //lock (_streamLock)
+            //{
+            //    Stream.BeginWrite(data, 0, data.Length, asyncResult =>
+            //    {
+            //        try
+            //        {
+            //            _stream.EndWrite(asyncResult);
+            //            tcs.TrySetResult(data.Length);
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            tcs.TrySetException(ex);
+            //        }
+            //    }, null);
+            //    Stream.Flush();
+            //}
+            //return tcs.Task;
         }
 #endif
 
         public void Write(byte[] data)
         {
             lock (_streamLock)
+            {
                 Stream.Write(data, 0, data.Length);
+                Stream.Flush();
+            }
         }
         public void Write(Stream stream)
         {
             lock (_streamLock)
+            {
                 stream.CopyTo(Stream);
+                Stream.Flush();
+            }
         }
         public int ReadByte()
         {
@@ -138,12 +149,11 @@ namespace CSRedis.Internal.IO
 
         public void Dispose()
         {
-            if (_pipeline != null)
-                _pipeline.Dispose();
+            if (_pipeline != null) _pipeline.Dispose();
             if (_stream != null)
             {
                 try { _stream.Close(); } catch { }
-                _stream.Dispose();
+                try { _stream.Dispose(); } catch { }
             }
         }
 

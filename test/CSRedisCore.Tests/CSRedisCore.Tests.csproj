@@ -14,7 +14,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\CSRedisCore.csproj" />
+	  <ProjectReference Include="..\..\src\CSRedisCore\CSRedisCore.csproj" />
 	</ItemGroup>
 
 </Project>
