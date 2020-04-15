@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CSRedus.Internal.ObjectPool
+namespace CSRedis.Internal.ObjectPool
 {
 
     /// <summary>

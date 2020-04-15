@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace CSRedus.Internal.ObjectPool
+namespace CSRedis.Internal.ObjectPool
 {
 
     public class Object<T> : IDisposable

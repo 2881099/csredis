@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSRedus.Internal.ObjectPool
+namespace CSRedis.Internal.ObjectPool
 {
 
     public class DefaultPolicy<T> : IPolicy<T>

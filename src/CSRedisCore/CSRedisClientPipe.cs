@@ -1,4 +1,4 @@
-﻿using CSRedus.Internal.ObjectPool;
+﻿using CSRedis.Internal.ObjectPool;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
