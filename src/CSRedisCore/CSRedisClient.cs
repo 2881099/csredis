@@ -30,9 +30,6 @@ namespace CSRedis
         private object NodesLock = new object();
         public ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
 
-        private int AutoStartPipeCommitCount { get => Nodes.First().Value.AutoStartPipeCommitCount; set => Nodes.Values.ToList().ForEach(p => p.AutoStartPipeCommitCount = value); }
-        private int AutoStartPipeCommitTimeout { get => Nodes.First().Value.AutoStartPipeCommitTimeout; set => Nodes.Values.ToList().ForEach(p => p.AutoStartPipeCommitTimeout = value); }
-
         private Func<JsonSerializerSettings> JsonSerializerSettings = () =>
         {
             var st = new JsonSerializerSettings();

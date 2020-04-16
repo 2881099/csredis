@@ -89,9 +89,6 @@ namespace CSRedis
         public string Key => _policy.Key;
         public string Prefix => _policy.Prefix;
         public Encoding Encoding { get; set; } = new UTF8Encoding(false);
-
-        internal int AutoStartPipeCommitCount { get; set; } = 10;
-        internal int AutoStartPipeCommitTimeout { get; set; } = 1000;
     }
 
     public class RedisClientPoolPolicy : IPolicy<RedisClient>

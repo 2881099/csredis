@@ -23,22 +23,22 @@
 var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,prefix=my_");
 ```
 
-| Parameter         | Default  | Explain |
-| :---------------- | -------: | :------------------- |
-| password          | <Empty>  | Redis server password |
-| defaultDatabase   | 0        | Redis server database |
-| **asyncPipeline** | false    | The asynchronous method automatically uses pipeline, and the 10W concurrent time is 450ms (welcome to feedback) |
-| poolsize          | 50       | Connection pool size |
-| idleTimeout       | 20000    | Idle time of elements in the connection pool (MS), suitable for connecting to remote redis server |
-| connectTimeout    | 5000     | Connection timeout (MS) |
-| syncTimeout       | 10000    | Send / receive timeout (MS) |
-| preheat           | 5        | Preheat connections, receive values such as preheat = 5 preheat 5 connections |
-| autoDispose       | true     | Follow system exit event to release automatically |
-| ssl               | false    | Enable encrypted transmission |
-| testcluster       | true     | 是否尝试集群模式，阿里云、腾讯云集群需要设置此选项为 false |
-| tryit             | 0        | Execution error, retry attempts |
-| name              | <Empty>  | Connection name, use client list command to view |
-| prefix            | <Empty>  | key前辍，所有方法都会附带此前辍，csredis.Set(prefix + "key", 111); |
+| Parameter         | Default   | Explain |
+| :---------------- | --------: | :------------------- |
+| password          | \<Empty\> | Redis server password |
+| defaultDatabase   | 0         | Redis server database |
+| **asyncPipeline** | false     | The asynchronous method automatically uses pipeline, and the 10W concurrent time is 450ms (welcome to feedback) |
+| poolsize          | 50        | Connection pool size |
+| idleTimeout       | 20000     | Idle time of elements in the connection pool (MS), suitable for connecting to remote redis server |
+| connectTimeout    | 5000      | Connection timeout (MS) |
+| syncTimeout       | 10000     | Send / receive timeout (MS) |
+| preheat           | 5         | Preheat connections, receive values such as preheat = 5 preheat 5 connections |
+| autoDispose       | true      | Follow system exit event to release automatically |
+| ssl               | false     | Enable encrypted transmission |
+| testcluster       | true      | 是否尝试集群模式，阿里云、腾讯云集群需要设置此选项为 false |
+| tryit             | 0         | Execution error, retry attempts |
+| name              | \<Empty\> | Connection name, use client list command to view |
+| prefix            | \<Empty\> | key前辍，所有方法都会附带此前辍，csredis.Set(prefix + "key", 111); |
 
 > IPv6: [fe80::b164:55b3:4b4f:7ce6%15]:6379
 
