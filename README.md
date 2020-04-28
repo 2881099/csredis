@@ -183,3 +183,8 @@ StackExchange.Redis StringSetAsync (concurrent Task.WaitAll)：172ms
 CSRedisCore GetAsync(Task.WaitAll)：435ms
 StackExchange.Redis StringGetAsync (concurrent Task.WaitAll)：176ms
 ```
+
+# Thank
+
+Original open source project: https://github.com/ctstone/csredis
+
