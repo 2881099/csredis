@@ -1620,7 +1620,7 @@ namespace CSRedis
                 {
                     foreach (var subscr in this.Subscrs)
                     {
-                        try { subscr.conn.Value.Unsubscribe(); } catch { }
+                        //try { subscr.conn.Value.Unsubscribe(); } catch { }
                         try { subscr.conn.Value.ReceiveTimeout = (subscr.conn.Pool as RedisClientPool)._policy._syncTimeout; } catch { }
                         subscr.conn.Pool.Return(subscr.conn, true);
                     }
@@ -1811,7 +1811,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                 {
                     foreach (var conn in this.RedisConnections)
                     {
-                        try { conn.Value.PUnsubscribe(); } catch { }
+                        //try { conn.Value.PUnsubscribe(); } catch { }
                         try { conn.Value.ReceiveTimeout = (conn.Pool as RedisClientPool)._policy._syncTimeout; } catch { }
                         conn.Pool.Return(conn, true);
                     }
