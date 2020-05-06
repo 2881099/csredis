@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -19,6 +20,11 @@ namespace CSRedis.Internal
         internal readonly IRedisSocket _redisSocket;
         readonly EndPoint _endPoint;
         readonly RedisIO _io;
+
+#if net40
+#else
+        private static readonly DiagnosticListener _diagnosticListener = new DiagnosticListener(CSRedisDiagnosticListenerExtensions.DiagnosticListenerName);
+#endif
 
         public event EventHandler Connected;
 
@@ -80,6 +86,11 @@ namespace CSRedis.Internal
         {
             ConnectIfNotConnected();
 
+#if !net40
+            var operationId = Guid.Empty;
+            var key = command.Arguments.Length > 0 ? command.Arguments[0].ToString() : "";
+#endif
+
             try
             {
                 if (IsPipelined)
@@ -89,8 +100,21 @@ namespace CSRedis.Internal
                 //	return _autoPipeline.EnqueueSync(command);
 
                 //Console.WriteLine("--------------Call " + command.ToString());
+#if !net40
+                operationId = _diagnosticListener.WriteCallBefore(new CallEventData(command.Command)
+                {
+                    Key = key
+                });
+#endif
                 _io.Write(_io.Writer.Prepare(command));
-                return command.Parse(_io.Reader);
+                var res = command.Parse(_io.Reader);
+#if !net40
+                _diagnosticListener.WriteCallAfter(operationId, new CallEventData(command.Command)
+                {
+                    Key = key
+                });
+#endif
+                return res;
             }
             catch (IOException)
             {
@@ -101,6 +125,12 @@ namespace CSRedis.Internal
             }
             catch (RedisException ex)
             {
+#if !net40
+                _diagnosticListener.WriteCallError(operationId, new CallEventData(command.Command)
+                {
+                    Key = key
+                }, ex);
+#endif
                 throw new RedisException($"{ex.Message}\r\nCommand: {command}", ex);
             }
         }
@@ -109,13 +139,34 @@ namespace CSRedis.Internal
 #else
         async public Task<T> CallAsync<T>(RedisCommand<T> command)
         {
-            //if (_autoPipeline.IsEnabled)
-            //	return _autoPipeline.EnqueueAsync(command);
+            var operationId = Guid.Empty;
+            var key = command.Arguments.Length > 0 ? command.Arguments[0].ToString() : "";
 
-            //Console.WriteLine("--------------CallAsync");
-            await _io.WriteAsync(command);
-            //_io.Stream.BeginRead()
-            return command.Parse(_io.Reader);
+            try
+            {
+                operationId = _diagnosticListener.WriteCallBefore(new CallEventData(command.Command)
+                {
+                    Key = key
+                });
+
+                await _io.WriteAsync(command);
+                var res = command.Parse(_io.Reader);
+
+                _diagnosticListener.WriteCallAfter(operationId, new CallEventData(command.Command)
+                {
+                    Key = key
+                });
+
+                return res;
+            }
+            catch (Exception ex)
+            {
+                _diagnosticListener.WriteCallError(operationId, new CallEventData(command.Command)
+                {
+                    Key = key
+                }, ex);
+                throw;
+            }
         }
 #endif
 
