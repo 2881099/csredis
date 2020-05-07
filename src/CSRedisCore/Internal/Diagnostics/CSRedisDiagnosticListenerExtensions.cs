@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace CSRedis.Internal
+namespace CSRedis.Internal.Diagnostics
 {
 #if net40
 #else
@@ -24,11 +24,7 @@ namespace CSRedis.Internal
             {
                 Guid operationId = Guid.NewGuid();
 
-                @this.Write(CSRedisBeforeCall, new
-                {
-                    OperationId = operationId,
-                    EventData = eventData
-                });
+                @this.Write(CSRedisBeforeCall, eventData);
 
                 return operationId;
             }
@@ -64,25 +60,6 @@ namespace CSRedis.Internal
                 });
             }
         }
-    }
-
-    public class EventData
-    {
-        public EventData(string operation)
-        {           
-            Operation = operation;
-        }
-
-        public string Operation { get; }
-    }
-
-    public class CallEventData : EventData
-    {
-        public CallEventData(string operation) : base(operation)
-        {
-        }
-
-        public string Key { get; set; }
-    }
+    } 
 #endif
 }

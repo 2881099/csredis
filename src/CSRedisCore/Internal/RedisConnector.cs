@@ -1,4 +1,5 @@
-﻿using CSRedis.Internal.IO;
+﻿using CSRedis.Internal.Diagnostics;
+using CSRedis.Internal.IO;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -101,18 +102,12 @@ namespace CSRedis.Internal
 
                 //Console.WriteLine("--------------Call " + command.ToString());
 #if !net40
-                operationId = _diagnosticListener.WriteCallBefore(new CallEventData(command.Command)
-                {
-                    Key = key
-                });
+                operationId = _diagnosticListener.WriteCallBefore(new CallEventData(command.Command, key));
 #endif
                 _io.Write(_io.Writer.Prepare(command));
                 var res = command.Parse(_io.Reader);
 #if !net40
-                _diagnosticListener.WriteCallAfter(operationId, new CallEventData(command.Command)
-                {
-                    Key = key
-                });
+                _diagnosticListener.WriteCallAfter(operationId, new CallEventData(command.Command, key));
 #endif
                 return res;
             }
@@ -126,10 +121,7 @@ namespace CSRedis.Internal
             catch (RedisException ex)
             {
 #if !net40
-                _diagnosticListener.WriteCallError(operationId, new CallEventData(command.Command)
-                {
-                    Key = key
-                }, ex);
+                _diagnosticListener.WriteCallError(operationId, new CallEventData(command.Command, key), ex);
 #endif
                 throw new RedisException($"{ex.Message}\r\nCommand: {command}", ex);
             }
@@ -144,27 +136,18 @@ namespace CSRedis.Internal
 
             try
             {
-                operationId = _diagnosticListener.WriteCallBefore(new CallEventData(command.Command)
-                {
-                    Key = key
-                });
+                operationId = _diagnosticListener.WriteCallBefore(new CallEventData(command.Command, key));
 
                 await _io.WriteAsync(command);
                 var res = command.Parse(_io.Reader);
 
-                _diagnosticListener.WriteCallAfter(operationId, new CallEventData(command.Command)
-                {
-                    Key = key
-                });
+                _diagnosticListener.WriteCallAfter(operationId, new CallEventData(command.Command, key));
 
                 return res;
             }
             catch (Exception ex)
             {
-                _diagnosticListener.WriteCallError(operationId, new CallEventData(command.Command)
-                {
-                    Key = key
-                }, ex);
+                _diagnosticListener.WriteCallError(operationId, new CallEventData(command.Command, key), ex);
                 throw;
             }
         }
