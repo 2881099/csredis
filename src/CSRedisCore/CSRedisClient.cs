@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace CSRedis
 {
@@ -3287,6 +3288,21 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         /// <param name="key">不含prefix前辍</param>
         /// <returns></returns>
         public T Get<T>(string key) => this.DeserializeRedisValueInternal<T>(ExecuteScalar(key, (c, k) => c.Value.GetBytes(k)));
+        /// <summary>
+        /// 获取指定 key 的值（适用大对象返回）
+        /// </summary>
+        /// <param name="key">不含prefix前辍</param>
+        /// <param name="destination">读取后写入目标流中</param>
+        /// <param name="bufferSize">读取缓冲区</param>
+        public void Get(string key, Stream destination, int bufferSize = 1024)
+        {
+            ExecuteScalar(key, (c, k) =>
+            {
+                c.Value.WriteNoneRead(new Internal.Commands.RedisString("GET", k));
+                c.Value._reader.ReadBulkBytes(destination, bufferSize, true);
+                return true;
+            });
+        }
         /// <summary>
         /// 对 key 所储存的值，获取指定偏移量上的位(bit)
         /// </summary>

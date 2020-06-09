@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.IO;
 
 public abstract class RedisHelper : RedisHelper<RedisHelper> { }
 
@@ -1354,6 +1355,13 @@ public abstract partial class RedisHelper<TMark>
     /// <param name="key">不含prefix前辍</param>
     /// <returns></returns>
     public static T Get<T>(string key) => Instance.Get<T>(key);
+    /// <summary>
+    /// 获取指定 key 的值（适用大对象返回）
+    /// </summary>
+    /// <param name="key">不含prefix前辍</param>
+    /// <param name="destination">读取后写入目标流中</param>
+    /// <param name="bufferSize">读取缓冲区</param>
+    public static void Get(string key, Stream destination, int bufferSize = 1024) => Instance.Get(key, destination, bufferSize);
     /// <summary>
     /// 对 key 所储存的值，获取指定偏移量上的位(bit)
     /// </summary>

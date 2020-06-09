@@ -43,6 +43,8 @@ namespace CSRedis
                 return _connector.Call(command);
         }
 
+        internal void WriteNoneRead(RedisCommand command) => _connector.CallNoneRead(command);
+
         #region Connection
         /// <summary>
         /// Authenticate to the server

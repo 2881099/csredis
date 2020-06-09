@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,10 @@ namespace CSRedisCore.Tests {
 			rds.Set(key, base.String);
 			rds.Append(key, base.String);
 			Assert.Equal(rds.Get(key), base.String + base.String);
+			var ms = new MemoryStream();
+			rds.Get(key, ms);
+			Assert.Equal(Encoding.UTF8.GetString(ms.ToArray()), base.String + base.String);
+			ms.Close();
 
 			key = "TestAppend_bytes";
 			rds.Set(key, base.Bytes);

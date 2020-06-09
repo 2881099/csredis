@@ -25,6 +25,7 @@ namespace CSRedis
         readonly SubscriptionListener _subscription;
         readonly MonitorListener _monitor;
         bool _streaming;
+        internal RedisReader _reader => _connector?._io?.Reader;
 
         internal Socket Socket => (_connector?._redisSocket as RedisSocket)?._socket;
 

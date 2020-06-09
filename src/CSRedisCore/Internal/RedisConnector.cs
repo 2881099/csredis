@@ -18,7 +18,7 @@ namespace CSRedis.Internal
         readonly int _bufferSize;
         internal readonly IRedisSocket _redisSocket;
         readonly EndPoint _endPoint;
-        readonly RedisIO _io;
+        internal readonly RedisIO _io;
 
         public event EventHandler Connected;
 
@@ -98,6 +98,28 @@ namespace CSRedis.Internal
                     throw;
                 Reconnect();
                 return Call(command);
+            }
+            catch (RedisException ex)
+            {
+                throw new RedisException($"{ex.Message}\r\nCommand: {command}", ex);
+            }
+        }
+
+        public void CallNoneRead(RedisCommand command)
+        {
+            ConnectIfNotConnected();
+
+            try
+            {
+                //Console.WriteLine("--------------Call " + command.ToString());
+                _io.Write(_io.Writer.Prepare(command));
+            }
+            catch (IOException)
+            {
+                if (ReconnectAttempts == 0)
+                    throw;
+                Reconnect();
+                CallNoneRead(command);
             }
             catch (RedisException ex)
             {
