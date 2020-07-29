@@ -197,17 +197,17 @@ public abstract partial class RedisHelper<TMark>
     /// <returns></returns>
     public static string[] PubSubChannels(string pattern) => Instance.PubSubChannels(pattern);
     /// <summary>
-    /// 查看所有模糊订阅端的数量
+    /// 查看所有模糊订阅端的数量<para></para>
+    /// 注意：分区模式下，其他客户端的订阅可能不会返回
     /// </summary>
     /// <returns></returns>
-    [Obsolete("分区模式下，其他客户端的模糊订阅可能不会返回")]
     public static long PubSubNumPat() => Instance.PubSubNumPat();
     /// <summary>
-    /// 查看所有订阅端的数量
+    /// 查看所有订阅端的数量<para></para>
+    /// 注意：分区模式下，其他客户端的订阅可能不会返回
     /// </summary>
     /// <param name="channels">频道</param>
     /// <returns></returns>
-    [Obsolete("分区模式下，其他客户端的订阅可能不会返回")]
     public static Dictionary<string, long> PubSubNumSub(params string[] channels) => Instance.PubSubNumSub(channels);
     /// <summary>
     /// 订阅，根据分区规则返回SubscribeObject，Subscribe(("chan1", msg => Console.WriteLine(msg.Body)), ("chan2", msg => Console.WriteLine(msg.Body)))
@@ -258,19 +258,19 @@ public abstract partial class RedisHelper<TMark>
     /// <returns></returns>
     public static bool PfAdd<T>(string key, params T[] elements) => Instance.PfAdd(key, elements);
     /// <summary>
-    /// 返回给定 HyperLogLog 的基数估算值
+    /// 返回给定 HyperLogLog 的基数估算值<para></para>
+    /// 注意：分区模式下，若keys分散在多个分区节点时，将报错
     /// </summary>
     /// <param name="keys">不含prefix前辍</param>
     /// <returns></returns>
-    [Obsolete("分区模式下，若keys分散在多个分区节点时，将报错")]
     public static long PfCount(params string[] keys) => Instance.PfCount(keys);
     /// <summary>
-    /// 将多个 HyperLogLog 合并为一个 HyperLogLog
+    /// 将多个 HyperLogLog 合并为一个 HyperLogLog<para></para>
+    /// 注意：分区模式下，若keys分散在多个分区节点时，将报错
     /// </summary>
     /// <param name="destKey">新的 HyperLogLog，不含prefix前辍</param>
     /// <param name="sourceKeys">源 HyperLogLog，不含prefix前辍</param>
     /// <returns></returns>
-    [Obsolete("分区模式下，若keys分散在多个分区节点时，将报错")]
     public static bool PfMerge(string destKey, params string[] sourceKeys) => Instance.PfMerge(destKey, sourceKeys);
     #endregion
 

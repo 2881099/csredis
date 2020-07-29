@@ -1393,17 +1393,17 @@ namespace CSRedis
             return ret.ToArray();
         }
         /// <summary>
-        /// 查看所有模糊订阅端的数量
+        /// 查看所有模糊订阅端的数量<para></para>
+        /// 注意：分区模式下，其他客户端的订阅可能不会返回
         /// </summary>
         /// <returns></returns>
-        [Obsolete("分区模式下，其他客户端的模糊订阅可能不会返回")]
         public long PubSubNumPat() => GetAndExecute(Nodes.First().Value, c => c.Value.PubSubNumPat());
         /// <summary>
-        /// 查看所有订阅端的数量
+        /// 查看所有订阅端的数量<para></para>
+        /// 注意：分区模式下，其他客户端的订阅可能不会返回
         /// </summary>
         /// <param name="channels">频道</param>
         /// <returns></returns>
-        [Obsolete("分区模式下，其他客户端的订阅可能不会返回")]
         public Dictionary<string, long> PubSubNumSub(params string[] channels) => ExecuteArray(channels, (c, k) =>
         {
             var prefix = (c.Pool as RedisClientPool).Prefix;
@@ -2019,19 +2019,19 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             return ExecuteScalar(key, (c, k) => c.Value.PfAdd(k, args));
         }
         /// <summary>
-        /// 返回给定 HyperLogLog 的基数估算值
+        /// 返回给定 HyperLogLog 的基数估算值<para></para>
+        /// 注意：分区模式下，若keys分散在多个分区节点时，将报错
         /// </summary>
         /// <param name="keys">不含prefix前辍</param>
         /// <returns></returns>
-        [Obsolete("分区模式下，若keys分散在多个分区节点时，将报错")]
         public long PfCount(params string[] keys) => NodesNotSupport(keys, 0, (c, k) => c.Value.PfCount(k));
         /// <summary>
-        /// 将多个 HyperLogLog 合并为一个 HyperLogLog
+        /// 将多个 HyperLogLog 合并为一个 HyperLogLog<para></para>
+        /// 注意：分区模式下，若keys分散在多个分区节点时，将报错
         /// </summary>
         /// <param name="destKey">新的 HyperLogLog，不含prefix前辍</param>
         /// <param name="sourceKeys">源 HyperLogLog，不含prefix前辍</param>
         /// <returns></returns>
-        [Obsolete("分区模式下，若keys分散在多个分区节点时，将报错")]
         public bool PfMerge(string destKey, params string[] sourceKeys) => NodesNotSupport(new[] { destKey }.Concat(sourceKeys).ToArray(), false, (c, k) => c.Value.PfMerge(k.First(), k.Skip(1).ToArray()) == "OK");
         #endregion
 
