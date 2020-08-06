@@ -1629,7 +1629,7 @@ namespace CSRedis
         }
     }
 
-    class RedisCommand
+    internal class RedisCommand
     {
         readonly string _command;
         readonly object[] _args;
@@ -1644,7 +1644,7 @@ namespace CSRedis
         }
     }
 
-    abstract class RedisCommand<T> : RedisCommand
+    internal abstract class RedisCommand<T> : RedisCommand
     {
         protected RedisCommand(string command, params object[] args)
             : base(command, args)

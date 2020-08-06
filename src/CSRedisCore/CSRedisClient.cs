@@ -242,7 +242,6 @@ namespace CSRedis
         /// <param name="readOnly">false: 只获取master节点进行读写操作<para></para>true: 只获取可用slave节点进行只读操作</param>
         public CSRedisClient(string connectionString, string[] sentinels, bool readOnly = false) : this(null, sentinels, readOnly, null, connectionString) { }
 
-
         /// <summary>
         /// 创建redis哨兵访问类(Redis Sentinel) <see cref="CSRedisClient"/> 
         /// </summary>
@@ -257,8 +256,7 @@ namespace CSRedis
         /// </summary>
         /// <param name="NodeRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
         /// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
-        public CSRedisClient(Func<string, string> NodeRule, SentinelMasterConverter convert = null, params string[] connectionStrings) : this(NodeRule, null, false, null, connectionStrings) { }
-
+        public CSRedisClient(Func<string, string> NodeRule, params string[] connectionStrings) : this(NodeRule, null, false, null, connectionStrings) { }
 
         protected CSRedisClient(Func<string, string> NodeRule, string[] sentinels, bool readOnly, SentinelMasterConverter convert = null, params string[] connectionStrings)
         {

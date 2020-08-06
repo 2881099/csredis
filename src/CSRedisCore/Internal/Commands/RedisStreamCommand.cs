@@ -27,7 +27,7 @@ namespace CSRedis.Internal.Commands
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 var lvl2Count = reader.ReadInt(false);
-                if (lvl2Count != 2) throw new RedisProtocolException("XRange/XRevRange/XClaim 数据格式 2级 MultiBulk 长度应该为 2");
+                if (lvl2Count != 2) throw new RedisProtocolException("XRange/XRevRange/XClaim 返回数据格式 2级 MultiBulk 长度应该为 2");
 
                 var id = reader.ReadBulkString();
 
@@ -67,7 +67,7 @@ namespace CSRedis.Internal.Commands
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 var lvl2Count = reader.ReadInt(false);
-                if (lvl2Count != 2) throw new RedisProtocolException("XRead 数据格式 2级 MultiBulk 长度应该为 2");
+                if (lvl2Count != 2) throw new RedisProtocolException("XRead 返回数据格式 2级 MultiBulk 长度应该为 2");
 
                 var key = reader.ReadBulkString();
 
@@ -79,7 +79,7 @@ namespace CSRedis.Internal.Commands
                 {
                     reader.ExpectType(RedisMessage.MultiBulk);
                     var lvl4Count = reader.ReadInt(false);
-                    if (lvl4Count != 2) throw new RedisProtocolException("XRead 数据格式 4级 MultiBulk 长度应该为 2");
+                    if (lvl4Count != 2) throw new RedisProtocolException("XRead 返回数据格式 4级 MultiBulk 长度应该为 2");
 
                     var id = reader.ReadBulkString();
 
@@ -114,7 +114,7 @@ namespace CSRedis.Internal.Commands
         {
             reader.ExpectType(RedisMessage.MultiBulk);
             long count = reader.ReadInt(false);
-            if (count != 4) throw new RedisProtocolException("XPedding 数据格式 1级 MultiBulk 长度应该为 4");
+            if (count != 4) throw new RedisProtocolException("XPedding 返回数据格式 1级 MultiBulk 长度应该为 4");
 
             var retCount = reader.ReadInt();
             var minId = reader.ReadBulkString();
@@ -128,7 +128,7 @@ namespace CSRedis.Internal.Commands
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 var lvl3Count = reader.ReadInt(false);
-                if (lvl3Count != 2) throw new RedisProtocolException("XPedding 数据格式 3级 MultiBulk 长度应该为 2");
+                if (lvl3Count != 2) throw new RedisProtocolException("XPedding 返回数据格式 3级 MultiBulk 长度应该为 2");
 
                 pendings[a] = (reader.ReadBulkString(), long.Parse(reader.ReadBulkString()));
             }
@@ -174,7 +174,7 @@ namespace CSRedis.Internal.Commands
         {
             reader.ExpectType(RedisMessage.MultiBulk);
             long count = reader.ReadInt(false);
-            if (count % 2 != 0) throw new RedisProtocolException("XInfo Stream 数据格式 1级 MultiBulk 长度应该为偶数");
+            if (count % 2 != 0) throw new RedisProtocolException("XInfo Stream 返回数据格式 1级 MultiBulk 长度应该为偶数");
 
             (long length, long radixTreeKeys, long radixTreeNodes, long groups, string lastGeneratedId, (string id, string[] items) firstEntry, (string id, string[] items) lastEntry) ret = default((long length, long radixTreeKeys, long radixTreeNodes, long groups, string lastGeneratedId, (string id, string[] items) firstEntry, (string id, string[] items) lastEntry));
 
@@ -202,7 +202,7 @@ namespace CSRedis.Internal.Commands
                     case "last-entry":
                         reader.ExpectType(RedisMessage.MultiBulk);
                         var lvl2Count = reader.ReadInt(false);
-                        if (lvl2Count != 2) throw new RedisProtocolException("XInfo Stream 数据格式 2级 MultiBulk 长度应该为 2");
+                        if (lvl2Count != 2) throw new RedisProtocolException("XInfo Stream 返回数据格式 2级 MultiBulk 长度应该为 2");
 
                         var id = reader.ReadBulkString();
 
@@ -241,7 +241,7 @@ namespace CSRedis.Internal.Commands
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 long lvl2Count = reader.ReadInt(false);
-                if (lvl2Count % 2 != 0) throw new RedisProtocolException("XInfo Groups 数据格式 2级 MultiBulk 长度应该为偶数");
+                if (lvl2Count % 2 != 0) throw new RedisProtocolException("XInfo Groups 返回数据格式 2级 MultiBulk 长度应该为偶数");
 
                 for (var b = 0; b < lvl2Count; b+= 2)
                 {
@@ -286,7 +286,7 @@ namespace CSRedis.Internal.Commands
             {
                 reader.ExpectType(RedisMessage.MultiBulk);
                 long lvl2Count = reader.ReadInt(false);
-                if (lvl2Count % 2 != 0) throw new RedisProtocolException("XInfo Consumers 数据格式 2级 MultiBulk 长度应该为偶数");
+                if (lvl2Count % 2 != 0) throw new RedisProtocolException("XInfo Consumers 返回数据格式 2级 MultiBulk 长度应该为偶数");
 
                 for (var b = 0; b < lvl2Count; b += 2)
                 {
