@@ -4246,19 +4246,56 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         #endregion
 
         #region Bloom Filter 4.0
-        public bool BfReserve(string key, decimal errorRate, long capacity, int expansion = 2, bool nonScaling = false) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfReserve(k, errorRate, capacity, expansion, nonScaling))) == "OK";
-        public bool BfAdd(string key, object item) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfAdd(k, this.SerializeRedisValueInternal(item))));
+        public bool BfReserve(string key, decimal errorRate, long capacity, int expansion = 2, bool nonScaling = false) => 
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfReserve(k, errorRate, capacity, expansion, nonScaling))) == "OK";
+        public bool BfAdd(string key, object item) => 
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfAdd(k, this.SerializeRedisValueInternal(item))));
         public bool[] BfMAdd(string key, object[] items) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfMAdd(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+
         public bool[] BfInsert(string key, object[] items, long? capacity = null, string error = null, int expansion = 2, bool noCreate = false, bool nonScaling = false) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInsert(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray(), capacity, error, expansion, noCreate, nonScaling)));
+
         public bool BfExists(string key, object item) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfExists(k, this.SerializeRedisValueInternal(item))));
         public bool[] BfMExists(string key, object[] items) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfMExists(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
-        public RedisScan<byte[]> BfScanDump<T>(string key, long iter) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfScanDump(k, iter)));
-        public bool BfLoadChunk(string key, long iter, byte[] data) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfLoadChunk(k, iter, data))) == "OK";
-        public (long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate) BfInfo(string key) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInfo(k)));
+
+        public RedisScan<byte[]> BfScanDump<T>(string key, long iter) => 
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfScanDump(k, iter)));
+        public bool BfLoadChunk(string key, long iter, byte[] data) => 
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfLoadChunk(k, iter, data))) == "OK";
+
+        public (long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate) BfInfo(string key) => 
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInfo(k)));
+        #endregion
+
+        #region Cuckoo Filter 4.0
+        public bool CfReserve(string key, long capacity, long? bucketSize = null, long? maxIterations = null, int? expansion = null) => 
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfReserve(k, capacity, bucketSize, maxIterations, expansion))) == "OK";
+        public bool CfAdd(string key, object item) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfAdd(false, k, this.SerializeRedisValueInternal(item))));
+        public bool CfAddNx(string key, object item) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfAdd(true, k, this.SerializeRedisValueInternal(item))));
+
+        public bool[] CfInsert(string key, object[] items, long? capacity = null, bool noCreate = false) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfInsert(false, k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray(), capacity, noCreate)));
+        public bool[] CfInsertNx(string key, object[] items, long? capacity = null, bool noCreate = false) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfInsert(true, k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray(), capacity, noCreate)));
+
+        public bool CfExists(string key, object item) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfExists(k, this.SerializeRedisValueInternal(item))));
+        public bool CfDel(string key, object item) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfDel(k, this.SerializeRedisValueInternal(item))));
+        public long CfCount(string key, object item) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfCount(k, this.SerializeRedisValueInternal(item))));
+
+        public RedisScan<byte[]> CfScanDump<T>(string key, long iter) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfScanDump(k, iter)));
+        public bool CfLoadChunk(string key, long iter, byte[] data) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfLoadChunk(k, iter, data))) == "OK";
+        public (long size, long numberOfBuckets, long numberOfFilter, long numberOfItemsInserted, long numberOfItemsDeleted, long bucketSize, long expansionRate, long maxIteration) CfInfo(string key) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfInfo(k)));
         #endregion
 
         /// <summary>

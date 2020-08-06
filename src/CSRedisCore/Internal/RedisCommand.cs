@@ -1671,6 +1671,116 @@ namespace CSRedis
         }
         #endregion
 
+        #region Cuckoo Filter
+        public static RedisStatus CfReserve(string key, long capacity, long? bucketSize = null, long? maxIterations = null, int? expansion = null)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key, capacity });
+            if (bucketSize != 2) args.AddRange(new object[] { "BUCKETSIZE", bucketSize });
+            if (maxIterations != 2) args.AddRange(new object[] { "MAXITERATIONS", maxIterations });
+            if (expansion != 2) args.AddRange(new object[] { "EXPANSION", expansion });
+            return new RedisStatus("CF.RESERVE", args.ToArray());
+        }
+        public static RedisBool CfAdd(bool nx, string key, object item)
+        {
+            return new RedisBool(nx ? "CF.ADDNX": "CF.ADD", key, item);
+        }
+        public static RedisArray.Generic<bool> CfInsert(bool nx, string key, object[] items, long? capacity = null, bool noCreate = false)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            if (capacity != null) args.AddRange(new object[] { "CAPACITY", capacity });
+            if (noCreate) args.Add("NOCREATE");
+            args.Add("ITEMS");
+            args.AddRange(items);
+            return new RedisArray.Generic<bool>(new RedisBool(nx ? "CF.INSERTNX" : "CF.INSERT", args.ToArray()));
+        }
+        public static RedisBool CfExists(string key, object item)
+        {
+            return new RedisBool("CF.EXISTS", key, item);
+        }
+        public static RedisBool CfDel(string key, object item)
+        {
+            return new RedisBool("CF.DEL", key, item);
+        }
+        public static RedisInt CfCount(string key, object item)
+        {
+            return new RedisInt("CF.COUNT", key, item);
+        }
+        public static RedisScanCommand<byte[]> CfScanDump(string key, long iter)
+        {
+            return new RedisScanCommand<byte[]>(
+                   new RedisArray.Bytes("CF.SCANDUMP", key, iter));
+        }
+        public static RedisStatus CfLoadChunk(string key, long iter, byte[] data)
+        {
+            return new RedisStatus("CF.LOADCHUNK", key, iter, data);
+        }
+        public static RedisCfInfoCommand CfInfo(string key)
+        {
+            return new RedisCfInfoCommand("CF.INFO", key);
+        }
+        public class RedisCfInfoCommand : RedisCommand<(long size, long numberOfBuckets, long numberOfFilter, long numberOfItemsInserted, long numberOfItemsDeleted, long bucketSize, long expansionRate, long maxIteration)>
+        {
+            public RedisCfInfoCommand(string command, params object[] args)
+                : base(command, args)
+            {
+            }
+
+            public override (long size, long numberOfBuckets, long numberOfFilter, long numberOfItemsInserted, long numberOfItemsDeleted, long bucketSize, long expansionRate, long maxIteration) Parse(RedisReader reader)
+            {
+                long size = 0;
+                long numberOfBuckets = 0;
+                long numberOfFilter = 0;
+                long numberOfItemsInserted = 0;
+                long numberOfItemsDeleted = 0;
+                long bucketSize = 0;
+                long expansionRate = 0;
+                long maxIteration = 0;
+
+                reader.ExpectType(RedisMessage.MultiBulk);
+                long count = reader.ReadInt(false);
+                if (count % 2 != 0) throw new RedisProtocolException("CF.INFO 返回数据格式 1级 MultiBulk 长度应该为偶数");
+
+                for (var b = 0; b < count; b += 2)
+                {
+                    var key = reader.ReadBulkString().ToLower();
+                    switch (key)
+                    {
+                        case "size":
+                            size = reader.ReadInt();
+                            break;
+                        case "number of buckets":
+                            numberOfBuckets = reader.ReadInt();
+                            break;
+                        case "number of filter":
+                            numberOfFilter = reader.ReadInt();
+                            break;
+                        case "number of items inserted":
+                            numberOfItemsInserted = reader.ReadInt();
+                            break;
+                        case "number of items deleted":
+                            numberOfItemsDeleted = reader.ReadInt();
+                            break;
+                        case "bucket size":
+                            bucketSize = reader.ReadInt();
+                            break;
+                        case "expansion rate":
+                            expansionRate = reader.ReadInt();
+                            break;
+                        case "max iteration":
+                            maxIteration = reader.ReadInt();
+                            break;
+                        default:
+                            reader.ReadBulkString();
+                            break;
+                    }
+                }
+                return (size, numberOfBuckets, numberOfFilter, numberOfItemsInserted, numberOfItemsDeleted, bucketSize, expansionRate, maxIteration);
+            }
+        }
+        #endregion
+
         public static class Sentinel
         {
             public static RedisArray.Generic<RedisSentinelInfo> Sentinels(string masterName)
