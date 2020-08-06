@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using CSRedis.Internal.ObjectPool;
 using System;
 using System.Collections.Generic;
@@ -6,9 +6,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace CSRedis
@@ -234,23 +232,37 @@ namespace CSRedis
         /// 创建redis访问类(支持单机或集群)
         /// </summary>
         /// <param name="connectionString">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
-        public CSRedisClient(string connectionString) : this(null, new string[0], false, connectionString) { }
+        public CSRedisClient(string connectionString) : this(null, new string[0], false, null, connectionString) { }
+
         /// <summary>
         /// 创建redis哨兵访问类(Redis Sentinel)
         /// </summary>
         /// <param name="connectionString">mymaster,password=123456,poolsize=50,connectTimeout=200,ssl=false</param>
         /// <param name="sentinels">哨兵节点，如：ip1:26379、ip2:26379</param>
         /// <param name="readOnly">false: 只获取master节点进行读写操作<para></para>true: 只获取可用slave节点进行只读操作</param>
-        public CSRedisClient(string connectionString, string[] sentinels, bool readOnly = false) : this(null, sentinels, readOnly, connectionString) { }
+        public CSRedisClient(string connectionString, string[] sentinels, bool readOnly = false) : this(null, sentinels, readOnly, null, connectionString) { }
+
+
+        /// <summary>
+        /// 创建redis哨兵访问类(Redis Sentinel) <see cref="CSRedisClient"/> 
+        /// </summary>
+        /// <param name="connectionString">mymaster,password=123456,poolsize=50,connectTimeout=200,ssl=false</param>
+        /// <param name="sentinels">哨兵节点，如：ip1:26379、ip2:26379</param>
+        /// <param name="readOnly">false: 只获取master节点进行读写操作<para></para>true: 只获取可用slave节点进行只读操作</param>
+        /// <param name="convert">哨兵主机转换规则</param>
+        public CSRedisClient(string connectionString, string[] sentinels, bool readOnly, SentinelMasterConverter convert) : this(null, sentinels, readOnly, convert, connectionString) { }
+
         /// <summary>
         /// 创建redis分区访问类，通过 KeyRule 对 key 进行分区，连接对应的 connectionString
         /// </summary>
         /// <param name="NodeRule">按key分区规则，返回值格式：127.0.0.1:6379/13，默认方案(null)：取key哈希与节点数取模</param>
         /// <param name="connectionStrings">127.0.0.1[:6379],password=123456,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍</param>
-        public CSRedisClient(Func<string, string> NodeRule, params string[] connectionStrings) : this(NodeRule, null, false, connectionStrings) { }
-        CSRedisClient(Func<string, string> NodeRule, string[] sentinels, bool readOnly, params string[] connectionStrings)
+        public CSRedisClient(Func<string, string> NodeRule, SentinelMasterConverter convert = null, params string[] connectionStrings) : this(NodeRule, null, false, null, connectionStrings) { }
+
+
+        protected CSRedisClient(Func<string, string> NodeRule, string[] sentinels, bool readOnly, SentinelMasterConverter convert = null, params string[] connectionStrings)
         {
-            if (connectionStrings == null || connectionStrings.Any() == false) throw new Exception("Redis ConnectionString 未设置");
+            if (connectionStrings == null || !connectionStrings.Any()) throw new Exception("Redis ConnectionString 未设置");
             var tmppoolPolicy = new RedisClientPoolPolicy();
             tmppoolPolicy.ConnectionString = connectionStrings.First() + ",preheat=false";
 
@@ -258,6 +270,7 @@ namespace CSRedis
             {
                 if (connectionStrings.Length > 1) throw new Exception("Redis Sentinel 不可设置多个 ConnectionString");
                 SentinelManager = new RedisSentinelManager(readOnly, sentinels);
+                SentinelManager.SentinelMasterConverter = convert;
                 SentinelManager.Connected += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(tmppoolPolicy._password))
@@ -269,7 +282,7 @@ namespace CSRedis
                         catch (Exception authEx)
                         {
                             if (authEx.Message != "ERR Client sent AUTH, but no password is set")
-                                throw authEx;
+                                throw;
                         }
                     }
                 };
