@@ -1,13 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 // http://redis.io/topics/sentinel-clients
 
 namespace CSRedis
 {
+    /// <summary>
+    /// 哨兵主机转换委托
+    /// </summary>
+    /// <param name="master">哨兵返回的主机信息</param>
+    /// <returns>客户端可连接的主机信息</returns>
+    public delegate Tuple<string, int> SentinelMasterConverter(Tuple<string, int> master);
+
     /// <summary>
     /// Represents a managed connection to a Redis master instance via a set of Redis sentinel nodes
     /// </summary>
@@ -127,6 +133,13 @@ namespace CSRedis
                 _redisClient.Dispose();
         }
 
+        /// <summary>
+        /// 哨兵主机转换委托
+        /// </summary>
+        /// <value>客户端可识别的主机转换委托</value>
+        public SentinelMasterConverter SentinelMasterConverter { get; set; }
+
+
         string SetMaster(string name, int timeout)
         {
             for (int i = 0; i < _sentinels.Count; i++)
@@ -152,6 +165,10 @@ namespace CSRedis
 
                     if (_redisClient != null)
                         _redisClient.Dispose();
+
+                    if (SentinelMasterConverter != null)
+                        master = SentinelMasterConverter(master);
+
                     _redisClient = new RedisClient(master.Item1, master.Item2);
                     _redisClient.Connected += OnConnectionConnected;
 
