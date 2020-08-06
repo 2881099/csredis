@@ -1565,6 +1565,112 @@ namespace CSRedis
 
         #endregion
 
+        #region Bloom Filter
+        public static RedisStatus BfReserve(string key, decimal errorRate, long capacity, int expansion = 2, bool nonScaling = false)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key, errorRate, capacity });
+            if (expansion != 2) args.AddRange(new object[] { "EXPANSION", expansion });
+            if (nonScaling) args.Add("NONSCALING");
+            return new RedisStatus("BF.RESERVE", args.ToArray());
+        }
+        public static RedisBool BfAdd(string key, object item)
+        {
+            return new RedisBool("BF.ADD", key, item);
+        }
+        public static RedisArray.Generic<bool> BfMAdd(string key, object[] items)
+        {
+            var args = new List<object>();
+            args.Add(key);
+            args.AddRange(items);
+            return new RedisArray.Generic<bool>(new RedisBool("BF.MADD", args.ToArray()));
+        }
+        public static RedisArray.Generic<bool> BfInsert(string key, object[] items, long? capacity = null, string error = null, int expansion = 2, bool noCreate = false, bool nonScaling = false)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            if (capacity != null) args.AddRange(new object[] { "CAPACITY", capacity });
+            if (string.IsNullOrEmpty(error) == false) args.AddRange(new object[] { "ERROR", error });
+            if (expansion != 2) args.Add(new object[] { "EXPANSION", expansion });
+            if (noCreate) args.Add("NOCREATE");
+            if (nonScaling) args.Add("NONSCALING");
+            args.Add("ITEMS");
+            args.AddRange(items);
+            return new RedisArray.Generic<bool>(new RedisBool("BF.INSERT", args.ToArray()));
+        }
+        public static RedisBool BfExists(string key, object item)
+        {
+            return new RedisBool("BF.EXISTS", key, item);
+        }
+        public static RedisArray.Generic<bool> BfMExists(string key, object[] items)
+        {
+            var args = new List<object>();
+            args.Add(key);
+            args.AddRange(items);
+            return new RedisArray.Generic<bool>(new RedisBool("BF.MEXISTS", args.ToArray()));
+        }
+        public static RedisScanCommand<byte[]> BfScanDump(string key, long iter)
+        {
+            return new RedisScanCommand<byte[]>(
+                   new RedisArray.Bytes("BF.SCANDUMP", key, iter));
+        }
+        public static RedisStatus BfLoadChunk(string key, long iter, byte[] data)
+        {
+            return new RedisStatus("BF.LOADCHUNK", key, iter, data);
+        }
+        public static RedisBfInfoCommand BfInfo(string key)
+        {
+            return new RedisBfInfoCommand("BF.INFO", key);
+        }
+        public class RedisBfInfoCommand : RedisCommand<(long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate)>
+        {
+            public RedisBfInfoCommand(string command, params object[] args)
+                : base(command, args)
+            {
+            }
+
+            public override (long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate) Parse(RedisReader reader)
+            {
+                long capacity = 0;
+                long size = 0;
+                long numberOfFilters = 0;
+                long numberOfItemsInserted = 0;
+                long expansionRate = 0;
+
+                reader.ExpectType(RedisMessage.MultiBulk);
+                long count = reader.ReadInt(false);
+                if (count % 2 != 0) throw new RedisProtocolException("BF.INFO 返回数据格式 1级 MultiBulk 长度应该为偶数");
+
+                for (var b = 0; b < count; b += 2)
+                {
+                    var key = reader.ReadBulkString().ToLower();
+                    switch (key)
+                    {
+                        case "capacity":
+                            capacity = reader.ReadInt();
+                            break;
+                        case "size":
+                            size = reader.ReadInt();
+                            break;
+                        case "number of filters":
+                            numberOfFilters = reader.ReadInt();
+                            break;
+                        case "number of items inserted":
+                            numberOfItemsInserted = reader.ReadInt();
+                            break;
+                        case "expansion rate":
+                            expansionRate = reader.ReadInt();
+                            break;
+                        default:
+                            reader.ReadBulkString();
+                            break;
+                    }
+                }
+                return (capacity, size, numberOfFilters, numberOfItemsInserted, expansionRate);
+            }
+        }
+        #endregion
+
         public static class Sentinel
         {
             public static RedisArray.Generic<RedisSentinelInfo> Sentinels(string masterName)

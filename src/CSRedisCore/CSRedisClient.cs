@@ -4245,6 +4245,22 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         public long XTrim(string key, long maxLen) => ExecuteScalar(key, (c, k) => c.Value.XTrim(k, maxLen));
         #endregion
 
+        #region Bloom Filter 4.0
+        public bool BfReserve(string key, decimal errorRate, long capacity, int expansion = 2, bool nonScaling = false) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfReserve(k, errorRate, capacity, expansion, nonScaling))) == "OK";
+        public bool BfAdd(string key, object item) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfAdd(k, this.SerializeRedisValueInternal(item))));
+        public bool[] BfMAdd(string key, object[] items) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfMAdd(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+        public bool[] BfInsert(string key, object[] items, long? capacity = null, string error = null, int expansion = 2, bool noCreate = false, bool nonScaling = false) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInsert(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray(), capacity, error, expansion, noCreate, nonScaling)));
+        public bool BfExists(string key, object item) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfExists(k, this.SerializeRedisValueInternal(item))));
+        public bool[] BfMExists(string key, object[] items) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfMExists(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+        public RedisScan<byte[]> BfScanDump<T>(string key, long iter) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfScanDump(k, iter)));
+        public bool BfLoadChunk(string key, long iter, byte[] data) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfLoadChunk(k, iter, data))) == "OK";
+        public (long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate) BfInfo(string key) => ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInfo(k)));
+        #endregion
+
         /// <summary>
         /// 开启分布式锁，若超时返回null
         /// </summary>

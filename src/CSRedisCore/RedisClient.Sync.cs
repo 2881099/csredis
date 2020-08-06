@@ -28,7 +28,7 @@ namespace CSRedis
             return Write(RedisCommands.Call(command, args));
         }
 
-        public T Write<T>(RedisCommand<T> command)
+        internal T Write<T>(RedisCommand<T> command)
         {
             if (_transaction.Active)
                 return _transaction.Write(command);
