@@ -4298,6 +4298,21 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfInfo(k)));
         #endregion
 
+        #region Count-Min Sketch 4.0
+        public bool CmsInitByDim(string key, long width, long depth) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsInitByDim(k, width, depth))) == "OK";
+        public bool CmsInitByProb(string key, decimal error, decimal probability) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsInitByProb(k, error, probability))) == "OK";
+        public long[] CmsIncrBy(string key, params (object item, long increment)[] items) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsIncrBy(k, items.Select(item => (this.SerializeRedisValueInternal(item.item), item.increment)).ToArray())));
+        public long[] CmsQuery(string key, params object[] items) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsQuery(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+        public bool CmsMerge(string dest, long numKeys, string[] src, long[] weights) =>
+            NodesNotSupport(new[] { dest }.Concat(src).ToArray(), null, (c, k) => c.Value.Write(RedisCommands.CmsMerge(k.FirstOrDefault(), numKeys, k.Where((_, idx) => idx > 0).ToArray(), weights))) == "OK";
+        public (long width, long depth, long count) CmsInfo(string key) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsInfo(k)));
+        #endregion
+
         /// <summary>
         /// 开启分布式锁，若超时返回null
         /// </summary>

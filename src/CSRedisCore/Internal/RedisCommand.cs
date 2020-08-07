@@ -1781,6 +1781,86 @@ namespace CSRedis
         }
         #endregion
 
+        #region Count-Min Sketch
+        public static RedisStatus CmsInitByDim(string key, long width, long depth)
+        {
+            return new RedisStatus("CMS.INITBYDIM", key, width, depth);
+        }
+        public static RedisStatus CmsInitByProb(string key, decimal error, decimal probability)
+        {
+            return new RedisStatus("CMS.INITBYPROB", key, error, probability);
+        }
+        public static RedisArray.Generic<long> CmsIncrBy(string key, params (object item, long increment)[] items)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            foreach (var item in items) args.AddRange(new object[] { item.item, item.increment });
+            return new RedisArray.Generic<long>(new RedisInt("CMS.INCRBY", args.ToArray()));
+        }
+        public static RedisArray.Generic<long> CmsQuery(string key, object[] items)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            args.AddRange(items);
+            return new RedisArray.Generic<long>(new RedisInt("CMS.QUERY", args.ToArray()));
+        }
+        public static RedisStatus CmsMerge(string dest, long numKeys, string[] src, long[] weights)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { dest, numKeys });
+            args.AddRange(src);
+            if (weights?.Any() == true)
+            {
+                args.Add("WEIGHTS");
+                args.AddRange(weights.Select(a => (object)a));
+            }
+            return new RedisStatus("CMS.MERGE", args.ToArray());
+        }
+        public static RedisCmsInfoCommand CmsInfo(string key)
+        {
+            return new RedisCmsInfoCommand("CMS.INFO", key);
+        }
+        public class RedisCmsInfoCommand : RedisCommand<(long width, long depth, long count)>
+        {
+            public RedisCmsInfoCommand(string command, params object[] args)
+                : base(command, args)
+            {
+            }
+
+            public override (long width, long depth, long count) Parse(RedisReader reader)
+            {
+                long width = 0;
+                long depth = 0;
+                long count = 0;
+
+                reader.ExpectType(RedisMessage.MultiBulk);
+                long arrayCount = reader.ReadInt(false);
+                if (arrayCount % 2 != 0) throw new RedisProtocolException("CMS.INFO 返回数据格式 1级 MultiBulk 长度应该为偶数");
+
+                for (var b = 0; b < arrayCount; b += 2)
+                {
+                    var key = reader.ReadBulkString().ToLower();
+                    switch (key)
+                    {
+                        case "width":
+                            width = reader.ReadInt();
+                            break;
+                        case "depth":
+                            depth = reader.ReadInt();
+                            break;
+                        case "count":
+                            count = reader.ReadInt();
+                            break;
+                        default:
+                            reader.ReadBulkString();
+                            break;
+                    }
+                }
+                return (width, depth, count);
+            }
+        }
+        #endregion
+
         public static class Sentinel
         {
             public static RedisArray.Generic<RedisSentinelInfo> Sentinels(string masterName)
