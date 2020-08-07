@@ -4270,7 +4270,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInfo(k)));
         #endregion
 
-        #region Cuckoo Filter 4.0
+        #region RedisBloom Cuckoo Filter 4.0
         public bool CfReserve(string key, long capacity, long? bucketSize = null, long? maxIterations = null, int? expansion = null) => 
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfReserve(k, capacity, bucketSize, maxIterations, expansion))) == "OK";
         public bool CfAdd(string key, object item) =>
@@ -4298,11 +4298,12 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfInfo(k)));
         #endregion
 
-        #region Count-Min Sketch 4.0
+        #region RedisBloom Count-Min Sketch 4.0
         public bool CmsInitByDim(string key, long width, long depth) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsInitByDim(k, width, depth))) == "OK";
         public bool CmsInitByProb(string key, decimal error, decimal probability) =>
            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsInitByProb(k, error, probability))) == "OK";
+
         public long[] CmsIncrBy(string key, params (object item, long increment)[] items) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsIncrBy(k, items.Select(item => (this.SerializeRedisValueInternal(item.item), item.increment)).ToArray())));
         public long[] CmsQuery(string key, params object[] items) =>
@@ -4311,6 +4312,26 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             NodesNotSupport(new[] { dest }.Concat(src).ToArray(), null, (c, k) => c.Value.Write(RedisCommands.CmsMerge(k.FirstOrDefault(), numKeys, k.Where((_, idx) => idx > 0).ToArray(), weights))) == "OK";
         public (long width, long depth, long count) CmsInfo(string key) =>
            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CmsInfo(k)));
+        #endregion
+
+        #region RedisBloom TopK Filter 4.0
+        public bool TopkReserve(string key, long topk, long width, long depth, decimal decay) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkReserve(k, topk, width, depth, decay))) == "OK";
+
+        public string[] TopkAdd(string key, object[] items) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkAdd(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+        public string[] TopkIncrBy(string key, params (object item, long increment)[] items) =>
+            ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkIncrBy(k, items.Select(item => (this.SerializeRedisValueInternal(item.item), item.increment)).ToArray())));
+
+        public bool[] TopkQuery(string key, object[] items) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkQuery(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+        public long[] TopkCount(string key, object[] items) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkCount(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
+
+        public string[] TopkList(string key) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkList(k)));
+        public (long k, long width, long depth, decimal decay) TopkInfo(string key) =>
+           ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.TopkInfo(k)));
         #endregion
 
         /// <summary>

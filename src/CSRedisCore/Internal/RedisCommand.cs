@@ -3,6 +3,7 @@ using CSRedis.Internal.IO;
 using CSRedis.Internal.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -1671,7 +1672,7 @@ namespace CSRedis
         }
         #endregion
 
-        #region Cuckoo Filter
+        #region RedisBloom Cuckoo Filter
         public static RedisStatus CfReserve(string key, long capacity, long? bucketSize = null, long? maxIterations = null, int? expansion = null)
         {
             var args = new List<object>();
@@ -1781,7 +1782,7 @@ namespace CSRedis
         }
         #endregion
 
-        #region Count-Min Sketch
+        #region RedisBloom Count-Min Sketch
         public static RedisStatus CmsInitByDim(string key, long width, long depth)
         {
             return new RedisStatus("CMS.INITBYDIM", key, width, depth);
@@ -1857,6 +1858,92 @@ namespace CSRedis
                     }
                 }
                 return (width, depth, count);
+            }
+        }
+        #endregion
+
+        #region RedisBloom TopK Filter
+        public static RedisStatus TopkReserve(string key, long topk, long width, long depth, decimal decay)
+        {
+            return new RedisStatus("TOPK.RESERVE", key, topk, width, depth, decay);
+        }
+        public static RedisArray.Generic<string> TopkAdd(string key, object[] items)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            args.AddRange(items);
+            return new RedisArray.Generic<string>(new RedisString("TOPK.ADD", args.ToArray()));
+        }
+        public static RedisArray.Generic<string> TopkIncrBy(string key, params (object item, long increment)[] items)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            foreach (var item in items) args.AddRange(new object[] { item.item, item.increment });
+            return new RedisArray.Generic<string>(new RedisString("TOPK.INCRBY", args.ToArray()));
+        }
+        public static RedisArray.Generic<bool> TopkQuery(string key, object[] items)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            args.AddRange(items);
+            return new RedisArray.Generic<bool>(new RedisBool("TOPK.QUERY", args.ToArray()));
+        }
+        public static RedisArray.Generic<long> TopkCount(string key, object[] items)
+        {
+            var args = new List<object>();
+            args.AddRange(new object[] { key });
+            args.AddRange(items);
+            return new RedisArray.Generic<long>(new RedisInt("TOPK.COUNT", args.ToArray()));
+        }
+        public static RedisArray.Generic<string> TopkList(string key)
+        {
+            return new RedisArray.Generic<string>(new RedisString("TOPK.LIST", key));
+        }
+        public static RedisTopkInfoCommand TopkInfo(string key)
+        {
+            return new RedisTopkInfoCommand("TOPK.INFO", key);
+        }
+        public class RedisTopkInfoCommand : RedisCommand<(long k, long width, long depth, decimal decay)>
+        {
+            public RedisTopkInfoCommand(string command, params object[] args)
+                : base(command, args)
+            {
+            }
+
+            public override (long k, long width, long depth, decimal decay) Parse(RedisReader reader)
+            {
+                long k = 0;
+                long width = 0;
+                long depth = 0;
+                decimal decay = 0;
+
+                reader.ExpectType(RedisMessage.MultiBulk);
+                long arrayCount = reader.ReadInt(false);
+                if (arrayCount % 2 != 0) throw new RedisProtocolException("CMS.INFO 返回数据格式 1级 MultiBulk 长度应该为偶数");
+
+                for (var b = 0; b < arrayCount; b += 2)
+                {
+                    var key = reader.ReadBulkString().ToLower();
+                    switch (key)
+                    {
+                        case "k":
+                            k = reader.ReadInt();
+                            break;
+                        case "width":
+                            width = reader.ReadInt();
+                            break;
+                        case "depth":
+                            depth = reader.ReadInt();
+                            break;
+                        case "decay":
+                            decay = decimal.Parse(reader.ReadBulkString(), NumberStyles.Any);
+                            break;
+                        default:
+                            reader.ReadBulkString();
+                            break;
+                    }
+                }
+                return (k, width, depth, decay);
             }
         }
         #endregion
