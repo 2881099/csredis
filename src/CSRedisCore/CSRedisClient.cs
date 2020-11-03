@@ -4246,9 +4246,9 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         #endregion
 
         #region Bloom Filter 4.0
-        public bool BfReserve(string key, decimal errorRate, long capacity, int expansion = 2, bool nonScaling = false) => 
+        public bool BfReserve(string key, decimal errorRate, long capacity, int expansion = 2, bool nonScaling = false) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfReserve(k, errorRate, capacity, expansion, nonScaling))) == "OK";
-        public bool BfAdd(string key, object item) => 
+        public bool BfAdd(string key, object item) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfAdd(k, this.SerializeRedisValueInternal(item))));
         public bool[] BfMAdd(string key, object[] items) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfMAdd(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
@@ -4261,17 +4261,17 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         public bool[] BfMExists(string key, object[] items) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfMExists(k, items.Select(item => this.SerializeRedisValueInternal(item)).ToArray())));
 
-        public RedisScan<byte[]> BfScanDump<T>(string key, long iter) => 
+        public RedisScan<byte[]> BfScanDump<T>(string key, long iter) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfScanDump(k, iter)));
-        public bool BfLoadChunk(string key, long iter, byte[] data) => 
+        public bool BfLoadChunk(string key, long iter, byte[] data) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfLoadChunk(k, iter, data))) == "OK";
 
-        public (long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate) BfInfo(string key) => 
+        public (long capacity, long size, long numberOfFilters, long numberOfItemsInserted, long expansionRate) BfInfo(string key) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.BfInfo(k)));
         #endregion
 
         #region RedisBloom Cuckoo Filter 4.0
-        public bool CfReserve(string key, long capacity, long? bucketSize = null, long? maxIterations = null, int? expansion = null) => 
+        public bool CfReserve(string key, long capacity, long? bucketSize = null, long? maxIterations = null, int? expansion = null) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfReserve(k, capacity, bucketSize, maxIterations, expansion))) == "OK";
         public bool CfAdd(string key, object item) =>
             ExecuteScalar(key, (c, k) => c.Value.Write(RedisCommands.CfAdd(false, k, this.SerializeRedisValueInternal(item))));
@@ -4350,7 +4350,8 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                 var value = Guid.NewGuid().ToString();
                 if (this.Set(name, value, timeoutSeconds, RedisExistence.Nx) == true)
                 {
-                    return new CSRedisClientLock(this, name, value, timeoutSeconds, autoDelay);
+                    int refreshSeconds = Math.Max(timeoutSeconds / 4, 1);
+                    return new CSRedisClientLock(this, name, value, timeoutSeconds, refreshSeconds,autoDelay);
                 }
                 Thread.CurrentThread.Join(3);
             }
@@ -4367,7 +4368,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         int _timeoutSeconds;
         Timer _autoDelayTimer;
 
-        internal CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, bool autoDelay)
+        internal CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, int refreshSeconds, bool autoDelay)
         {
             _client = rds;
             _name = name;
@@ -4375,8 +4376,9 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             _timeoutSeconds = timeoutSeconds;
             if (autoDelay)
             {
-                var milliseconds = _timeoutSeconds * 1000 / 2;
-                _autoDelayTimer = new Timer(state2 => Delay(milliseconds), null, milliseconds, milliseconds);
+                var refreshMilli = refreshSeconds * 1000;
+                var timeoutMilli = timeoutSeconds * 1000;
+                _autoDelayTimer = new Timer(state2 => Refresh(timeoutMilli), null, refreshMilli, refreshMilli);
             }
         }
 
@@ -4391,6 +4393,23 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 if gva == ARGV[1] then
   local ttlva = redis.call('PTTL', KEYS[1])
   redis.call('PEXPIRE', KEYS[1], ARGV[2] + ttlva)
+  return 1
+end
+return 0", _name, _value, milliseconds)?.ToString() == "1";
+            if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+            return ret;
+        }
+
+        /// <summary>
+        /// 刷新锁时间，把key的ttl重新设置为milliseconds，锁在占用期内操作时返回true，若因锁超时被其他使用者占用则返回false
+        /// </summary>
+        /// <param name="milliseconds">刷新的毫秒数</param>
+        /// <returns>成功/失败</returns>
+        public bool Refresh(int milliseconds)
+        {
+            var ret = RedisHelper.Eval(@"local gva = redis.call('GET', KEYS[1])
+if gva == ARGV[1] then
+  redis.call('PEXPIRE', KEYS[1], ARGV[2])
   return 1
 end
 return 0", _name, _value, milliseconds)?.ToString() == "1";
