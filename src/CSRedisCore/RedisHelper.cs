@@ -39,6 +39,10 @@ public abstract partial class RedisHelper<TMark>
         }
     }
     public static ConcurrentDictionary<string, RedisClientPool> Nodes => Instance.Nodes;
+    /// <summary>
+    /// 获取连接字符串指定的prefix前缀
+    /// </summary>
+    public static string Prefix => Nodes.First().Value.Prefix;
 
     /// <summary>
     /// 初始化csredis静态访问类
@@ -1529,6 +1533,7 @@ public abstract partial class RedisHelper<TMark>
     public static bool ExpireAt(string key, DateTime expire) => Instance.ExpireAt(key, expire);
     /// <summary>
     /// 查找所有分区节点中符合给定模式(pattern)的 key
+    /// <para>Keys方法返回的keys[]包含prefix，使用前请自行处理</para>
     /// </summary>
     /// <param name="pattern">如：runoob*</param>
     /// <returns></returns>
