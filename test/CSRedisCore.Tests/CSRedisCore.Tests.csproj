@@ -1,20 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp2.1</TargetFramework>
-
+		<TargetFramework>net5.0</TargetFramework>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<WarningLevel>3</WarningLevel>
+		<NoWarn>1701;1702;1591</NoWarn>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-		<PackageReference Include="xunit" Version="2.3.1" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
+		<PackageReference Include="xunit" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\CSRedisCore\CSRedisCore.csproj" />
+		<ProjectReference Include="..\..\src\CSRedisCore\CSRedisCore.csproj" />
 	</ItemGroup>
 
 </Project>

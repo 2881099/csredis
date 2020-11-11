@@ -102,16 +102,20 @@ namespace Microsoft.Extensions.Caching.Distributed {
 			if (value == null) return null;
 			using (MemoryStream ms = new MemoryStream()) {
 				IFormatter formatter = new BinaryFormatter();
-				formatter.Serialize(ms, value);
-				return ms.GetBuffer();
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
+                formatter.Serialize(ms, value);
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
+                return ms.GetBuffer();
 			}
 		}
 		public static object Deserialize(byte[] stream) {
 			if (stream == null) return null;
 			using (MemoryStream ms = new MemoryStream(stream)) {
 				IFormatter formatter = new BinaryFormatter();
-				return formatter.Deserialize(ms);
-			}
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
+                return formatter.Deserialize(ms);
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
+            }
 		}
 	}
 }

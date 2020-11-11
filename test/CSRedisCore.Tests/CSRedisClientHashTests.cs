@@ -37,29 +37,31 @@ namespace CSRedisCore.Tests {
 		}
 
 		[Fact]
-		public void HGetAll() {
+		public void HGetAll()
+		{
 			Assert.True(rds.HMSet("TestHGetAll", "string1", base.String, "bytes1", base.Bytes, "class1", base.Class, "class1array", new[] { base.Class, base.Class }));
 			Assert.Equal(4, rds.HGetAll("TestHGetAll").Count);
 			Assert.Equal(base.String, rds.HGetAll("TestHGetAll")["string1"]);
 			Assert.Equal(Encoding.UTF8.GetString(base.Bytes), rds.HGetAll("TestHGetAll")["bytes1"]);
 			Assert.Equal(base.Class.ToString(), rds.HGetAll("TestHGetAll")["class1"]);
 
-            Task.Run(async () =>
-            {
-                var test = await rds.HGetAllAsync("TestHGetAll");
+			Task.Run(async () =>
+			{
+				var test = await rds.HGetAllAsync("TestHGetAll");
 
-                rds.Set("TestHGetAll2", "1");
-                try
-                {
-                    var test2 = await rds.HGetAllAsync("TestHGetAll2");
-                }catch(Exception ex)
-                {
+				rds.Set("TestHGetAll2", "1");
+				try
+				{
+					var test2 = await rds.HGetAllAsync("TestHGetAll2");
+				}
+				catch
+				{
 
-                }
+				}
 
-                for(var a = 0; a< 1000; a++)
-                    test = await rds.HGetAllAsync("TestHGetAll");
-            }).Wait();
+				for (var a = 0; a < 1000; a++)
+					test = await rds.HGetAllAsync("TestHGetAll");
+			}).Wait();
 		}
 
 		[Fact]

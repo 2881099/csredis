@@ -15,19 +15,23 @@
 		<Title>$(AssemblyName)</Title>
 		<IsPackable>true</IsPackable>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-		<WarningLevel>3</WarningLevel>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>false</DelaySign>
 	</PropertyGroup>
+	
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DocumentationFile>bin\Debug\netstandard2.0\CSRedisCore.xml</DocumentationFile>
+		<WarningLevel>3</WarningLevel>
+		<NoWarn>1701;1702;1591</NoWarn>
 	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <DefineConstants>net40</DefineConstants>
-  </PropertyGroup>
+	
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+		<DefineConstants>net40</DefineConstants>
+	</PropertyGroup>
 </Project>
