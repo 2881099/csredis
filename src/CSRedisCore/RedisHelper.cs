@@ -28,13 +28,13 @@ public abstract partial class RedisHelper<TMark>
     private static CSRedisClient _instance;
     /// <summary>
     /// CSRedisClient 静态实例，使用前请初始化
-    /// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))
+    /// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))
     /// </summary>
     public static CSRedisClient Instance
     {
         get
         {
-            if (_instance == null) throw new Exception("使用前请初始化 RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"));");
+            if (_instance == null) throw new Exception("使用前请初始化 RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"));");
             return _instance;
         }
     }
@@ -46,7 +46,7 @@ public abstract partial class RedisHelper<TMark>
 
     /// <summary>
     /// 初始化csredis静态访问类
-    /// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,pass=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))
+    /// RedisHelper.Initialization(new CSRedis.CSRedisClient(\"127.0.0.1:6379,password=123,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍\"))
     /// </summary>
     /// <param name="csredis"></param>
     public static void Initialization(CSRedisClient csredis)

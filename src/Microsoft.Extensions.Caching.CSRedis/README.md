@@ -12,7 +12,7 @@
 ## 普通模式
 
 ```csharp
-var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,pass=123,defaultDatabase=13,ssl=false,writeBuffer=10240,poolsize=50,prefix=key前辍");
+var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,ssl=false,writeBuffer=10240,poolsize=50,prefix=key前辍");
 services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(csredis));
 ```
 
@@ -20,10 +20,10 @@ services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.
 
 ```csharp
 var csredis = new CSRedis.CSRedisClient(null,
-  "127.0.0.1:6371,pass=123,defaultDatabase=11,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍", 
-  "127.0.0.1:6372,pass=123,defaultDatabase=12,poolsize=11,ssl=false,writeBuffer=10240,prefix=key前辍",
-  "127.0.0.1:6373,pass=123,defaultDatabase=13,poolsize=12,ssl=false,writeBuffer=10240,prefix=key前辍",
-  "127.0.0.1:6374,pass=123,defaultDatabase=14,poolsize=13,ssl=false,writeBuffer=10240,prefix=key前辍");
+  "127.0.0.1:6371,password=123,defaultDatabase=11,poolsize=10,ssl=false,writeBuffer=10240,prefix=key前辍", 
+  "127.0.0.1:6372,password=123,defaultDatabase=12,poolsize=11,ssl=false,writeBuffer=10240,prefix=key前辍",
+  "127.0.0.1:6373,password=123,defaultDatabase=13,poolsize=12,ssl=false,writeBuffer=10240,prefix=key前辍",
+  "127.0.0.1:6374,password=123,defaultDatabase=14,poolsize=13,ssl=false,writeBuffer=10240,prefix=key前辍");
 services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(csredis));
 ```
 
