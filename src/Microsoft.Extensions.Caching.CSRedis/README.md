@@ -13,7 +13,9 @@
 
 ```csharp
 var csredis = new CSRedis.CSRedisClient("127.0.0.1:6379,password=123,defaultDatabase=13,ssl=false,writeBuffer=10240,poolsize=50,prefix=key前辍");
-services.AddSingleton<IDistributedCache>(new Microsoft.Extensions.Caching.Redis.CSRedisCache(csredis));
+services.AddCSRedisCache(options => {
+	options.CSRedisClient = csredis;
+});
 ```
 
 # 集群模式
