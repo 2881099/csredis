@@ -16,7 +16,7 @@ public abstract partial class RedisHelper<TMark>
     /// 永不过期
     /// </summary>
 	public static readonly int NeverExpired = -1;
-    internal static ThreadLocal<Random> rnd = new ThreadLocal<Random>();
+    internal static ThreadLocal<Random> rnd = new ThreadLocal<Random>(()=> new Random());//fix
     /// <summary>
     /// 随机秒（防止所有key同一时间过期，雪崩）
     /// </summary>
