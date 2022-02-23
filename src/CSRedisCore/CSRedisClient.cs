@@ -4426,7 +4426,7 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Refresh(int milliseconds)
         {
-            var ret = RedisHelper.Eval(@"local gva = redis.call('GET', KEYS[1])
+            var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
   redis.call('PEXPIRE', KEYS[1], ARGV[2])
   return 1
