@@ -14,9 +14,10 @@ namespace CSRedis
     static class RedisCommands
     {
         #region Connection
-        public static RedisStatus Auth(string password)
+        public static RedisStatus Auth(string user, string password)
         {
-            return new RedisStatus("AUTH", password);
+            if (string.IsNullOrEmpty(user)) return new RedisStatus("AUTH", password);
+            return new RedisStatus("AUTH", user, password);
         }
         public static RedisString Echo(string message)
         {

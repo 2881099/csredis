@@ -53,7 +53,11 @@ namespace CSRedis
         /// <returns>Status message</returns>
         public string Auth(string password)
         {
-            return Write(RedisCommands.Auth(password));
+            return Write(RedisCommands.Auth(null, password));
+        }
+        public string Auth(string user, string password)
+        {
+            return Write(RedisCommands.Auth(user, password));
         }
 
         /// <summary>
