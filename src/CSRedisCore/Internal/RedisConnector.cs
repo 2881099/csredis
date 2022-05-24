@@ -231,7 +231,7 @@ namespace CSRedis.Internal
             int attempts = 0;
             while (attempts++ < ReconnectAttempts || ReconnectAttempts == -1)
             {
-                if (Connect(-1))
+                if (Connect(5000))
                     return;
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(ReconnectWait));
@@ -255,7 +255,7 @@ namespace CSRedis.Internal
         void ConnectIfNotConnected()
         {
             if (!IsConnected)
-                Connect(-1);
+                Connect(5000);
         }
 
         void ExpectConnected()
