@@ -77,7 +77,7 @@ namespace CSRedis
                 }
                 catch (Exception ex)
                 {
-                    base.SetUnavailable(ex);
+                    base.SetUnavailable(ex, obj.LastGetTimeCopy);
                 }
             }
             base.Return(obj, isRecreate);
@@ -110,7 +110,7 @@ namespace CSRedis
         public int AsyncGetCapacity { get; set; } = 100000;
         public bool IsThrowGetTimeoutException { get; set; } = true;
         public bool IsAutoDisposeWithSystem { get; set; } = true;
-        public int CheckAvailableInterval { get; set; } = 5;
+        public int CheckAvailableInterval { get; set; } = 2;
 
         internal string BuildConnectionString(string endpoint)
         {
@@ -360,7 +360,7 @@ namespace CSRedis
             catch (Exception ex)
             {
                 initTestOk = false; //预热一次失败，后面将不进行
-                pool.SetUnavailable(ex);
+                pool.SetUnavailable(ex, DateTime.Now);
             }
             for (var a = 1; initTestOk && a < minPoolSize; a += 10)
             {

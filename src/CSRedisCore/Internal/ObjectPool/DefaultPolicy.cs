@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CSRedis.Internal.ObjectPool
@@ -16,7 +14,8 @@ namespace CSRedis.Internal.ObjectPool
         public int AsyncGetCapacity { get; set; } = 10000;
         public bool IsThrowGetTimeoutException { get; set; } = true;
         public bool IsAutoDisposeWithSystem { get; set; } = true;
-        public int CheckAvailableInterval { get; set; } = 5;
+        public int CheckAvailableInterval { get; set; } = 3;
+        public int Weight { get; set; } = 1;
 
         public Func<T> CreateObject;
         public Action<Object<T>> OnGetObject;
@@ -33,7 +32,6 @@ namespace CSRedis.Internal.ObjectPool
 
         public void OnGet(Object<T> obj)
         {
-            //Console.WriteLine("Get: " + obj);
             OnGetObject?.Invoke(obj);
         }
 
@@ -41,7 +39,6 @@ namespace CSRedis.Internal.ObjectPool
 #else
         public Task OnGetAsync(Object<T> obj)
         {
-            //Console.WriteLine("GetAsync: " + obj);
             OnGetObject?.Invoke(obj);
             return Task.FromResult(true);
         }
@@ -54,7 +51,6 @@ namespace CSRedis.Internal.ObjectPool
 
         public void OnReturn(Object<T> obj)
         {
-            //Console.WriteLine("Return: " + obj);
         }
 
         public bool OnCheckAvailable(Object<T> obj)

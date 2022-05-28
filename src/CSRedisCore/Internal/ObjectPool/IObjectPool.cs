@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CSRedis.Internal.ObjectPool
@@ -26,7 +24,7 @@ namespace CSRedis.Internal.ObjectPool
         /// </summary>
         /// <param name="exception"></param>
         /// <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
-        bool SetUnavailable(Exception exception);
+        bool SetUnavailable(Exception exception, DateTime lastGetTime);
 
         /// <summary>
         /// 统计对象池中的对象

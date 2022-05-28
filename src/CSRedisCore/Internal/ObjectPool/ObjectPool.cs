@@ -1,14 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSRedis.Internal.ObjectPool
 {
+    internal class TestTrace
+    {
+        internal static void WriteLine(string text, ConsoleColor backgroundColor)
+        {
+            try //#643
+            {
+                var bgcolor = Console.BackgroundColor;
+                var forecolor = Console.ForegroundColor;
+                Console.BackgroundColor = backgroundColor;
+
+                switch (backgroundColor)
+                {
+                    case ConsoleColor.Yellow:
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+                    case ConsoleColor.DarkGreen:
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+                }
+                Console.Write(text);
+                Console.BackgroundColor = bgcolor;
+                Console.ForegroundColor = forecolor;
+                Console.WriteLine();
+            }
+            catch
+            {
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine(text);
+                }
+                catch { }
+            }
+        }
+    }
 
     /// <summary>
     /// 对象池管理类
@@ -29,25 +61,23 @@ namespace CSRedis.Internal.ObjectPool
         public bool IsAvailable => this.UnavailableException == null;
         public Exception UnavailableException { get; private set; }
         public DateTime? UnavailableTime { get; private set; }
+        public DateTime? AvailableTime { get; private set; }
         private object UnavailableLock = new object();
         private bool running = true;
 
-        public bool SetUnavailable(Exception exception)
+        public bool SetUnavailable(Exception exception, DateTime lastGetTime)
         {
-
             bool isseted = false;
-
             if (exception != null && UnavailableException == null)
             {
-
                 lock (UnavailableLock)
                 {
-
                     if (UnavailableException == null)
                     {
-
+                        if (lastGetTime < AvailableTime) return false; //已经恢复
                         UnavailableException = exception;
                         UnavailableTime = DateTime.Now;
+                        AvailableTime = null;
                         isseted = true;
                     }
                 }
@@ -55,7 +85,6 @@ namespace CSRedis.Internal.ObjectPool
 
             if (isseted)
             {
-
                 Policy.OnUnavailable();
                 CheckAvailable(Policy.CheckAvailableInterval);
             }
@@ -69,61 +98,35 @@ namespace CSRedis.Internal.ObjectPool
         /// <param name="interval"></param>
         private void CheckAvailable(int interval)
         {
-
             new Thread(() =>
             {
-
                 if (UnavailableException != null)
-                {
-                    var bgcolor = Console.BackgroundColor;
-                    var forecolor = Console.ForegroundColor;
-                    Console.BackgroundColor = ConsoleColor.DarkYellow;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write($"【{Policy.Name}】恢复检查时间：{DateTime.Now.AddSeconds(interval)}");
-                    Console.BackgroundColor = bgcolor;
-                    Console.ForegroundColor = forecolor;
-                    Console.WriteLine();
-                }
+                    TestTrace.WriteLine($"【{Policy.Name}】Next recovery time：{DateTime.Now.AddSeconds(interval)}", ConsoleColor.DarkYellow);
 
                 while (UnavailableException != null)
                 {
-
                     if (running == false) return;
-
                     Thread.CurrentThread.Join(TimeSpan.FromSeconds(interval));
-
                     if (running == false) return;
 
                     try
                     {
-
-                        var conn = getFree(false);
+                        var conn = GetFree(false);
                         if (conn == null) throw new Exception($"CheckAvailable 无法获得资源，{this.Statistics}");
 
                         try
                         {
-
                             if (Policy.OnCheckAvailable(conn) == false) throw new Exception("CheckAvailable 应抛出异常，代表仍然不可用。");
                             break;
-
                         }
                         finally
                         {
-
                             Return(conn);
                         }
-
                     }
                     catch (Exception ex)
                     {
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkYellow;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"【{Policy.Name}】仍然不可用，下一次恢复检查时间：{DateTime.Now.AddSeconds(interval)}，错误：({ex.Message})");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+                        TestTrace.WriteLine($"【{Policy.Name}】Next recovery time: {DateTime.Now.AddSeconds(interval)} ({ex.Message})", ConsoleColor.DarkYellow);
                     }
                 }
 
@@ -138,15 +141,13 @@ namespace CSRedis.Internal.ObjectPool
             bool isRestored = false;
             if (UnavailableException != null)
             {
-
                 lock (UnavailableLock)
                 {
-
                     if (UnavailableException != null)
                     {
-
                         UnavailableException = null;
                         UnavailableTime = null;
+                        AvailableTime = DateTime.Now;
                         isRestored = true;
                     }
                 }
@@ -154,44 +155,29 @@ namespace CSRedis.Internal.ObjectPool
 
             if (isRestored)
             {
-
                 lock (_allObjectsLock)
                     _allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
 
                 Policy.OnAvailable();
-
-                var bgcolor = Console.BackgroundColor;
-                var forecolor = Console.ForegroundColor;
-                Console.BackgroundColor = ConsoleColor.DarkGreen;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write($"【{Policy.Name}】已恢复工作");
-                Console.BackgroundColor = bgcolor;
-                Console.ForegroundColor = forecolor;
-                Console.WriteLine();
+                TestTrace.WriteLine($"【{Policy.Name}】Recovered", ConsoleColor.DarkGreen);
             }
         }
 
         protected bool LiveCheckAvailable()
         {
-
             try
             {
-
-                var conn = getFree(false);
+                var conn = GetFree(false);
                 if (conn == null) throw new Exception($"LiveCheckAvailable 无法获得资源，{this.Statistics}");
 
                 try
                 {
-
                     if (Policy.OnCheckAvailable(conn) == false) throw new Exception("LiveCheckAvailable 应抛出异常，代表仍然不可用。");
-
                 }
                 finally
                 {
-
                     Return(conn);
                 }
-
             }
             catch
             {
@@ -199,7 +185,6 @@ namespace CSRedis.Internal.ObjectPool
             }
 
             RestoreToAvailable();
-
             return true;
         }
 
@@ -249,7 +234,7 @@ namespace CSRedis.Internal.ObjectPool
                 Console.CancelKeyPress += (s1, e1) =>
                 {
                     if (e1.Cancel) return;
-                    if (Policy.IsAutoDisposeWithSystem) 
+                    if (Policy.IsAutoDisposeWithSystem)
                         running = false;
                 };
             }
@@ -260,7 +245,7 @@ namespace CSRedis.Internal.ObjectPool
         /// 获取可用资源，或创建资源
         /// </summary>
         /// <returns></returns>
-        private Object<T> getFree(bool checkAvailable)
+        private Object<T> GetFree(bool checkAvailable)
         {
 
             if (running == false)
@@ -271,7 +256,6 @@ namespace CSRedis.Internal.ObjectPool
 
             if ((_freeObjects.TryPop(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize)
             {
-
                 lock (_allObjectsLock)
                     if (_allObjects.Count < Policy.PoolSize)
                         _allObjects.Add(obj = new Object<T> { Pool = this, Id = _allObjects.Count + 1 });
@@ -299,12 +283,9 @@ namespace CSRedis.Internal.ObjectPool
 
         public Object<T> Get(TimeSpan? timeout = null)
         {
-
-            var obj = getFree(true);
-
+            var obj = GetFree(true);
             if (obj == null)
             {
-
                 var queueItem = new GetSyncQueueInfo();
 
                 _getSyncQueue.Enqueue(queueItem);
@@ -325,11 +306,9 @@ namespace CSRedis.Internal.ObjectPool
 
                 if (obj == null)
                 {
-
                     Policy.OnGetTimeout();
-
                     if (Policy.IsThrowGetTimeoutException)
-                        throw new TimeoutException($"SafeObjectPool.Get 获取超时（{timeout.Value.TotalSeconds}秒）。");
+                        throw new TimeoutException($"ObjectPool.Get 获取超时（{timeout.Value.TotalSeconds}秒）。");
 
                     return null;
                 }
@@ -347,6 +326,7 @@ namespace CSRedis.Internal.ObjectPool
 
             obj.LastGetThreadId = Thread.CurrentThread.ManagedThreadId;
             obj.LastGetTime = DateTime.Now;
+            obj.LastGetTimeCopy = DateTime.Now;
             Interlocked.Increment(ref obj._getTimes);
 
             return obj;
@@ -356,14 +336,11 @@ namespace CSRedis.Internal.ObjectPool
 #else
         async public Task<Object<T>> GetAsync()
         {
-
-            var obj = getFree(true);
-
+            var obj = GetFree(true);
             if (obj == null)
             {
-
                 if (Policy.AsyncGetCapacity > 0 && _getAsyncQueue.Count >= Policy.AsyncGetCapacity - 1)
-                    throw new OutOfMemoryException($"SafeObjectPool.GetAsync 无可用资源且队列过长，Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}。");
+                    throw new OutOfMemoryException($"ObjectPool.GetAsync 无可用资源且队列过长，Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}。");
 
                 var tcs = new TaskCompletionSource<Object<T>>();
 
@@ -383,7 +360,7 @@ namespace CSRedis.Internal.ObjectPool
                 //	Policy.GetTimeout();
 
                 //	if (Policy.IsThrowGetTimeoutException)
-                //		throw new Exception($"SafeObjectPool.GetAsync 获取超时（{timeout.Value.TotalSeconds}秒）。");
+                //		throw new Exception($"ObjectPool.GetAsync 获取超时（{timeout.Value.TotalSeconds}秒）。");
 
                 //	return null;
                 //}
@@ -401,6 +378,7 @@ namespace CSRedis.Internal.ObjectPool
 
             obj.LastGetThreadId = Thread.CurrentThread.ManagedThreadId;
             obj.LastGetTime = DateTime.Now;
+            obj.LastGetTimeCopy = DateTime.Now;
             Interlocked.Increment(ref obj._getTimes);
 
             return obj;
@@ -409,40 +387,31 @@ namespace CSRedis.Internal.ObjectPool
 
         public void Return(Object<T> obj, bool isReset = false)
         {
-
             if (obj == null) return;
-
             if (obj._isReturned) return;
 
             if (running == false)
             {
-
                 Policy.OnDestroy(obj.Value);
                 try { (obj.Value as IDisposable)?.Dispose(); } catch { }
-
                 return;
             }
 
             if (isReset) obj.ResetValue();
-
             bool isReturn = false;
 
             while (isReturn == false && _getQueue.TryDequeue(out var isAsync))
             {
-
                 if (isAsync == false)
                 {
-
                     if (_getSyncQueue.TryDequeue(out var queueItem) && queueItem != null)
                     {
-
                         lock (queueItem.Lock)
                             if (queueItem.IsTimeout == false)
                                 queueItem.ReturnValue = obj;
 
                         if (queueItem.ReturnValue != null)
                         {
-
                             obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
                             obj.LastReturnTime = DateTime.Now;
 
@@ -458,14 +427,11 @@ namespace CSRedis.Internal.ObjectPool
 
                         try { queueItem.Dispose(); } catch { }
                     }
-
                 }
                 else
                 {
-
                     if (_getAsyncQueue.TryDequeue(out var tcs) && tcs != null && tcs.Task.IsCanceled == false)
                     {
-
                         obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
                         obj.LastReturnTime = DateTime.Now;
 
@@ -498,11 +464,9 @@ namespace CSRedis.Internal.ObjectPool
 
         public void Dispose()
         {
-
             running = false;
 
             while (_freeObjects.TryPop(out var fo)) ;
-
             while (_getSyncQueue.TryDequeue(out var sync))
             {
                 try { sync.Wait.Set(); } catch { }
@@ -524,13 +488,9 @@ namespace CSRedis.Internal.ObjectPool
 
         class GetSyncQueueInfo : IDisposable
         {
-
             internal ManualResetEventSlim Wait { get; set; } = new ManualResetEventSlim();
-
             internal Object<T> ReturnValue { get; set; }
-
             internal object Lock = new object();
-
             internal bool IsTimeout { get; set; } = false;
 
             public void Dispose()
