@@ -35,7 +35,7 @@ namespace CSRedis
                 {
                     try
                     {
-                        rc.Auth(_policy._password);
+                        rc.Auth(_policy._user, _policy._password);
                     }
                     catch (Exception authEx)
                     {
@@ -77,7 +77,7 @@ namespace CSRedis
                 }
                 catch (Exception ex)
                 {
-                    base.SetUnavailable(ex);
+                    base.SetUnavailable(ex, obj.LastGetTimeCopy);
                 }
             }
             base.Return(obj, isRecreate);
@@ -96,7 +96,7 @@ namespace CSRedis
 
         internal RedisClientPool _pool;
         internal int _port = 6379, _database = 0, _tryit = 0, _connectTimeout = 5000, _syncTimeout = 10000;
-        internal string _ip = "127.0.0.1", _password = "", _clientname = "";
+        internal string _ip = "127.0.0.1", _user = "", _password = "", _clientname = "";
         internal bool _ssl = false, _testCluster = true, _asyncPipeline = false;
         internal int _preheat = 5;
         internal string Key => $"{_ip}:{_port}/{_database}";
@@ -110,11 +110,11 @@ namespace CSRedis
         public int AsyncGetCapacity { get; set; } = 100000;
         public bool IsThrowGetTimeoutException { get; set; } = true;
         public bool IsAutoDisposeWithSystem { get; set; } = true;
-        public int CheckAvailableInterval { get; set; } = 5;
+        public int CheckAvailableInterval { get; set; } = 2;
 
         internal string BuildConnectionString(string endpoint)
         {
-            return $"{endpoint},password={_password},defaultDatabase={_database},poolsize={PoolSize}," +
+            return $"{endpoint}{(string.IsNullOrEmpty(_user) ? "" : $"user={_user}")},password={_password},defaultDatabase={_database},poolsize={PoolSize}," +
                 $"connectTimeout={_connectTimeout},syncTimeout={_syncTimeout},idletimeout={(int)IdleTimeout.TotalMilliseconds}," +
                 $"preheat=false,ssl={(_ssl ? "true" : "false")},tryit={_tryit},name={_clientname},prefix={Prefix}," + 
                 $"autodispose={(IsAutoDisposeWithSystem ? "true" : "false")},asyncpipeline={(_asyncPipeline ? "true" : "false")}";
@@ -192,6 +192,9 @@ namespace CSRedis
                     var kv = new[] { vs[a].ToLower().Trim(), vs[a + 1] };
                     switch (kv[0])
                     {
+                        case "user":
+                            _user = kv.Length > 1 ? kv[1] : "";
+                            break;
                         case "password":
                             _password = kv.Length > 1 ? kv[1] : "";
                             break;
@@ -357,7 +360,7 @@ namespace CSRedis
             catch (Exception ex)
             {
                 initTestOk = false; //预热一次失败，后面将不进行
-                pool.SetUnavailable(ex);
+                pool.SetUnavailable(ex, DateTime.Now);
             }
             for (var a = 1; initTestOk && a < minPoolSize; a += 10)
             {

@@ -14,9 +14,10 @@ namespace CSRedis
     static class RedisCommands
     {
         #region Connection
-        public static RedisStatus Auth(string password)
+        public static RedisStatus Auth(string user, string password)
         {
-            return new RedisStatus("AUTH", password);
+            if (string.IsNullOrEmpty(user)) return new RedisStatus("AUTH", password);
+            return new RedisStatus("AUTH", user, password);
         }
         public static RedisString Echo(string message)
         {
@@ -1416,9 +1417,10 @@ namespace CSRedis
         public static RedisString XAdd(string key, long maxLen, string id = "*", params (string, string)[] fieldValues)
         {
             var args = new List<object>();
-            args.AddRange(new object[] { key, id });
+            args.Add(key);
             if (maxLen > 0) args.AddRange(new object[] { "MAXLEN", maxLen });
-            else if (maxLen < 0) args.AddRange(new object[] { "MAXLEN", $"~{Math.Abs(maxLen)}" });
+            else if (maxLen < 0) args.AddRange(new object[] { "MAXLEN", "~", Math.Abs(maxLen) });
+            args.Add(id);
             args.AddRange(fieldValues.Select(a => new[] { a.Item1, a.Item2 }).SelectMany(a => a).Select(a => (object)a));
             return new RedisString("XADD", args.ToArray());
         }
@@ -1560,8 +1562,8 @@ namespace CSRedis
 
         public static RedisInt XTrim(string key, long maxLen)
         {
-            var maxLenArg = maxLen > 0 ? maxLen.ToString() : $"~{Math.Abs(maxLen)}";
-            return new RedisInt("XTRIM", key, "MAXLEN", maxLenArg);
+            if (maxLen > 0) return new RedisInt("XTRIM", key, "MAXLEN", maxLen.ToString());
+            return new RedisInt("XTRIM", key, "MAXLEN", "~", Math.Abs(maxLen).ToString());
         }
 
         #endregion

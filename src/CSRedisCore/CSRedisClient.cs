@@ -485,7 +485,7 @@ namespace CSRedis
                             ex = ex3;
                             if (SentinelManager != null && ex.Message.Contains("READONLY"))
                             { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
+                                if (pool.SetUnavailable(ex, obj.LastGetTimeCopy) == true)
                                     BackgroundGetSentinelMasterValue();
                             }
                             throw ex;
@@ -511,7 +511,7 @@ namespace CSRedis
                         {
                             if (SentinelManager != null)
                             { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
+                                if (pool.SetUnavailable(ex, obj.LastGetTimeCopy) == true)
                                     BackgroundGetSentinelMasterValue();
                                 throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
                             }
@@ -4357,6 +4357,25 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             }
             return null;
         }
+
+        /// <summary>
+        /// 尝试开启分布式锁，若失败立刻返回null
+        /// </summary>
+        /// <param name="name">锁名称</param>
+        /// <param name="timeoutSeconds">超时（秒）</param>
+        /// <param name="autoDelay">自动延长锁超时时间，看门狗线程的超时时间为timeoutSeconds/2 ， 在看门狗线程超时时间时自动延长锁的时间为timeoutSeconds。除非程序意外退出，否则永不超时。</param>
+        /// <returns></returns>
+        public CSRedisClientLock TryLock(string name, int timeoutSeconds, bool autoDelay = true)
+        {
+            name = $"CSRedisClientLock:{name}";
+            var value = Guid.NewGuid().ToString();
+            if (this.Set(name, value, timeoutSeconds, RedisExistence.Nx) == true)
+            {
+                double refreshSeconds = (double)timeoutSeconds / 2.0;
+                return new CSRedisClientLock(this, name, value, timeoutSeconds, refreshSeconds, autoDelay);
+            }
+            return null;
+        }
     }
 
     public class CSRedisClientLock : IDisposable
@@ -4368,7 +4387,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         int _timeoutSeconds;
         Timer _autoDelayTimer;
 
-        internal CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, double refreshSeconds, bool autoDelay)
+        public CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, double refreshSeconds, bool autoDelay)
         {
             _client = rds;
             _name = name;
@@ -4407,7 +4426,7 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Refresh(int milliseconds)
         {
-            var ret = RedisHelper.Eval(@"local gva = redis.call('GET', KEYS[1])
+            var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
   redis.call('PEXPIRE', KEYS[1], ARGV[2])
   return 1

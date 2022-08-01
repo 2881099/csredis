@@ -58,7 +58,7 @@ namespace CSRedis
         /// <returns>Task associated with status message</returns>
         public Task<string> AuthAsync(string password)
         {
-            return WriteAsync(RedisCommands.Auth(password));
+            return WriteAsync(RedisCommands.Auth(null, password));
         }
 
         /// <summary>

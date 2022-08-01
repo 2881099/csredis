@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace CSRedis.Internal.ObjectPool
@@ -16,7 +14,8 @@ namespace CSRedis.Internal.ObjectPool
                 Id = id,
                 Value = value,
                 LastGetThreadId = Thread.CurrentThread.ManagedThreadId,
-                LastGetTime = DateTime.Now
+                LastGetTime = DateTime.Now,
+                LastGetTimeCopy = DateTime.Now
             };
         }
 
@@ -42,6 +41,7 @@ namespace CSRedis.Internal.ObjectPool
 
         /// 最后获取时的时间
         public DateTime LastGetTime { get; internal set; }
+        public DateTime LastGetTimeCopy { get; internal set; }
 
         /// <summary>
         /// 最后归还时的时间
