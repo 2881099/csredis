@@ -122,6 +122,7 @@ namespace CSRedis.Internal.Commands
 
             reader.ExpectType(RedisMessage.MultiBulk);
             var lvl2Count = reader.ReadInt(false);
+            if (lvl2Count < 0) lvl2Count = 0;
             var pendings = new (string consumer, long count)[lvl2Count];
 
             for (var a = 0; a < lvl2Count; a++)
