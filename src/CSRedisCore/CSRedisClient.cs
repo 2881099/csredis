@@ -439,15 +439,15 @@ namespace CSRedis
                             pool._policy.SetHost(SentinelMasterValue);
                             if (pool.CheckAvailable())
                             {
-
-                                var bgcolor = Console.BackgroundColor;
-                                var forecolor = Console.ForegroundColor;
-                                Console.BackgroundColor = ConsoleColor.DarkGreen;
-                                Console.ForegroundColor = ConsoleColor.White;
-                                Console.Write($"Redis Sentinel Pool 已切换至 {SentinelMasterValue}");
-                                Console.BackgroundColor = bgcolor;
-                                Console.ForegroundColor = forecolor;
-                                Console.WriteLine();
+                                Trace.TraceInformation($"Redis Sentinel Pool 已切换至 {SentinelMasterValue}");
+                                //var bgcolor = Console.BackgroundColor;
+                                //var forecolor = Console.ForegroundColor;
+                                //Console.BackgroundColor = ConsoleColor.DarkGreen;
+                                //Console.ForegroundColor = ConsoleColor.White;
+                                //Console.Write($"Redis Sentinel Pool 已切换至 {SentinelMasterValue}");
+                                //Console.BackgroundColor = bgcolor;
+                                //Console.ForegroundColor = forecolor;
+                                //Console.WriteLine();
 
                                 BackgroundGetSentinelMasterValueIng = false;
                                 return;
@@ -1520,14 +1520,15 @@ namespace CSRedis
                     }
                     catch (Exception ex)
                     {
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkRed;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"订阅方法执行出错【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}\r\n{ex.StackTrace}");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+                        Trace.WriteLine($"订阅方法执行出错【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}\r\n{ex.StackTrace}");
+                        //var bgcolor = Console.BackgroundColor;
+                        //var forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkRed;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"订阅方法执行出错【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}\r\n{ex.StackTrace}");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
                     }
                 };
                 subscr.conn.Value.SubscriptionReceived += SubscriptionReceived;
@@ -1570,14 +1571,17 @@ namespace CSRedis
                     {
                         subscr.conn.Value.Ping();
 
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkGreen;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"正在订阅【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+
+                        Trace.WriteLine($"正在订阅【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})");
+
+                        //var bgcolor = Console.BackgroundColor;
+                        //var forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkGreen;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"正在订阅【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
 
                         isSubscribeing = true;
                         isKeepliveReSubscribe = false;
@@ -1600,14 +1604,17 @@ namespace CSRedis
                     {
                         if (IsUnsubscribed) break;
 
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkYellow;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}，3秒后重连。。。");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+
+                        Trace.TraceWarning($"订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}，3秒后重连。。。");
+
+                        //var bgcolor = Console.BackgroundColor;
+                        //var forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkYellow;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})/(chans:{string.Join(",", subscr.chans)})：{ex.Message}，3秒后重连。。。");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
                         Thread.CurrentThread.Join(1000 * 3);
 
                         subscr.conn.ResetValue();
@@ -1752,14 +1759,16 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                     }
                     catch (Exception ex)
                     {
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkRed;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"模糊订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})：{ex.Message}\r\n{ex.StackTrace}");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+
+                        Trace.TraceWarning($"模糊订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})：{ex.Message}\r\n{ex.StackTrace}");
+                        //var bgcolor = Console.BackgroundColor;
+                        //var forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkRed;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"模糊订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})：{ex.Message}\r\n{ex.StackTrace}");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
 
                     }
                 };
@@ -1771,14 +1780,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                     {
                         conn.Value.Ping();
 
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkGreen;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"正在模糊订阅【{pool.Key}】(channels:{string.Join(",", Channels)})");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+                        Trace.TraceInformation($"正在模糊订阅【{pool.Key}】(channels:{string.Join(",", Channels)})");
+                        //var bgcolor = Console.BackgroundColor;
+                        //var forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkGreen;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"正在模糊订阅【{pool.Key}】(channels:{string.Join(",", Channels)})");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
 
                         //conn.Value.Socket?.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.KeepAlive, 60000);
                         conn.Value.ReceiveTimeout = 0;
@@ -1795,14 +1805,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                     {
                         if (IsPUnsubscribed) break;
 
-                        var bgcolor = Console.BackgroundColor;
-                        var forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkYellow;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"模糊订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})：{ex.Message}，3秒后重连。。。");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+                        Trace.TraceWarning($"模糊订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})：{ex.Message}，3秒后重连。。。");
+                        //var bgcolor = Console.BackgroundColor;
+                        //var forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkYellow;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"模糊订阅出错【{pool.Key}】(channels:{string.Join(",", Channels)})：{ex.Message}，3秒后重连。。。");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
                         Thread.CurrentThread.Join(1000 * 3);
 
                         conn.ResetValue();
@@ -1880,14 +1891,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                 }
                 catch (Exception ex)
                 {
-                    var bgcolor = Console.BackgroundColor;
-                    var forecolor = Console.ForegroundColor;
-                    Console.BackgroundColor = ConsoleColor.DarkRed;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}");
-                    Console.BackgroundColor = bgcolor;
-                    Console.ForegroundColor = forecolor;
-                    Console.WriteLine();
+                    Trace.TraceWarning($"列表订阅出错(listKey:{listKey})：{ex.Message}");
+                    //var bgcolor = Console.BackgroundColor;
+                    //var forecolor = Console.ForegroundColor;
+                    //Console.BackgroundColor = ConsoleColor.DarkRed;
+                    //Console.ForegroundColor = ConsoleColor.White;
+                    //Console.Write($"列表订阅出错(listKey:{listKey})：{ex.Message}");
+                    //Console.BackgroundColor = bgcolor;
+                    //Console.ForegroundColor = forecolor;
+                    //Console.WriteLine();
                 }
             }, true));
 
@@ -1939,14 +1951,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             var isMultiKey = listKeys.Length > 1;
             var subobj = new SubscribeListObject();
 
-            var bgcolor = Console.BackgroundColor;
-            var forecolor = Console.ForegroundColor;
-            Console.BackgroundColor = ConsoleColor.DarkGreen;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write($"正在订阅列表(listKey:{listKeysStr})");
-            Console.BackgroundColor = bgcolor;
-            Console.ForegroundColor = forecolor;
-            Console.WriteLine();
+            Trace.TraceInformation($"正在订阅列表(listKey:{listKeysStr})");
+            //var bgcolor = Console.BackgroundColor;
+            //var forecolor = Console.ForegroundColor;
+            //Console.BackgroundColor = ConsoleColor.DarkGreen;
+            //Console.ForegroundColor = ConsoleColor.White;
+            //Console.Write($"正在订阅列表(listKey:{listKeysStr})");
+            //Console.BackgroundColor = bgcolor;
+            //Console.ForegroundColor = forecolor;
+            //Console.WriteLine();
 
             new Thread(() =>
             {
@@ -1973,14 +1986,15 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                     }
                     catch (Exception ex)
                     {
-                        bgcolor = Console.BackgroundColor;
-                        forecolor = Console.ForegroundColor;
-                        Console.BackgroundColor = ConsoleColor.DarkRed;
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"列表订阅出错(listKey:{listKeysStr})：{ex.Message}");
-                        Console.BackgroundColor = bgcolor;
-                        Console.ForegroundColor = forecolor;
-                        Console.WriteLine();
+                        Trace.TraceWarning($"列表订阅出错(listKey:{listKeysStr})：{ex.Message}");
+                        //bgcolor = Console.BackgroundColor;
+                        //forecolor = Console.ForegroundColor;
+                        //Console.BackgroundColor = ConsoleColor.DarkRed;
+                        //Console.ForegroundColor = ConsoleColor.White;
+                        //Console.Write($"列表订阅出错(listKey:{listKeysStr})：{ex.Message}");
+                        //Console.BackgroundColor = bgcolor;
+                        //Console.ForegroundColor = forecolor;
+                        //Console.WriteLine();
 
                         Thread.CurrentThread.Join(3000);
                     }
