@@ -14,10 +14,58 @@ namespace CSRedisCore.Tests {
 		 * 
 		 * */
 
-		[Fact]
+        [Fact]
+        public void Issues457()
+        {
+            var redis = rds;
+            var key = "key_Issues457";
+            var group = "group_Issues457";
+            var consumer = "consumer_Issues457";
+            var maxLen = 9999;
+
+            //删除，重新创建，并加入数据，进行测试
+            redis.Del(key);
+            redis.XGroupCreate(key, group, "0", true);
+            redis.XAdd(key, maxLen, "*", ("__data", "my data1"));
+            redis.XAdd(key, maxLen, "*", ("__data", "my data2"));
+
+            //检查pending表的长度
+            //!!!!!!pending表不存在时，读取会报错!!!!!!!!!
+            var pending0 = redis.XPending(key, group);
+            //消费确认前，pending 应该等于0
+            Assert.True(pending0.count == 0);
+
+            //读取未阅读的消息1,读取2次
+            var new1 = redis.XReadGroup(group, consumer, 1, 1, (key, ">"));
+            var new2 = redis.XReadGroup(group, consumer, 1, 1, (key, ">"));
+            Assert.NotNull(new1[0].data);
+            Assert.NotEmpty(new1[0].data);
+            Assert.NotNull(new2[0].data);
+            Assert.NotEmpty(new2[0].data);
+
+            //检查pending表的长度
+            var pending = redis.XPending(key, group);
+            //消费确认前，pending 应该等于2
+            Assert.True(pending.count == 2);
+
+            //消费确认
+            var id1 = new1[0].data[0].id;
+            var id2 = new2[0].data[0].id;
+            redis.XAck(key, group, id1);
+            redis.XAck(key, group, id2);
+
+            //检查pending表的长度
+            //!!!!!!pending表不存在时，读取会报错!!!!!!!!!
+            var pending2 = redis.XPending(key, group);
+            //消费确认后，pending 应该等于0
+            //Assert.True(pending2.count == 0);
+        }
+
+
+        [Fact]
         public void XAck()
         {
-
+            
         }
 
         [Fact]

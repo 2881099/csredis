@@ -485,7 +485,7 @@ namespace CSRedis
                             ex = ex3;
                             if (SentinelManager != null && ex.Message.Contains("READONLY"))
                             { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
+                                if (pool.SetUnavailable(ex, obj.LastGetTimeCopy) == true)
                                     BackgroundGetSentinelMasterValue();
                             }
                             throw ex;
@@ -511,7 +511,7 @@ namespace CSRedis
                         {
                             if (SentinelManager != null)
                             { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
+                                if (pool.SetUnavailable(ex, obj.LastGetTimeCopy) == true)
                                     BackgroundGetSentinelMasterValue();
                                 throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
                             }

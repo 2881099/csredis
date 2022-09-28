@@ -46,7 +46,7 @@ namespace CSRedis
 
                     void trySetException(Exception ex)
                     {
-                        pool.SetUnavailable(ex);
+                        pool.SetUnavailable(ex, ap.Client.LastGetTimeCopy);
                         while (rc._asyncPipe?.IsEmpty == false)
                         {
                             TaskCompletionSource<object> trytsc = null;
@@ -137,7 +137,7 @@ namespace CSRedis
                             ex = ex3;
                             if (SentinelManager != null && ex.Message.Contains("READONLY"))
                             { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
+                                if (pool.SetUnavailable(ex, obj.LastGetTimeCopy) == true)
                                     BackgroundGetSentinelMasterValue();
                             }
                             throw ex;
@@ -163,7 +163,7 @@ namespace CSRedis
                         {
                             if (SentinelManager != null)
                             { //哨兵轮询
-                                if (pool.SetUnavailable(ex) == true)
+                                if (pool.SetUnavailable(ex, obj.LastGetTimeCopy) == true)
                                     BackgroundGetSentinelMasterValue();
                                 throw new Exception($"Redis Sentinel Master is switching：{ex.Message}");
                             }
@@ -1784,7 +1784,7 @@ namespace CSRedis
         async public Task<bool> LSetAsync(string key, long index, object value)
         {
             var args = this.SerializeRedisValueInternal(value);
-            return await ExecuteScalar(key, (c, k) => c.Value.LSetAsync(k, index, args)) == "OK";
+            return await ExecuteScalarAsync(key, (c, k) => c.Value.LSetAsync(k, index, args)) == "OK";
         }
         /// <summary>
         /// 对一个列表进行修剪，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除
@@ -1845,7 +1845,7 @@ namespace CSRedis
         public Task<long> RPushXAsync(string key, object value)
         {
             var args = this.SerializeRedisValueInternal(value);
-            return ExecuteScalar(key, (c, k) => c.Value.RPushXAsync(k, args));
+            return ExecuteScalarAsync(key, (c, k) => c.Value.RPushXAsync(k, args));
         }
         #endregion
 
@@ -2221,10 +2221,10 @@ namespace CSRedis
         async public Task<bool> SetAsync(string key, object value, TimeSpan expire, RedisExistence? exists = null)
         {
             object redisValule = this.SerializeRedisValueInternal(value);
-            if (expire <= TimeSpan.Zero && exists == null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule)) == "OK";
-            if (expire <= TimeSpan.Zero && exists != null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule, null, exists)) == "OK";
-            if (expire > TimeSpan.Zero && exists == null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule, expire, null)) == "OK";
-            if (expire > TimeSpan.Zero && exists != null) return await ExecuteScalar(key, (c, k) => c.Value.SetAsync(k, redisValule, expire, exists)) == "OK";
+            if (expire <= TimeSpan.Zero && exists == null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule)) == "OK";
+            if (expire <= TimeSpan.Zero && exists != null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, null, exists)) == "OK";
+            if (expire > TimeSpan.Zero && exists == null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, expire, null)) == "OK";
+            if (expire > TimeSpan.Zero && exists != null) return await ExecuteScalarAsync(key, (c, k) => c.Value.SetAsync(k, redisValule, expire, exists)) == "OK";
             return false;
         }
         /// <summary>
