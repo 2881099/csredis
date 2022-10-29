@@ -116,6 +116,15 @@ namespace CSRedis.Internal.ObjectPool
 
                         try
                         {
+                            try
+                            {
+                                Policy.OnCheckAvailable(conn);
+                                break;
+                            }
+                            catch
+                            {
+                                conn.ResetValue();
+                            }
                             if (Policy.OnCheckAvailable(conn) == false) throw new Exception("CheckAvailable 应抛出异常，代表仍然不可用。");
                             break;
                         }

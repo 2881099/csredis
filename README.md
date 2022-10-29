@@ -185,6 +185,14 @@ CSRedisCore GetAsync(Task.WaitAll)：435ms
 StackExchange.Redis StringGetAsync (concurrent Task.WaitAll)：176ms
 ```
 
+## 💕 Donation (捐赠)
+
+> 感谢你的打赏
+
+- [Alipay](https://www.cnblogs.com/FreeSql/gallery/image/338860.html)
+
+- [WeChat](https://www.cnblogs.com/FreeSql/gallery/image/338859.html)
+
 # Thank
 
 Original open source project: https://github.com/ctstone/csredis
