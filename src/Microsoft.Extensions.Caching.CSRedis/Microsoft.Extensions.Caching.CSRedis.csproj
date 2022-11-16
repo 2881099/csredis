@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net60;net50;netcoreapp31;netcoreapp21</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net70;net60;net50;netcoreapp31;netcoreapp21</TargetFrameworks>
 		<AssemblyName>Caching.CSRedis</AssemblyName>
 		<PackageId>Caching.CSRedis</PackageId>
 		<RootNamespace>Caching.CSRedis</RootNamespace>
-		<Version>3.8.669</Version>
+		<Version>3.8.670</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageProjectUrl>https://github.com/2881099/csredis/tree/master/src/Microsoft.Extensions.Caching.CSRedis/README.md</PackageProjectUrl>
 		<Description>分布式缓存 CSRedisCore 实现 Microsoft.Extensions.Caching</Description>
@@ -21,6 +21,10 @@
 		<NoWarn>1701;1702;1591</NoWarn>
 	</PropertyGroup>
 	
+	
+	<ItemGroup Condition="'$(TargetFramework)' == 'net70'">
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
+	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net60' or '$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
 	</ItemGroup>
