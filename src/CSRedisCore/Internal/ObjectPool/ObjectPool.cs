@@ -50,9 +50,9 @@ namespace CSRedis.Internal.ObjectPool
     {
         public IPolicy<T> Policy { get; protected set; }
 
-        private List<Object<T>> _allObjects = new List<Object<T>>();
         private object _allObjectsLock = new object();
-        private ConcurrentStack<Object<T>> _freeObjects = new ConcurrentStack<Object<T>>();
+        internal List<Object<T>> _allObjects = new List<Object<T>>();
+        internal ConcurrentStack<Object<T>> _freeObjects = new ConcurrentStack<Object<T>>();
 
         private ConcurrentQueue<GetSyncQueueInfo> _getSyncQueue = new ConcurrentQueue<GetSyncQueueInfo>();
         private ConcurrentQueue<TaskCompletionSource<Object<T>>> _getAsyncQueue = new ConcurrentQueue<TaskCompletionSource<Object<T>>>();
@@ -112,7 +112,7 @@ namespace CSRedis.Internal.ObjectPool
                     try
                     {
                         var conn = GetFree(false);
-                        if (conn == null) throw new Exception($"CheckAvailable 无法获得资源，{this.Statistics}");
+                        if (conn == null) throw new Exception($"【{Policy.Name}】Failed to get resource {this.Statistics}");
 
                         try
                         {
@@ -125,7 +125,7 @@ namespace CSRedis.Internal.ObjectPool
                             {
                                 conn.ResetValue();
                             }
-                            if (Policy.OnCheckAvailable(conn) == false) throw new Exception("CheckAvailable 应抛出异常，代表仍然不可用。");
+                            if (Policy.OnCheckAvailable(conn) == false) throw new Exception($"【{Policy.Name}】An exception needs to be thrown");
                             break;
                         }
                         finally
@@ -154,6 +154,8 @@ namespace CSRedis.Internal.ObjectPool
                 {
                     if (UnavailableException != null)
                     {
+                        lock (_allObjectsLock)
+                            _allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
                         UnavailableException = null;
                         UnavailableTime = null;
                         AvailableTime = DateTime.Now;
@@ -164,9 +166,6 @@ namespace CSRedis.Internal.ObjectPool
 
             if (isRestored)
             {
-                lock (_allObjectsLock)
-                    _allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
-
                 Policy.OnAvailable();
                 TestTrace.WriteLine($"【{Policy.Name}】Recovered", ConsoleColor.DarkGreen);
             }
@@ -177,11 +176,11 @@ namespace CSRedis.Internal.ObjectPool
             try
             {
                 var conn = GetFree(false);
-                if (conn == null) throw new Exception($"LiveCheckAvailable 无法获得资源，{this.Statistics}");
+                if (conn == null) throw new Exception($"【{Policy.Name}】Failed to get resource {this.Statistics}");
 
                 try
                 {
-                    if (Policy.OnCheckAvailable(conn) == false) throw new Exception("LiveCheckAvailable 应抛出异常，代表仍然不可用。");
+                    if (Policy.OnCheckAvailable(conn) == false) throw new Exception("【{Policy.Name}】An exception needs to be thrown");
                 }
                 finally
                 {
@@ -250,6 +249,29 @@ namespace CSRedis.Internal.ObjectPool
             catch { }
         }
 
+        public void AutoFree()
+        {
+            if (running == false) return;
+            if (UnavailableException != null) return;
+
+            var list = new List<Object<T>>();
+            while (_freeObjects.TryPop(out var obj))
+                list.Add(obj);
+            foreach (var obj in list)
+            {
+                if (obj != null && obj.Value == null ||
+                    obj != null && Policy.IdleTimeout > TimeSpan.Zero && DateTime.Now.Subtract(obj.LastReturnTime) > Policy.IdleTimeout)
+                {
+                    if (obj.Value != null)
+                    {
+                        Return(obj, true);
+                        continue;
+                    }
+                }
+                Return(obj);
+            }
+        }
+
         /// <summary>
         /// 获取可用资源，或创建资源
         /// </summary>
@@ -258,10 +280,10 @@ namespace CSRedis.Internal.ObjectPool
         {
 
             if (running == false)
-                throw new ObjectDisposedException($"【{Policy.Name}】对象池已释放，无法访问。");
+                throw new ObjectDisposedException($"【{Policy.Name}】The ObjectPool has been disposed, see: https://github.com/dotnetcore/FreeSql/discussions/1079");
 
             if (checkAvailable && UnavailableException != null)
-                throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{UnavailableException?.Message}", UnavailableException);
+                throw new Exception($"【{Policy.Name}】Status unavailable, waiting for recovery. {UnavailableException?.Message}", UnavailableException);
 
             if ((_freeObjects.TryPop(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize)
             {
@@ -312,12 +334,13 @@ namespace CSRedis.Internal.ObjectPool
                 if (obj == null) obj = queueItem.ReturnValue;
                 if (obj == null) lock (queueItem.Lock) queueItem.IsTimeout = (obj = queueItem.ReturnValue) == null;
                 if (obj == null) obj = queueItem.ReturnValue;
+                if (queueItem.Exception != null) throw queueItem.Exception;
 
                 if (obj == null)
                 {
                     Policy.OnGetTimeout();
                     if (Policy.IsThrowGetTimeoutException)
-                        throw new TimeoutException($"ObjectPool.Get 获取超时（{timeout.Value.TotalSeconds}秒）。");
+                        throw new TimeoutException($"【{Policy.Name}】ObjectPool.Get() timeout {timeout.Value.TotalSeconds} seconds, see: https://github.com/dotnetcore/FreeSql/discussions/1081");
 
                     return null;
                 }
@@ -349,7 +372,7 @@ namespace CSRedis.Internal.ObjectPool
             if (obj == null)
             {
                 if (Policy.AsyncGetCapacity > 0 && _getAsyncQueue.Count >= Policy.AsyncGetCapacity - 1)
-                    throw new OutOfMemoryException($"ObjectPool.GetAsync 无可用资源且队列过长，Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}。");
+                    throw new OutOfMemoryException($"【{Policy.Name}】ObjectPool.GetAsync() The queue is too long. Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}");
 
                 var tcs = new TaskCompletionSource<Object<T>>();
 
@@ -369,7 +392,7 @@ namespace CSRedis.Internal.ObjectPool
                 //	Policy.GetTimeout();
 
                 //	if (Policy.IsThrowGetTimeoutException)
-                //		throw new Exception($"ObjectPool.GetAsync 获取超时（{timeout.Value.TotalSeconds}秒）。");
+                //		throw new TimeoutException($"【{Policy.Name}】ObjectPool.GetAsync() timeout {timeout.Value.TotalSeconds} seconds, see: https://github.com/dotnetcore/FreeSql/discussions/1081");
 
                 //	return null;
                 //}
@@ -421,16 +444,26 @@ namespace CSRedis.Internal.ObjectPool
 
                         if (queueItem.ReturnValue != null)
                         {
-                            obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
-                            obj.LastReturnTime = DateTime.Now;
-
-                            try
+                            if (UnavailableException != null)
                             {
-                                queueItem.Wait.Set();
-                                isReturn = true;
+                                queueItem.Exception = new Exception($"【{Policy.Name}】Status unavailable, waiting for recovery. {UnavailableException?.Message}", UnavailableException);
+                                try
+                                {
+                                    queueItem.Wait.Set();
+                                }
+                                catch { }
                             }
-                            catch
+                            else
                             {
+                                obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
+                                obj.LastReturnTime = DateTime.Now;
+
+                                try
+                                {
+                                    queueItem.Wait.Set();
+                                    isReturn = true;
+                                }
+                                catch { }
                             }
                         }
 
@@ -441,10 +474,25 @@ namespace CSRedis.Internal.ObjectPool
                 {
                     if (_getAsyncQueue.TryDequeue(out var tcs) && tcs != null && tcs.Task.IsCanceled == false)
                     {
-                        obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
-                        obj.LastReturnTime = DateTime.Now;
+                        if (UnavailableException != null)
+                        {
+                            try
+                            {
+                                tcs.TrySetException(new Exception($"【{Policy.Name}】Status unavailable, waiting for recovery. {UnavailableException?.Message}", UnavailableException));
+                            }
+                            catch { }
+                        }
+                        else
+                        {
+                            obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
+                            obj.LastReturnTime = DateTime.Now;
 
-                        try { isReturn = tcs.TrySetResult(obj); } catch { }
+                            try
+                            {
+                                isReturn = tcs.TrySetResult(obj);
+                            }
+                            catch { }
+                        }
                     }
                 }
             }
@@ -501,6 +549,7 @@ namespace CSRedis.Internal.ObjectPool
             internal Object<T> ReturnValue { get; set; }
             internal object Lock = new object();
             internal bool IsTimeout { get; set; } = false;
+            internal Exception Exception { get; set; }
 
             public void Dispose()
             {
