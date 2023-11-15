@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Extensions.Caching.Distributed {
-	public static class IDistributedCacheExtensions {
+#if NET7_0_OR_GREATER
+#else
+namespace Microsoft.Extensions.Caching.Distributed
+{
+    public static class IDistributedCacheExtensions
+	{
 
 		/// <summary>
 		/// 获取缓存，反序列化成对象返回
@@ -15,7 +15,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="cache"></param>
 		/// <param name="key">key</param>
 		/// <returns>对象</returns>
-		public static object GetObject(this IDistributedCache cache, string key) {
+		public static object GetObject(this IDistributedCache cache, string key)
+		{
 			return Deserialize(cache.Get(key));
 		}
 		/// <summary>
@@ -25,7 +26,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="cache"></param>
 		/// <param name="key">key</param>
 		/// <returns>对象</returns>
-		public static T GetObject<T>(this IDistributedCache cache, string key) {
+		public static T GetObject<T>(this IDistributedCache cache, string key)
+		{
 			var obj = Deserialize(cache.Get(key));
 			if (obj == null) return default(T);
 			return (T)obj;
@@ -36,7 +38,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="cache"></param>
 		/// <param name="key">key</param>
 		/// <returns>对象</returns>
-		async public static Task<object> GetObjectAsync(this IDistributedCache cache, string key) {
+		async public static Task<object> GetObjectAsync(this IDistributedCache cache, string key)
+		{
 			return Deserialize(await cache.GetAsync(key));
 		}
 		/// <summary>
@@ -46,7 +49,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="cache"></param>
 		/// <param name="key">key</param>
 		/// <returns>对象</returns>
-		async public static Task<T> GetObjectAsync<T>(this IDistributedCache cache, string key) {
+		async public static Task<T> GetObjectAsync<T>(this IDistributedCache cache, string key)
+		{
 			var obj = Deserialize(await cache.GetAsync(key));
 			if (obj == null) return default(T);
 			return (T)obj;
@@ -57,7 +61,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="cache"></param>
 		/// <param name="key">key</param>
 		/// <param name="value">对象</param>
-		public static void SetObject(this IDistributedCache cache, string key, object value) {
+		public static void SetObject(this IDistributedCache cache, string key, object value)
+		{
 			var data = Serialize(value);
 			if (data == null) cache.Remove(key);
 			else cache.Set(key, Serialize(value));
@@ -69,7 +74,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="key">key</param>
 		/// <param name="value">对象</param>
 		/// <param name="options">策略</param>
-		public static void SetObject(this IDistributedCache cache, string key, object value, DistributedCacheEntryOptions options) {
+		public static void SetObject(this IDistributedCache cache, string key, object value, DistributedCacheEntryOptions options)
+		{
 			var data = Serialize(value);
 			if (data == null) cache.Remove(key);
 			else cache.Set(key, Serialize(value), options);
@@ -80,7 +86,8 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="cache"></param>
 		/// <param name="key">key</param>
 		/// <param name="value">对象</param>
-		public static Task SetObjectAsync(this IDistributedCache cache, string key, object value) {
+		public static Task SetObjectAsync(this IDistributedCache cache, string key, object value)
+		{
 			var data = Serialize(value);
 			if (data == null) return cache.RemoveAsync(key);
 			else return cache.SetAsync(key, Serialize(value));
@@ -92,30 +99,32 @@ namespace Microsoft.Extensions.Caching.Distributed {
 		/// <param name="key">key</param>
 		/// <param name="value">对象</param>
 		/// <param name="options">策略</param>
-		public static Task SetObjectAsync(this IDistributedCache cache, string key, object value, DistributedCacheEntryOptions options) {
+		public static Task SetObjectAsync(this IDistributedCache cache, string key, object value, DistributedCacheEntryOptions options)
+		{
 			var data = Serialize(value);
 			if (data == null) return cache.RemoveAsync(key);
 			else return cache.SetAsync(key, Serialize(value), options);
 		}
 
-		public static byte[] Serialize(object value) {
+		public static byte[] Serialize(object value)
+		{
 			if (value == null) return null;
-			using (MemoryStream ms = new MemoryStream()) {
-				IFormatter formatter = new BinaryFormatter();
-#pragma warning disable SYSLIB0011 // 类型或成员已过时
-                formatter.Serialize(ms, value);
-#pragma warning restore SYSLIB0011 // 类型或成员已过时
-                return ms.GetBuffer();
+			using (MemoryStream ms = new MemoryStream())
+			{
+				var formatter = new BinaryFormatter();
+				formatter.Serialize(ms, value);
+				return ms.GetBuffer();
 			}
 		}
-		public static object Deserialize(byte[] stream) {
+		public static object Deserialize(byte[] stream)
+		{
 			if (stream == null) return null;
-			using (MemoryStream ms = new MemoryStream(stream)) {
-				IFormatter formatter = new BinaryFormatter();
-#pragma warning disable SYSLIB0011 // 类型或成员已过时
-                return formatter.Deserialize(ms);
-#pragma warning restore SYSLIB0011 // 类型或成员已过时
-            }
+			using (MemoryStream ms = new MemoryStream(stream))
+			{
+				var formatter = new BinaryFormatter();
+				return formatter.Deserialize(ms);
+			}
 		}
 	}
 }
+#endif
