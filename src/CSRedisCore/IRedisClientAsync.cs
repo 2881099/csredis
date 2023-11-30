@@ -11,7 +11,7 @@ namespace CSRedis
     /// </summary>
     public interface IRedisClientAsync : IRedisClient
     {
-#if net40
+#if NET40
 #else
         /// <summary>
         /// Open connection to redis server

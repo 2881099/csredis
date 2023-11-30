@@ -52,7 +52,7 @@ namespace CSRedis.Internal.IO
                 throw new RedisSocketException("Connect to server timeout");
         }
 
-#if net40
+#if NET40
 #else
         TaskCompletionSource<bool> connectTcs;
         public Task<bool> ConnectAsync(EndPoint endpoint)
@@ -85,7 +85,7 @@ namespace CSRedis.Internal.IO
             if (!_ssl) return netStream;
 
             var sslStream = new SslStream(netStream, true);
-#if net40
+#if NET40
             sslStream.AuthenticateAsClient(GetHostForAuthentication());
 #else
             sslStream.AuthenticateAsClientAsync(GetHostForAuthentication()).Wait();

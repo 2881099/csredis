@@ -30,8 +30,4 @@
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
-	
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-		<DefineConstants>net40</DefineConstants>
-	</PropertyGroup>
 </Project>

@@ -43,7 +43,7 @@ namespace CSRedis.Internal.ObjectPool
         /// <returns></returns>
         Object<T> Get(TimeSpan? timeout = null);
 
-#if net40
+#if NET40
 #else
         /// <summary>
         /// 获取资源

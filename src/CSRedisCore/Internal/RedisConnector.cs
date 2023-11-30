@@ -65,7 +65,7 @@ namespace CSRedis.Internal
             return _redisSocket.Connected;
         }
 
-#if net40
+#if NET40
 #else
         public Task<bool> ConnectAsync()
         {
@@ -127,7 +127,7 @@ namespace CSRedis.Internal
             }
         }
 
-#if net40
+#if NET40
 #else
         async public Task<T> CallAsync<T>(RedisCommand<T> command)
         {

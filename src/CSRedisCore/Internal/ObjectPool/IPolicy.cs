@@ -68,7 +68,7 @@ namespace CSRedis.Internal.ObjectPool
         /// </summary>
         /// <param name="obj">资源对象</param>
         void OnGet(Object<T> obj);
-#if net40
+#if NET40
 #else
         /// <summary>
         /// 从对象池获取对象成功的时候触发，通过该方法统计或初始化对象

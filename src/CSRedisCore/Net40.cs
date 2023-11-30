@@ -10,7 +10,7 @@ namespace CSRedis
     {
         public static Task<T> FromResult<T>(T value)
         {
-#if net40
+#if NET40
             return new Task<T>(() => value);
 #else
             return Task.FromResult(value);
@@ -18,7 +18,7 @@ namespace CSRedis
         }
         public static Task Run(Action action)
         {
-#if net40
+#if NET40
             var tcs = new TaskCompletionSource<object>();
             new Thread(() =>
             {

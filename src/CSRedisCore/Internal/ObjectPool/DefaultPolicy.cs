@@ -35,7 +35,7 @@ namespace CSRedis.Internal.ObjectPool
             OnGetObject?.Invoke(obj);
         }
 
-#if net40
+#if NET40
 #else
         public Task OnGetAsync(Object<T> obj)
         {

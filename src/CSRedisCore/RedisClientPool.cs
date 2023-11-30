@@ -303,7 +303,7 @@ namespace CSRedis
                 }
             }
         }
-#if net40
+#if NET40
 #else
         async public Task OnGetAsync(Object<RedisClient> obj)
         {

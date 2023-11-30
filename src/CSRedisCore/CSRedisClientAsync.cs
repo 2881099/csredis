@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if net40
+#if NET40
 #else
 namespace CSRedis
 {

@@ -79,7 +79,7 @@ namespace CSRedis.Internal
                 TransactionQueued(this, new RedisTransactionQueuedEventArgs(response, command, args));
         }
 
-#if net40
+#if NET40
 #else
         public Task<string> StartAsync()
         {

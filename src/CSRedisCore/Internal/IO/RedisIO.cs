@@ -44,7 +44,7 @@ namespace CSRedis.Internal.IO
         }
 
 
-#if net40
+#if NET40
 #else
         async public Task<int> WriteAsync(RedisCommand command)
         {

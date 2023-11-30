@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if net40
+#if NET40
 #else
 namespace CSRedis
 {
