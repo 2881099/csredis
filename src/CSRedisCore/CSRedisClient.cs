@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using CSRedis.Internal.ObjectPool;
 using System;
 using System.Collections.Generic;
@@ -28,15 +27,27 @@ namespace CSRedis
         internal bool IsMultiNode => Nodes.Count > 1 && SentinelManager == null;
         private object NodesLock = new object();
         public ConcurrentDictionary<ushort, ushort> SlotCache = new ConcurrentDictionary<ushort, ushort>();
-
-        private Func<JsonSerializerSettings> JsonSerializerSettings = () =>
+#if NETCOREAPP3_0_OR_GREATER
+        private Func<System.Text.Json.JsonSerializerOptions> jsonSerializerOptions = () =>
         {
-            var st = new JsonSerializerSettings();
+            return new System.Text.Json.JsonSerializerOptions
+            {
+                Converters =
+                {
+                    new System.Text.Json.Serialization.JsonStringEnumConverter()
+                }
+            };
+        };
+#else
+        private Func<Newtonsoft.Json.JsonSerializerSettings> jsonSerializerSettings = () =>
+        {
+            var st = new Newtonsoft.Json.JsonSerializerSettings();
             st.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            st.DateFormatHandling = DateFormatHandling.IsoDateFormat;
-            st.DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
+            st.DateFormatHandling = Newtonsoft.Json.DateFormatHandling.IsoDateFormat;
+            st.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.RoundtripKind;
             return st;
         };
+#endif
 
         /// <summary>
 		/// 自定义序列化(全局默认)
@@ -64,13 +75,21 @@ namespace CSRedis
         {
             if (CurrentSerialize != null) return CurrentSerialize(value);
             if (Serialize != null) return Serialize(value);
-            return JsonConvert.SerializeObject(value, this.JsonSerializerSettings());
+#if NETCOREAPP3_0_OR_GREATER
+            return System.Text.Json.JsonSerializer.Serialize(value, this.jsonSerializerOptions());
+#else
+            return Newtonsoft.Json.JsonConvert.SerializeObject(value, this.jsonSerializerSettings());
+#endif
         }
         internal T DeserializeObject<T>(string value)
         {
             if (CurrentDeserialize != null) return (T)CurrentDeserialize(value, typeof(T));
             if (Deserialize != null) return (T)Deserialize(value, typeof(T));
-            return JsonConvert.DeserializeObject<T>(value, this.JsonSerializerSettings());
+#if NETCOREAPP3_0_OR_GREATER
+            return System.Text.Json.JsonSerializer.Deserialize<T>(value, this.jsonSerializerOptions());
+#else
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(value, this.jsonSerializerSettings());
+#endif
         }
 
         internal object SerializeRedisValueInternal(object value)
@@ -226,7 +245,7 @@ namespace CSRedis
             foreach (var kv in value) dic.Add(kv.Key, this.DeserializeRedisValueInternal<TValue>(kv.Value));
             return dic;
         }
-        #endregion
+#endregion
 
         /// <summary>
         /// 创建redis访问类(支持单机或集群)

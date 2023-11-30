@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net45;net40</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net8.0;net7.0;net6.0;net5.0;netcoreapp3.1;netcoreapp2.1;net45;net40;</TargetFrameworks>
 		<AssemblyName>CSRedisCore</AssemblyName>
 		<PackageId>CSRedisCore</PackageId>
 		<RootNamespace>CSRedisCore</RootNamespace>
@@ -26,8 +26,10 @@
 		<NoWarn>1701;1702;1591</NoWarn>
 	</PropertyGroup>
 	
-	<ItemGroup>
+	<ItemGroup Condition="!$(DefineConstants.Contains(NETCOREAPP3_0_OR_GREATER))">
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 	
