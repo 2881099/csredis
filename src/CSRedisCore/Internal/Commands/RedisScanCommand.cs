@@ -1,13 +1,10 @@
 ﻿using CSRedis.Internal.IO;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 
 namespace CSRedis.Internal.Commands
 {
-    class RedisScanCommand<T> : RedisCommand<RedisScan<T>>
+	class RedisScanCommand<T> : RedisCommand<RedisScan<T>>
     {
         RedisCommand<T[]> _command;
 
@@ -23,7 +20,7 @@ namespace CSRedis.Internal.Commands
             if (reader.ReadInt(false) != 2)
                 throw new RedisProtocolException("Expected 2 items");
 
-            long cursor = Int64.Parse(reader.ReadBulkString());
+            long cursor = Int64.Parse(reader.ReadBulkString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
             T[] items = _command.Parse(reader);
 
             return new RedisScan<T>(cursor, items);

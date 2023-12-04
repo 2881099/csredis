@@ -1,13 +1,9 @@
 ﻿using CSRedis.Internal.IO;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 
 namespace CSRedis.Internal.Commands
 {
-    class RedisXRangeCommand : RedisCommand<(string id, string[] items)[]>
+	class RedisXRangeCommand : RedisCommand<(string id, string[] items)[]>
     {
         public RedisXRangeCommand(string command, params object[] args)
             : base(command, args)
@@ -131,7 +127,7 @@ namespace CSRedis.Internal.Commands
                 var lvl3Count = reader.ReadInt(false);
                 if (lvl3Count != 2) throw new RedisProtocolException("XPedding 返回数据格式 3级 MultiBulk 长度应该为 2");
 
-                pendings[a] = (reader.ReadBulkString(), long.Parse(reader.ReadBulkString()));
+                pendings[a] = (reader.ReadBulkString(), long.Parse(reader.ReadBulkString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat));
             }
 
             return (retCount, minId, maxId, pendings);

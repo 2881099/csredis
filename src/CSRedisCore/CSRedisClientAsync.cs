@@ -3,8 +3,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 #else
 namespace CSRedis
 {
-    public partial class CSRedisClient
+	public partial class CSRedisClient
     {
 
         ConcurrentDictionary<string, AutoPipe> _autoPipe = new ConcurrentDictionary<string, AutoPipe>();
@@ -2421,7 +2421,7 @@ namespace CSRedis
                 if (rule1 != rule2)
                 {
                     var ret = StartPipe(a => a.Dump(key).Del(key));
-                    int.TryParse(ret[1]?.ToString(), out var tryint);
+                    int.TryParse(ret[1]?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryint);
                     if (ret[0] == null || tryint <= 0) return false;
                     return await RestoreAsync(newKey, (byte[])ret[0]);
                 }

@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
 
 namespace CSRedis.Internal.IO
 {
-    internal partial class RedisReader
+	internal partial class RedisReader
     {
         readonly RedisIO _io;
 
@@ -36,7 +36,7 @@ namespace CSRedis.Internal.IO
                 ExpectType(RedisMessage.Int);
 
             string line = ReadLine();
-            return Int64.Parse(line.ToString());
+            return Int64.Parse(line.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
         }
 
         public object ReadBulk(bool checkType = true, bool asString = false)

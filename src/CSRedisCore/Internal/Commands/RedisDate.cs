@@ -1,5 +1,6 @@
 ﻿using CSRedis.Internal.IO;
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace CSRedis.Internal.Commands
@@ -28,8 +29,8 @@ namespace CSRedis.Internal.Commands
                 reader.ExpectType(RedisMessage.MultiBulk);
                 reader.ExpectSize(2);
 
-                var timestamp = Int32.Parse(reader.ReadBulkString());
-                var microseconds = long.Parse(reader.ReadBulkString());
+                var timestamp = Int32.Parse(reader.ReadBulkString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
+                var microseconds = long.Parse(reader.ReadBulkString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
 
                 return FromTimestamp(timestamp, microseconds);
             }

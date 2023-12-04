@@ -17,7 +17,7 @@ namespace CSRedis.Internal.Commands
 
         static decimal FromString(string input)
         {
-            return decimal.Parse(input, NumberStyles.Any);
+            return decimal.Parse(input, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
         }
 
         public class Nullable : RedisCommand<decimal?>

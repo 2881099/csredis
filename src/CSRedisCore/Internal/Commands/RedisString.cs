@@ -1,10 +1,11 @@
 ﻿using CSRedis.Internal.IO;
 using System;
 using System.ComponentModel;
+using System.Globalization;
 
 namespace CSRedis.Internal.Commands
 {
-    class RedisString : RedisCommand<string>
+	class RedisString : RedisCommand<string>
     {
         public RedisString(string command, params object[] args)
             : base(command, args)
@@ -39,7 +40,7 @@ namespace CSRedis.Internal.Commands
 
             public override int Parse(RedisReader reader)
             {
-                return Int32.Parse(reader.ReadBulkString());
+                return Int32.Parse(reader.ReadBulkString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
             }
         }
 

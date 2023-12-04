@@ -1,17 +1,18 @@
-using Newtonsoft.Json;
 using CSRedis.Internal.ObjectPool;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.IO;
 
 namespace CSRedis
 {
-    public partial class CSRedisClient : IDisposable
+	public partial class CSRedisClient : IDisposable
     {
         /// <summary>
         /// 按 key 规则分区存储
@@ -136,40 +137,40 @@ namespace CSRedis
                         else if (valueStr == "0") obj = false;
                         break;
                     case "System.Byte":
-                        if (byte.TryParse(valueStr, out var trybyte)) obj = trybyte;
+                        if (byte.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var trybyte)) obj = trybyte;
                         break;
                     case "System.Char":
                         if (valueStr.Length > 0) obj = valueStr[0];
                         break;
                     case "System.Decimal":
-                        if (Decimal.TryParse(valueStr, out var trydec)) obj = trydec;
+                        if (Decimal.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var trydec)) obj = trydec;
                         break;
                     case "System.Double":
-                        if (Double.TryParse(valueStr, out var trydb)) obj = trydb;
+                        if (Double.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var trydb)) obj = trydb;
                         break;
                     case "System.Single":
-                        if (Single.TryParse(valueStr, out var trysg)) obj = trysg;
+                        if (Single.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var trysg)) obj = trysg;
                         break;
                     case "System.Int32":
-                        if (Int32.TryParse(valueStr, out var tryint32)) obj = tryint32;
+                        if (Int32.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryint32)) obj = tryint32;
                         break;
                     case "System.Int64":
-                        if (Int64.TryParse(valueStr, out var tryint64)) obj = tryint64;
+                        if (Int64.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryint64)) obj = tryint64;
                         break;
                     case "System.SByte":
-                        if (SByte.TryParse(valueStr, out var trysb)) obj = trysb;
+                        if (SByte.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var trysb)) obj = trysb;
                         break;
                     case "System.Int16":
-                        if (Int16.TryParse(valueStr, out var tryint16)) obj = tryint16;
+                        if (Int16.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryint16)) obj = tryint16;
                         break;
                     case "System.UInt32":
-                        if (UInt32.TryParse(valueStr, out var tryuint32)) obj = tryuint32;
+                        if (UInt32.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryuint32)) obj = tryuint32;
                         break;
                     case "System.UInt64":
-                        if (UInt64.TryParse(valueStr, out var tryuint64)) obj = tryuint64;
+                        if (UInt64.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryuint64)) obj = tryuint64;
                         break;
                     case "System.UInt16":
-                        if (UInt16.TryParse(valueStr, out var tryuint16)) obj = tryuint16;
+                        if (UInt16.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryuint16)) obj = tryuint16;
                         break;
                     case "System.DateTime":
                         if (DateTime.TryParse(valueStr, out var trydt)) obj = trydt;
@@ -178,7 +179,7 @@ namespace CSRedis
                         if (DateTimeOffset.TryParse(valueStr, out var trydtos)) obj = trydtos;
                         break;
                     case "System.TimeSpan":
-                        if (Int64.TryParse(valueStr, out tryint64)) obj = new TimeSpan(tryint64);
+                        if (Int64.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out tryint64)) obj = new TimeSpan(tryint64);
                         break;
                     case "System.Guid":
                         if (Guid.TryParse(valueStr, out var tryguid)) obj = tryguid;
@@ -3648,7 +3649,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
                 if (rule1 != rule2)
                 {
                     var ret = StartPipe(a => a.Dump(key).Del(key));
-                    int.TryParse(ret[1]?.ToString(), out var tryint);
+                    int.TryParse(ret[1]?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var tryint);
                     if (ret[0] == null || tryint <= 0) return false;
                     return Restore(newKey, (byte[])ret[0]);
                 }

@@ -4,14 +4,11 @@ using CSRedis.Internal.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace CSRedis
 {
-    static class RedisCommands
+	static class RedisCommands
     {
         #region Connection
         public static RedisStatus Auth(string user, string password)
@@ -1938,7 +1935,7 @@ namespace CSRedis
                             depth = reader.ReadInt();
                             break;
                         case "decay":
-                            decay = decimal.Parse(reader.ReadBulkString(), NumberStyles.Any);
+                            decay = decimal.Parse(reader.ReadBulkString(), NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
                             break;
                         default:
                             reader.ReadBulkString();
