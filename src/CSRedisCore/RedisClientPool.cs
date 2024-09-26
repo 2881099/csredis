@@ -61,12 +61,15 @@ namespace CSRedis
                         if (!obj.Value.IsConnected) obj.Value.Connect(_policy._connectTimeout);
                         obj.Value.Ping();
 
-                        var fcolor = Console.ForegroundColor;
-                        Console.WriteLine($"");
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        Console.WriteLine($"csreids 错误【{Policy.Name}】：{exception.Message} {exception.StackTrace}");
-                        Console.ForegroundColor = fcolor;
-                        Console.WriteLine($"");
+
+                        Trace.TraceWarning($"\ncsreids 错误【{Policy.Name}】：{exception.Message} {exception.StackTrace}\n");
+
+                        //var fcolor = Console.ForegroundColor;
+                        //Console.WriteLine($"");
+                        //Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        //Console.WriteLine($"csreids 错误【{Policy.Name}】：{exception.Message} {exception.StackTrace}");
+                        //Console.ForegroundColor = fcolor;
+                        //Console.WriteLine($"");
                     }
                     catch
                     {
