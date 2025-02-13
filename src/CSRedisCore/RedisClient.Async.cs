@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 #if net40
@@ -11,6 +12,8 @@ namespace CSRedis
 {
     public partial class RedisClient
     {
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        
         /// <summary>
         /// Open connection to redis server
         /// </summary>
@@ -39,9 +42,18 @@ namespace CSRedis
             else if (_asyncPipe != null)
             {
                 var tsc = new TaskCompletionSource<object>();
-                _asyncPipe.Enqueue(tsc);
+                try
+                {
+                    await _semaphore.WaitAsync();
+                    
+                    _asyncPipe.Enqueue(tsc);
                 
-                _connector.Pipeline.Write(command);
+                    _connector.Pipeline.Write(command);
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
 
                 var ret = await tsc.Task;
                 return (T)ret;
