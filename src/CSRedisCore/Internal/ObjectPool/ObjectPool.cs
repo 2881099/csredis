@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,23 +14,26 @@ namespace CSRedis.Internal.ObjectPool
         {
             try //#643
             {
-                var bgcolor = Console.BackgroundColor;
-                var forecolor = Console.ForegroundColor;
-                Console.BackgroundColor = backgroundColor;
 
-                switch (backgroundColor)
-                {
-                    case ConsoleColor.Yellow:
-                        Console.ForegroundColor = ConsoleColor.White;
-                        break;
-                    case ConsoleColor.DarkGreen:
-                        Console.ForegroundColor = ConsoleColor.White;
-                        break;
-                }
-                Console.Write(text);
-                Console.BackgroundColor = bgcolor;
-                Console.ForegroundColor = forecolor;
-                Console.WriteLine();
+                Trace.TraceInformation(text);
+
+                //var bgcolor = Console.BackgroundColor;
+                //var forecolor = Console.ForegroundColor;
+                //Console.BackgroundColor = backgroundColor;
+
+                //switch (backgroundColor)
+                //{
+                //    case ConsoleColor.Yellow:
+                //        Console.ForegroundColor = ConsoleColor.White;
+                //        break;
+                //    case ConsoleColor.DarkGreen:
+                //        Console.ForegroundColor = ConsoleColor.White;
+                //        break;
+                //}
+                //Console.Write(text);
+                //Console.BackgroundColor = bgcolor;
+                //Console.ForegroundColor = forecolor;
+                //Console.WriteLine();
             }
             catch
             {
