@@ -257,6 +257,12 @@ namespace CSRedis.Internal.Commands
                         case "last-delivered-id":
                             ret[a].lastDeliveredId = reader.ReadBulkString();
                             break;
+			case "entries-read":
+                            reader.ReadInt();
+                            break;
+                        case "lag":
+                            reader.ReadInt();
+                            break;
                         default:
                             reader.ReadBulkString();
                             break;
