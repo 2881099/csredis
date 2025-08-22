@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace CSRedis
 {
-	public partial class CSRedisClient : IDisposable
+    public partial class CSRedisClient : IDisposable
     {
         /// <summary>
         /// 按 key 规则分区存储
@@ -57,8 +57,8 @@ namespace CSRedis
         /// </summary>
         public Func<string, Type, object> CurrentDeserialize;
 
-        DateTime _dt1970 = new DateTime(1970, 1, 1);
-        Random _rnd = new Random();
+        private DateTime _dt1970 = new DateTime(1970, 1, 1);
+        private Random _rnd = new Random();
 
         #region 序列化写入，反序列化
         internal string SerializeObject(object value)
@@ -407,9 +407,9 @@ namespace CSRedis
             SentinelManager?.Dispose();
         }
 
-        bool BackgroundGetSentinelMasterValueIng = false;
-        object BackgroundGetSentinelMasterValueIngLock = new object();
-        bool BackgroundGetSentinelMasterValue()
+        private bool BackgroundGetSentinelMasterValueIng = false;
+        private object BackgroundGetSentinelMasterValueIngLock = new object();
+        private bool BackgroundGetSentinelMasterValue()
         {
             if (SentinelManager == null) return false;
             if (Nodes.Count > 1) return false;
@@ -463,7 +463,7 @@ namespace CSRedis
             }
             return ing;
         }
-        T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100, int errtimes = 0)
+        private T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100, int errtimes = 0)
         {
             Object<RedisClient> obj = null;
             Exception ex = null;
@@ -540,7 +540,7 @@ namespace CSRedis
             };
             return GetAndExecute<T>(GetRedirectPool(redirect.Value, pool), redirectHander, jump - 1);
         }
-        bool TryAddNode(string nodeKey, RedisClientPool pool)
+        private bool TryAddNode(string nodeKey, RedisClientPool pool)
         {
             if (Nodes.TryAdd(nodeKey, pool))
             {
@@ -551,7 +551,7 @@ namespace CSRedis
             }
             return false;
         }
-        RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool)
+        private RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool)
         {
             if (redirect.endpoint.StartsWith("127.0.0.1"))
                 redirect.endpoint = $"{pool._policy._ip}:{redirect.endpoint.Substring(10)}";
@@ -584,7 +584,7 @@ namespace CSRedis
             }
             return movedPool;
         }
-        (bool isMoved, bool isAsk, ushort slot, string endpoint)? ParseClusterRedirect(Exception ex)
+        private (bool isMoved, bool isAsk, ushort slot, string endpoint)? ParseClusterRedirect(Exception ex)
         {
             if (ex == null) return null;
             bool isMoved = ex.Message.StartsWith("MOVED ");
@@ -596,7 +596,7 @@ namespace CSRedis
             return (isMoved, isAsk, slot, parts[2]);
         }
 
-        T NodesNotSupport<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], T> callback)
+        private T NodesNotSupport<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], T> callback)
         {
             if (keys == null || keys.Any() == false) return defaultValue;
             var rules = Nodes.Count > 1 ? keys.Select(a => NodeRuleRaw(a)).Distinct() : new[] { Nodes.FirstOrDefault().Key };
@@ -607,13 +607,13 @@ namespace CSRedis
             if (rkeys.Length == 0) return defaultValue;
             return GetAndExecute(pool, conn => callback(conn, rkeys));
         }
-        T NodesNotSupport<T>(string key, Func<Object<RedisClient>, string, T> callback)
+        private T NodesNotSupport<T>(string key, Func<Object<RedisClient>, string, T> callback)
         {
             if (IsMultiNode) throw new Exception("由于开启了分区模式，无法使用此功能");
             return ExecuteScalar<T>(key, callback);
         }
 
-        RedisClientPool GetNodeOrThrowNotFound(string nodeKey)
+        private RedisClientPool GetNodeOrThrowNotFound(string nodeKey)
         {
             if (Nodes.Count == 1) return Nodes.First().Value;
             if (Nodes.ContainsKey(nodeKey) == false) throw new Exception($"找不到群集节点：{nodeKey}");
@@ -4381,12 +4381,12 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 
     public class CSRedisClientLock : IDisposable
     {
-
-        CSRedisClient _client;
-        string _name;
-        string _value;
-        int _timeoutSeconds;
-        Timer _autoDelayTimer;
+        private CSRedisClient _client;
+        private string _name;
+        private string _value;
+        private int _timeoutSeconds;
+        private Timer _autoDelayTimer;
+        private CancellationTokenSource _handleLostTokenSource;
 
         public CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, double refreshSeconds, bool autoDelay)
         {
@@ -4396,11 +4396,19 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             _timeoutSeconds = timeoutSeconds;
             if (autoDelay)
             {
+                _handleLostTokenSource = new CancellationTokenSource();
+                HandleLostToken = _handleLostTokenSource.Token;
+
                 var refreshMilli = (int)(refreshSeconds * 1000);
                 var timeoutMilli = timeoutSeconds * 1000;
                 _autoDelayTimer = new Timer(state2 => Refresh(timeoutMilli), null, refreshMilli, refreshMilli);
             }
         }
+
+        /// <summary>
+        /// 当刷新锁时间的看门狗线程失去与Redis连接时，导致无法刷新延长锁时间时，触发此HandelLostToken Cancel
+        /// </summary>
+        public CancellationToken? HandleLostToken { get; }
 
         /// <summary>
         /// 延长锁时间，锁在占用期内操作时返回true，若因锁超时被其他使用者占用则返回false
@@ -4427,14 +4435,23 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Refresh(int milliseconds)
         {
-            var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
+            try
+            {
+                var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
   redis.call('PEXPIRE', KEYS[1], ARGV[2])
   return 1
 end
 return 0", _name, _value, milliseconds)?.ToString() == "1";
-            if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
-            return ret;
+                if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+                return ret;
+            }
+            catch
+            {
+                _handleLostTokenSource?.Cancel();
+                _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+                return false;//这里必须要吞掉异常，否则会导致整个程序崩溃，因为Timer的异常没有地方去处理
+            }
         }
 
         /// <summary>
