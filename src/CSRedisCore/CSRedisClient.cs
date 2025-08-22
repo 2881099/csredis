@@ -4461,6 +4461,7 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Unlock()
         {
+            _handleLostTokenSource?.Dispose();
             _autoDelayTimer?.Dispose();
             return _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
