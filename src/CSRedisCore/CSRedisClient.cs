@@ -4444,7 +4444,11 @@ if gva == ARGV[1] then
   return 1
 end
 return 0", _name, _value, milliseconds)?.ToString() == "1";
-                if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+                if (ret == false)
+                {
+                    _handleLostTokenSource?.Cancel();
+                    _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+                }
                 return ret;
             }
             catch
