@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace CSRedis
 {
-	public partial class CSRedisClient : IDisposable
+    public partial class CSRedisClient : IDisposable
     {
         /// <summary>
         /// 按 key 规则分区存储
@@ -4387,6 +4387,7 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
         string _value;
         int _timeoutSeconds;
         Timer _autoDelayTimer;
+        CancellationTokenSource _handleLostTokenSource;
 
         public CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, double refreshSeconds, bool autoDelay)
         {
@@ -4396,11 +4397,19 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
             _timeoutSeconds = timeoutSeconds;
             if (autoDelay)
             {
+                _handleLostTokenSource = new CancellationTokenSource();
+                HandleLostToken = _handleLostTokenSource.Token;
+
                 var refreshMilli = (int)(refreshSeconds * 1000);
                 var timeoutMilli = timeoutSeconds * 1000;
                 _autoDelayTimer = new Timer(state2 => Refresh(timeoutMilli), null, refreshMilli, refreshMilli);
             }
         }
+
+        /// <summary>
+        /// 当刷新锁时间的看门狗线程失去与Redis连接时，导致无法刷新延长锁时间时，触发此HandelLostToken Cancel
+        /// </summary>
+        public CancellationToken? HandleLostToken { get; }
 
         /// <summary>
         /// 延长锁时间，锁在占用期内操作时返回true，若因锁超时被其他使用者占用则返回false
@@ -4427,14 +4436,23 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Refresh(int milliseconds)
         {
-            var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
+            try
+            {
+                var ret = _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
   redis.call('PEXPIRE', KEYS[1], ARGV[2])
   return 1
 end
 return 0", _name, _value, milliseconds)?.ToString() == "1";
-            if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
-            return ret;
+                if (ret == false) _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+                return ret;
+            }
+            catch
+            {
+                _handleLostTokenSource?.Cancel();
+                _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
+                return false;//这里必须要吞掉异常，否则会导致整个程序崩溃，因为Timer的异常没有地方去处理
+            }
         }
 
         /// <summary>
@@ -4443,6 +4461,7 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Unlock()
         {
+            _handleLostTokenSource?.Dispose();
             _autoDelayTimer?.Dispose();
             return _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
