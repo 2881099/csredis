@@ -57,8 +57,8 @@ namespace CSRedis
         /// </summary>
         public Func<string, Type, object> CurrentDeserialize;
 
-        private DateTime _dt1970 = new DateTime(1970, 1, 1);
-        private Random _rnd = new Random();
+        DateTime _dt1970 = new DateTime(1970, 1, 1);
+        Random _rnd = new Random();
 
         #region 序列化写入，反序列化
         internal string SerializeObject(object value)
@@ -407,9 +407,9 @@ namespace CSRedis
             SentinelManager?.Dispose();
         }
 
-        private bool BackgroundGetSentinelMasterValueIng = false;
-        private object BackgroundGetSentinelMasterValueIngLock = new object();
-        private bool BackgroundGetSentinelMasterValue()
+        bool BackgroundGetSentinelMasterValueIng = false;
+        object BackgroundGetSentinelMasterValueIngLock = new object();
+        bool BackgroundGetSentinelMasterValue()
         {
             if (SentinelManager == null) return false;
             if (Nodes.Count > 1) return false;
@@ -463,7 +463,7 @@ namespace CSRedis
             }
             return ing;
         }
-        private T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100, int errtimes = 0)
+        T GetAndExecute<T>(RedisClientPool pool, Func<Object<RedisClient>, T> handler, int jump = 100, int errtimes = 0)
         {
             Object<RedisClient> obj = null;
             Exception ex = null;
@@ -540,7 +540,7 @@ namespace CSRedis
             };
             return GetAndExecute<T>(GetRedirectPool(redirect.Value, pool), redirectHander, jump - 1);
         }
-        private bool TryAddNode(string nodeKey, RedisClientPool pool)
+        bool TryAddNode(string nodeKey, RedisClientPool pool)
         {
             if (Nodes.TryAdd(nodeKey, pool))
             {
@@ -551,7 +551,7 @@ namespace CSRedis
             }
             return false;
         }
-        private RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool)
+        RedisClientPool GetRedirectPool((bool isMoved, bool isAsk, ushort slot, string endpoint) redirect, RedisClientPool pool)
         {
             if (redirect.endpoint.StartsWith("127.0.0.1"))
                 redirect.endpoint = $"{pool._policy._ip}:{redirect.endpoint.Substring(10)}";
@@ -584,7 +584,7 @@ namespace CSRedis
             }
             return movedPool;
         }
-        private (bool isMoved, bool isAsk, ushort slot, string endpoint)? ParseClusterRedirect(Exception ex)
+        (bool isMoved, bool isAsk, ushort slot, string endpoint)? ParseClusterRedirect(Exception ex)
         {
             if (ex == null) return null;
             bool isMoved = ex.Message.StartsWith("MOVED ");
@@ -596,7 +596,7 @@ namespace CSRedis
             return (isMoved, isAsk, slot, parts[2]);
         }
 
-        private T NodesNotSupport<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], T> callback)
+        T NodesNotSupport<T>(string[] keys, T defaultValue, Func<Object<RedisClient>, string[], T> callback)
         {
             if (keys == null || keys.Any() == false) return defaultValue;
             var rules = Nodes.Count > 1 ? keys.Select(a => NodeRuleRaw(a)).Distinct() : new[] { Nodes.FirstOrDefault().Key };
@@ -607,13 +607,13 @@ namespace CSRedis
             if (rkeys.Length == 0) return defaultValue;
             return GetAndExecute(pool, conn => callback(conn, rkeys));
         }
-        private T NodesNotSupport<T>(string key, Func<Object<RedisClient>, string, T> callback)
+        T NodesNotSupport<T>(string key, Func<Object<RedisClient>, string, T> callback)
         {
             if (IsMultiNode) throw new Exception("由于开启了分区模式，无法使用此功能");
             return ExecuteScalar<T>(key, callback);
         }
 
-        private RedisClientPool GetNodeOrThrowNotFound(string nodeKey)
+        RedisClientPool GetNodeOrThrowNotFound(string nodeKey)
         {
             if (Nodes.Count == 1) return Nodes.First().Value;
             if (Nodes.ContainsKey(nodeKey) == false) throw new Exception($"找不到群集节点：{nodeKey}");
@@ -4381,12 +4381,13 @@ return 0", $"CSRedisPSubscribe{psubscribeKey}", "", trylong.ToString());
 
     public class CSRedisClientLock : IDisposable
     {
-        private CSRedisClient _client;
-        private string _name;
-        private string _value;
-        private int _timeoutSeconds;
-        private Timer _autoDelayTimer;
-        private CancellationTokenSource _handleLostTokenSource;
+
+        CSRedisClient _client;
+        string _name;
+        string _value;
+        int _timeoutSeconds;
+        Timer _autoDelayTimer;
+        CancellationTokenSource _handleLostTokenSource;
 
         public CSRedisClientLock(CSRedisClient rds, string name, string value, int timeoutSeconds, double refreshSeconds, bool autoDelay)
         {
