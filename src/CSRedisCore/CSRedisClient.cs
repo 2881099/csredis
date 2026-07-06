@@ -4446,16 +4446,28 @@ end
 return 0", _name, _value, milliseconds)?.ToString() == "1";
                 if (ret == false)
                 {
-                    _handleLostTokenSource?.Cancel();
+                    CancelHandleLostTokenSource();
                     _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
                 }
                 return ret;
             }
             catch
             {
-                _handleLostTokenSource?.Cancel();
+                CancelHandleLostTokenSource();
                 _autoDelayTimer?.Dispose(); //未知情况，关闭定时器
                 return false;//这里必须要吞掉异常，否则会导致整个程序崩溃，因为Timer的异常没有地方去处理
+            }
+        }
+
+        void CancelHandleLostTokenSource()
+        {
+            try
+            {
+                _handleLostTokenSource?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                //Unlock/Dispose 之后定时器回调可能仍在执行，此时 TokenSource 已释放，吞掉异常防止 Timer 线程崩溃进程 #533
             }
         }
 
@@ -4465,8 +4477,8 @@ return 0", _name, _value, milliseconds)?.ToString() == "1";
         /// <returns>成功/失败</returns>
         public bool Unlock()
         {
+            _autoDelayTimer?.Dispose(); //先停定时器再释放 TokenSource，缩小定时器回调与 Dispose 的竞态窗口
             _handleLostTokenSource?.Dispose();
-            _autoDelayTimer?.Dispose();
             return _client.Eval(@"local gva = redis.call('GET', KEYS[1])
 if gva == ARGV[1] then
   redis.call('DEL', KEYS[1])
