@@ -214,7 +214,7 @@ namespace CSRedis.Internal.Commands
                         else ret.lastEntry = (id, items);
                         break;
                     default:
-                        reader.ReadBulkString();
+                        reader.Read();
                         break;
                 }
             }
@@ -257,14 +257,8 @@ namespace CSRedis.Internal.Commands
                         case "last-delivered-id":
                             ret[a].lastDeliveredId = reader.ReadBulkString();
                             break;
-			case "entries-read":
-                            reader.ReadInt();
-                            break;
-                        case "lag":
-                            reader.ReadInt();
-                            break;
                         default:
-                            reader.ReadBulkString();
+                            reader.Read();
                             break;
                     }
                 }
@@ -306,7 +300,7 @@ namespace CSRedis.Internal.Commands
                             ret[a].idle = reader.ReadInt();
                             break;
                         default:
-                            reader.ReadBulkString();
+                            reader.Read();
                             break;
                     }
                 }
