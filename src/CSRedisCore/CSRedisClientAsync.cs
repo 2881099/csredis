@@ -46,7 +46,12 @@ namespace CSRedis
 
                     void trySetException(Exception ex)
                     {
-                        pool.SetUnavailable(ex, ap.Client.LastGetTimeCopy);
+                        // 仅“连接/超时”类异常才熔断整池。普通命令异常（服务端返回的业务错误等）
+                        // 不应把整个连接池标记为不可用，否则会造成“Redis 正常但应用整片报错”。
+                        if (ex is CSRedis.Internal.IO.RedisSocketException || ex is TimeoutException
+                            || ex is System.Net.Sockets.SocketException || ex is System.IO.IOException
+                            || ex is ObjectDisposedException)
+                            pool.SetUnavailable(ex, ap.Client.LastGetTimeCopy);
                         while (rc._asyncPipe?.IsEmpty == false)
                         {
                             TaskCompletionSource<object> trytsc = null;
