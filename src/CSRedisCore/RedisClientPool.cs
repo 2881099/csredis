@@ -39,7 +39,7 @@ namespace CSRedis
                     }
                     catch (Exception authEx)
                     {
-                        if (authEx.Message != "ERR Client sent AUTH, but no password is set")
+                        if (!authEx.Message.StartsWith("ERR Client sent AUTH, but no password is set\r\nCommand: AUTH", StringComparison.Ordinal))
                             throw authEx;
                     }
                 }
