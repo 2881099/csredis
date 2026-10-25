@@ -2,14 +2,19 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Caching.CSRedis;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.Extensions.Caching.Redis {
 
+	/// <summary>
+	///  Distributed cache implementation using Redis.
+	/// </summary>
 	public class CSRedisCache : IDistributedCache {
 		private CSRedis.CSRedisClient _redisClient;
-		public CSRedisCache(CSRedis.CSRedisClient redisClient) {
-			_redisClient = redisClient;
+		public CSRedisCache(IOptions<CSRedisCacheOptions> optionsAccessor) {
+			_redisClient = optionsAccessor.Value.CSRedisClient;
 		}
 		// KEYS[1] = = key
 		// ARGV[1] = absolute-expiration - ticks as long (-1 for none)
